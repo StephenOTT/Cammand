@@ -1,0 +1,181 @@
+﻿@using System.IO
+@using System.IO.IsolatedStorage
+@using System.Text
+@using Camunda.Http
+@using Camunda.Http.Api.Api
+@using Camunda.Http.Api.Client
+@using Camunda.Http.Api.Model
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Win32.SafeHandles
+@using ClientUtils = Camunda.Http.Api.Client.ClientUtils
+@inject AppData AppData
+
+<Container>
+    <Row>
+        <Column>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Create a Deployment</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Field>
+                        <FieldLabel>Deployment Name</FieldLabel>
+                        <TextEdit @bind-Text="@deploymentNameForDeployment"/>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Deployment Source</FieldLabel>
+                        <TextEdit @bind-Text="@deploymentSource"/>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Tenant Id</FieldLabel>
+                        <TextEdit @bind-Text="@tenantIdForDeployment"/>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Duplicate Filtering</FieldLabel>
+                        <Check TValue="bool" @bind-Checked="@duplicateFilteringForDeployment"/>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Deploy Changed Only</FieldLabel>
+                        <Check TValue="bool" @bind-Checked="@deployChangedOnlyForDeployment"/>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Add files to Deployment @(isLoadingFiles ? ": Loading..." : "")</FieldLabel>
+                        <FileEdit Multiple="true" Changed="@LoadFiles" MaxMessageSize=@maxFileSize />
+                    </Field>
+                    <DataGrid TItem="IFileEntry"
+                              Data="@loadedFiles.Keys"
+                              Sortable="false"
+                              Hoverable="false" PageSize=@maxAllowedFiles>
+                        <EmptyTemplate>
+                            <Text>No files currently ready for deployment</Text>
+                        </EmptyTemplate>
+
+                        <ChildContent>
+                            <DataGridColumn TItem="IFileEntry" Field="@nameof(IFileEntry.Name)" Caption="File Name"/>
+                            <DataGridColumn TItem="IFileEntry" Field="@nameof(IFileEntry.Size)" Caption="Size"/>
+                            <DataGridColumn TItem="IFileEntry" Field="@nameof(IFileEntry.Type)" Caption="Type"/>
+                            <DataGridColumn TItem="IFileEntry" Field="@nameof(IFileEntry.Name)">
+                                <DisplayTemplate>
+                                    <Button Color="Color.Danger" PreventDefaultOnSubmit="true" Clicked="@(() => ClearFile(context))">
+                                        <Icon Name="IconName.Times"/>
+                                    </Button>
+                                </DisplayTemplate>
+                            </DataGridColumn>
+                        </ChildContent>
+                    </DataGrid>
+                </CardBody>
+                <CardBody>
+                    <Button Color="Color.Primary" Clicked="@DeployFiles">Deploy</Button>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+
+    [Parameter]
+    public  CamundaClient Camunda { get; set; }
+
+    string deploymentNameForDeployment = "MyDeployment";
+    string deploymentSource = "MySource";
+    string tenantIdForDeployment;
+    bool duplicateFilteringForDeployment;
+    bool deployChangedOnlyForDeployment;
+    bool isLoadingFiles;
+
+    private static Dictionary<IFileEntry, string> loadedFiles = new ();
+    private int maxFileSize = 1024 * 1024 * 15;
+    private int maxAllowedFiles = 10;
+
+    async Task LoadFiles(FileChangedEventArgs e)
+    {
+        try
+        {
+            if (loadedFiles.Count() >= maxAllowedFiles)
+            {
+                AppData.PushToSnackBar("Max number of files per deployment is: " + maxAllowedFiles, SnackbarColor.Warning);
+            }
+            else
+            {
+                isLoadingFiles = true;
+                foreach (var file in e.Files)
+                {
+                    if (loadedFiles.Count() >= maxAllowedFiles)
+                    {
+                        AppData.PushToSnackBar("Max number of files per deployment is: " + maxAllowedFiles, SnackbarColor.Warning);
+                    }
+                    else
+                    {
+                        using var reader = new StreamReader(file.OpenReadStream(maxFileSize));
+
+                        foreach (IFileEntry duplicate in loadedFiles.Keys.Where(f => f.Name == file.Name))
+                        {
+                            loadedFiles.Remove(duplicate);
+                        }
+
+                        loadedFiles.Add(file, await reader.ReadToEndAsync());
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+        finally
+        {
+            isLoadingFiles = false;
+            StateHasChanged();
+        }
+    }
+
+    void ClearFile(IFileEntry fileToClear)
+    {
+        loadedFiles.Remove(fileToClear);
+        @*AppData.PushToSnackBar(fileToClear.Name + " was removed");*@
+    }
+
+    async void DeployFiles()
+    {
+        if (loadedFiles.Any())
+        {
+            try
+            {
+                var deploymentApi = AppData.CamundaClient.Api.DeploymentApi;
+                
+                var fileStreams = loadedFiles
+                    .Select( f => (Stream) new FileMemoryStream(
+                        buffer: Encoding.UTF8.GetBytes(f.Value),
+                        fileName: f.Key.Name,
+                        contentName: f.Key.Name
+                        )).ToList();
+
+                var deploymentResult = await deploymentApi.CreateDeploymentAsync(
+                    tenantId: tenantIdForDeployment,
+                    deploymentSource: deploymentSource,
+                    deployChangedOnly: deployChangedOnlyForDeployment,
+                    enableDuplicateFiltering: duplicateFilteringForDeployment,
+                    deploymentName: deploymentNameForDeployment,
+                    data: fileStreams);
+
+
+                AppData.PushToSnackBar("Deployment Successful: " + deploymentResult.Id, SnackbarColor.Success);
+
+                loadedFiles.Clear();
+            }
+            catch (Exception ex)
+            {
+    //@TODO add support for deployment error details so we can see the errors of what failed in the deployment
+                AppData.PushToSnackBar(ex.Message, SnackbarColor.Danger);
+                throw ex;
+            }
+        }
+        else
+        {
+            AppData.PushToSnackBar("No Files to upload.", SnackbarColor.Warning);
+        }
+    }
+
+}

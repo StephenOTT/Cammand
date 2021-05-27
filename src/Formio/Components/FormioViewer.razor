@@ -1,0 +1,64 @@
+﻿@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div @ref="formioElement"></div>
+
+
+
+
+
+@code
+{
+    ElementReference formioElement;
+    IJSObjectReference formioModule;
+    IJSObjectReference FormInstance;
+
+    [Parameter]
+    public object formSchema { get; set; }
+    
+    [Parameter]
+    public RenderFragment noSchemaDisplay { get; set; }
+
+    [Parameter]
+    public object formOptions { get; set; } = null;
+    
+    [Parameter]
+    public object formDefaultData { get; set; } = null;
+    
+    [Parameter]
+    public Action<object> submissionHandler { get; set; } = null;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            formioModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Formio/js/formio-interop.js");
+            FormInstance = await formioModule.InvokeAsync<IJSObjectReference>("createForm", formioElement, formSchema);
+            // await FormInstance.InvokeVoidAsync("setNoSubmit", FormInstance, true);
+
+            // if (formDefaultData != null)
+            // {
+            //     await FormInstance.InvokeVoidAsync("setDefaultData", formDefaultData, true);
+            // }
+            
+            
+            // form.on('bpmn-error', submission => { <--- @TODO add support for list of listeners to be injected
+        }
+
+    }
+
+    void LogNoSchema()
+    {
+        Console.WriteLine("No Form Schema found for Formio Render");
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await FormInstance.DisposeAsync();
+        await formioModule.DisposeAsync();
+    }
+}
+

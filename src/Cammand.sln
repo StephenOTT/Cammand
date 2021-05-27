@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.810.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BpmnJs", "BpmnJs\BpmnJs.csproj", "{711EF309-A06E-4E5B-9A54-17ED0C68F995}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Camunda.Http.Api", "Camunda.Http.Api\Camunda.Http.Api.csproj", "{338C7887-818E-444B-AC44-F8C8D9F68DAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Formio", "Formio\Formio.csproj", "{B1717ADE-2749-4627-9347-2B3605BC8F85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainApp", "MainApp\MainApp.csproj", "{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{711EF309-A06E-4E5B-9A54-17ED0C68F995}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{711EF309-A06E-4E5B-9A54-17ED0C68F995}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{711EF309-A06E-4E5B-9A54-17ED0C68F995}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{711EF309-A06E-4E5B-9A54-17ED0C68F995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{338C7887-818E-444B-AC44-F8C8D9F68DAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{338C7887-818E-444B-AC44-F8C8D9F68DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{338C7887-818E-444B-AC44-F8C8D9F68DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{338C7887-818E-444B-AC44-F8C8D9F68DAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1717ADE-2749-4627-9347-2B3605BC8F85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1717ADE-2749-4627-9347-2B3605BC8F85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1717ADE-2749-4627-9347-2B3605BC8F85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1717ADE-2749-4627-9347-2B3605BC8F85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B847BCFF-B5DD-496E-B0AC-EAB453F97484}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+		$0.TextStylePolicy = $2
+		$2.inheritsSet = null
+		$2.scope = text/x-json
+		$0.JSONFormattingPolicy = $3
+		$3.AutoStructureCompletion = True
+		$3.BracePositions = SemiExpanded
+		$3.FormatOnPaste = True
+		$3.scope = text/x-json
+		$0.TextStylePolicy = $4
+		$4.inheritsSet = null
+		$4.scope = text/x-web
+		$0.VersionControlPolicy = $5
+	EndGlobalSection
+EndGlobal

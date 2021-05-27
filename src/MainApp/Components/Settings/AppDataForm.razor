@@ -1,0 +1,85 @@
+﻿@inject AppData AppData
+
+
+<Card Margin="Margin.Is4.OnY">
+    <CardHeader>
+        <CardTitle>App Settings</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <CardText>Configure client side App settings.  Settings are lost upon close of browser tab.</CardText>
+    </CardBody>
+    <CardBody>
+        <CardText>Leave username and password blank if you do not want to use authentication.</CardText>
+    </CardBody>
+    <CardBody>
+        <Validations Mode="ValidationMode.Auto" ValidateOnLoad="false">
+            <Validation Validator="@ValidationRule.IsNotEmpty">
+                <Field>
+                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Engine API Url</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                        <TextEdit Placeholder="Camunda API URL" Text="@AppData.EngineUrl" TextChanged="@EngineUrlChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900">
+                            <Feedback>
+                                <ValidationError>Enter full name!</ValidationError>
+                            </Feedback>
+                        </TextEdit>
+                    </FieldBody>
+                </Field>
+            </Validation>
+            <Validation>
+                <Field>
+                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Username</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                        <TextEdit Autofocus="true" Placeholder="username" Text="@AppData.EngineUsername" TextChanged="@UserNameCredentialChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900" />
+                    </FieldBody>
+                </Field>
+            </Validation>
+            <Validation>
+                <Field>
+                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Password</FieldLabel>
+                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                        <TextEdit Role="TextRole.Password" Placeholder="Password" Text="@AppData.EnginePassword" TextChanged="@PasswordCredentialChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900">
+                        </TextEdit>
+                    </FieldBody>
+                </Field>
+            </Validation>
+        </Validations>
+        <Button Color="Color.Primary" Clicked="TestConnection">Test Connection</Button>
+    </CardBody>
+</Card>
+
+
+@code {
+    void EngineUrlChange(string value)
+    {
+        AppData.EngineUrl = value;
+        AppData.CreateClient();
+    }
+
+
+    void UserNameCredentialChange(string value)
+    {
+        AppData.EngineUsername = value;
+        AppData.CreateClient();
+    }
+
+    void PasswordCredentialChange(string value)
+    {
+        AppData.EnginePassword = value;
+        AppData.CreateClient();
+    }
+
+    async void TestConnection()
+    {
+        try
+        {
+            await AppData.CamundaClient.Api.UserApi.GetUserCountAsync(id: AppData.EngineUsername);
+            AppData.PushToSnackBar("Successfully connected as user: " + AppData.EngineUsername, SnackbarColor.Success);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            AppData.PushToSnackBar("Connection Failed: " + e.Message, SnackbarColor.Danger);
+        }
+
+    }
+}

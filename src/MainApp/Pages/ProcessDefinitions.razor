@@ -1,0 +1,29 @@
+﻿@using MainApp.Components.ProcessDefinition
+
+@inject AppData AppData
+
+@page "/process-definitions"
+
+<Container>
+    <Row>
+        <Column>
+            <Heading Size="HeadingSize.Is1">Process Definitions</Heading>
+        </Column>
+    </Row>
+    <Row>
+        <Column>
+            <ProcessDefinitionDataGrid camunda="@camunda" />
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+    CamundaClient camunda;
+
+    protected override void OnInitialized()
+    {
+        camunda = AppData.CamundaClient;
+    }
+
+}

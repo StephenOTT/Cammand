@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\.DS_Store" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\css\bpmn-custom.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\css\bpmn.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\css\diagram-js.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\font\bpmn.eot" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\font\bpmn.svg" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\font\bpmn.ttf" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\font\bpmn.woff" />
+    <_ContentIncludedByDefault Remove="wwwroot\bpmn\font\bpmn.woff2" />
+  </ItemGroup>
+</Project>

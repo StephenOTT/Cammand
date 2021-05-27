@@ -1,0 +1,28 @@
+﻿@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div @ref="bpmnJsElement" style='height: 100%;'></div>
+
+
+
+
+@code
+{
+    public ElementReference bpmnJsElement;
+    public IJSObjectReference bpmnJsModule;
+    public IJSObjectReference bpmnJsInstance;
+
+
+    
+
+    [Parameter]
+    public string bpmnXml { get; set; }
+    
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await bpmnJsInstance.DisposeAsync();
+        await bpmnJsModule.DisposeAsync();
+    }
+}
+

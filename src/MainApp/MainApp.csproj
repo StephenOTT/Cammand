@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazorise.DataGrid" Version="0.9.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.6" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="5.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="0.9.3.6" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
+    <PackageReference Include="Blazorise.Snackbar" Version="0.9.3.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\" />
+    <Folder Include="Components\ProcessDefinition\" />
+    <Folder Include="Components\ProcessInstance\" />
+    <Folder Include="Components\VariableInstance\" />
+    <Folder Include="Components\Incident\" />
+    <Folder Include="Components\UserTask\" />
+    <Folder Include="Components\Settings\" />
+    <Folder Include="Components\Deployment\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BpmnJs\BpmnJs.csproj"/>
+    <ProjectReference Include="..\Camunda.Http.Api\Camunda.Http.Api.csproj" />
+    <ProjectReference Include="..\Formio\Formio.csproj" />
+  </ItemGroup>
+</Project>

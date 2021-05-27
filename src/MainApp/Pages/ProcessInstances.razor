@@ -1,0 +1,33 @@
+﻿@using MainApp.Components.ProcessInstance
+
+@inject AppData AppData
+
+@page "/process-definitions/{definitionId}"
+
+<Container>
+    <Row>
+        <Column>
+            <Heading Size="HeadingSize.Is1">Process Instances</Heading>
+        </Column>
+    </Row>
+    <Row>
+        <Column>
+            <HistoricProcessInstanceDataGrid camunda="@camunda" processDefinitionId="@definitionId" />
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+
+    [Parameter]
+    public string definitionId { get; set; }
+
+    CamundaClient camunda;
+
+    protected override void OnInitialized()
+    {
+        camunda = AppData.CamundaClient;
+    }
+
+}

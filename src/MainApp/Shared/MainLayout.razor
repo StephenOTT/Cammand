@@ -1,0 +1,127 @@
+﻿@inherits LayoutComponentBase
+@inject AppData AppData
+
+
+<Layout>
+    <LayoutHeader Fixed="true">
+        <Bar @bind-Visible="@topbarVisible" Breakpoint="Breakpoint.Desktop" Background="Background.Light" ThemeContrast="ThemeContrast.Light">
+            <BarBrand>
+                <BarItem>
+                    <BarLabel>Cammand</BarLabel>
+                </BarItem>
+            </BarBrand>
+            <BarToggler />
+            <BarMenu>
+                <BarEnd>
+                    <BarItem>
+                        <LoginDisplay />
+                    </BarItem>
+                    <BarItem>
+                        <BarLink To="#">About</BarLink>
+                    </BarItem>
+                    <BarItem>
+                        <BarLink To="https://github.com/stephenott">GitHub</BarLink>
+                    </BarItem>
+                </BarEnd>
+            </BarMenu>
+        </Bar>
+    </LayoutHeader>
+    <Layout Sider="true">
+        <LayoutSider>
+            <LayoutSiderContent>
+                <Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Light" Background="Background.Light"
+                     Mode="BarMode.VerticalInline" CollapseMode="BarCollapseMode.Small">
+                    <BarToggler />
+                    <BarMenu>
+                        <BarStart>
+                            <BarItem>
+                                <BarLink To="">
+                                    <BarIcon IconName="IconName.Dashboard" />
+                                    Dashboard
+                                </BarLink>
+                            </BarItem>
+                            <BarItem>
+                                <BarDropdown @bind-Visible="uiElementsVisible">
+                                    <BarDropdownToggle>
+                                        <BarIcon IconName="IconName.Wrench" />
+                                        Mgmt
+                                    </BarDropdownToggle>
+                                    <BarDropdownMenu>
+                                        <BarDropdownItem To="process-definitions">
+                                            Process Definitions
+                                        </BarDropdownItem>
+                                        <BarDropdownItem To="deployments">
+                                            Deployments
+                                        </BarDropdownItem>
+                                        <BarDropdownItem To="deployments/create">
+                                            Create Deployment
+                                        </BarDropdownItem>
+                                        <BarDropdownItem To="settings">
+                                            Settings
+                                        </BarDropdownItem>
+                                    </BarDropdownMenu>
+                                </BarDropdown>
+                            </BarItem>
+                            <BarItem>
+                                <BarDropdown>
+                                    <BarDropdownToggle>
+                                        <BarIcon IconName="IconName.Edit" />
+                                        Tasklist
+                                    </BarDropdownToggle>
+                                </BarDropdown>
+                            </BarItem>
+                            <BarItem>
+                                <BarDropdown>
+                                    <BarDropdownToggle>
+                                        <BarIcon IconName="IconName.PuzzlePiece" />
+                                        Admin
+                                    </BarDropdownToggle>
+                                </BarDropdown>
+                            </BarItem>
+                        </BarStart>
+                    </BarMenu>
+                </Bar>
+
+            </LayoutSiderContent>
+        </LayoutSider>
+        <Layout>
+            <LayoutContent>
+                @Body
+                <SnackbarStack @ref="@AppData.snackbarStack"
+                               Location="SnackbarStackLocation.Right"
+                               Multiline="true">
+                </SnackbarStack>
+            </LayoutContent>
+        </Layout>
+    </Layout>
+</Layout>
+
+@*<div class="page">
+        <div class="sidebar">
+            <NavMenu />
+            <SnackbarStack @ref="@AppData.snackbarStack"
+                           Location="SnackbarStackLocation.Right"
+                           Multiline="true">
+            </SnackbarStack>
+        </div>
+
+        <div class="main">
+            <div class="top-row px-4 auth">
+                <LoginDisplay />
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+
+            <div class="content px-4">
+                @Body
+            </div>
+        </div>
+    </div>*@
+
+@code{
+
+    private bool topbarVisible = false;
+    private bool uiElementsVisible = true;
+    private bool isBarVisual;
+
+
+}

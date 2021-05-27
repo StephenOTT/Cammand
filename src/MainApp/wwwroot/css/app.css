@@ -1,0 +1,9 @@
+﻿/*.sidebar {
+    background: rgb(222,43,43);
+    background: linear-gradient(180deg, rgba(222,43,43,1) 0%, rgba(190,58,93,1) 88%);
+}
+*/
+
+.sidebar {
+    background-color: red;
+}

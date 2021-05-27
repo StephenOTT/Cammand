@@ -1,0 +1,181 @@
+﻿@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div @ref="bpmnJsElement" style='height: 100%;'></div>
+
+@foreach (KeyValuePair<string, int> entry in activityIncidentCounts)
+{
+    <div @ref=activityIncidentRefs[entry.Key]>
+        @if (activityIncidentCountDisplay != null)
+        {
+            @activityIncidentCountDisplay(activityIncidentCounts[entry.Key])
+        }
+        else
+        {
+            <div>@activityIncidentCounts[entry.Key]</div>
+        }
+    </div>
+}
+
+@foreach (KeyValuePair<string, int> entry in activeActivityCounts)
+{
+    <div @ref=activeActivityRefs[entry.Key]>
+        @if (activeActivityCountDisplay != null)
+        {
+            @activeActivityCountDisplay(activeActivityCounts[entry.Key])
+        }
+        else
+        {
+            <div>@activeActivityCounts[entry.Key]</div>
+        }
+    </div>
+}
+
+
+@foreach (KeyValuePair<string, int> entry in completedActivityInstanceCounts)
+{
+    <div @ref=completedActivityInstanceRefs[entry.Key]>
+        @if (completedActivityInstanceCountDisplay != null)
+        {
+            @completedActivityInstanceCountDisplay(completedActivityInstanceCounts[entry.Key])
+        }
+        else
+        {
+            <div>@completedActivityInstanceCounts[entry.Key]</div>
+        }
+    </div>
+}
+
+
+@code
+{
+    public ElementReference bpmnJsElement;
+    public IJSObjectReference bpmnJsModule;
+    public IJSObjectReference bpmnJsInstance;
+
+
+
+    [Parameter]
+    public RenderFragment<int> activityIncidentCountDisplay { get; set; }
+
+    [Parameter]
+    public Dictionary<string, int> activityIncidentCounts { get; set; } = new Dictionary<string, int>();
+
+    Dictionary<string, ElementReference> activityIncidentRefs = new Dictionary<string, ElementReference>();
+
+
+
+    [Parameter]
+    public RenderFragment<int> activeActivityCountDisplay { get; set; }
+
+    [Parameter]
+    public Dictionary<string, int> activeActivityCounts { get; set; } = new Dictionary<string, int>();
+
+    Dictionary<string, ElementReference> activeActivityRefs = new Dictionary<string, ElementReference>();
+
+
+
+    [Parameter]
+    public RenderFragment<int> completedActivityInstanceCountDisplay { get; set; }
+
+    [Parameter]
+    public Dictionary<string, int> completedActivityInstanceCounts { get; set; } = new Dictionary<string, int>();
+
+    Dictionary<string, ElementReference> completedActivityInstanceRefs = new Dictionary<string, ElementReference>();
+
+
+    [Parameter]
+    public bool applyCompletedActivityMarker { get; set; }
+
+    [Parameter]
+    public string completedActivityMarkerConfig { get; set; }
+
+
+
+    [Parameter]
+    public string bpmnXml { get; set; }
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
+            bpmnJsInstance = await bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", bpmnJsElement);
+
+            await bpmnJsInstance.InvokeVoidAsync("importXML", bpmnXml);
+
+            var overlays = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "overlays");
+            var canvas = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "canvas");
+
+
+
+            foreach (var entry in activityIncidentRefs)
+            {
+                await overlays.InvokeVoidAsync("add", entry.Key,
+                    new
+                    {
+                        position = new
+                        {
+                            bottom = 16,
+                            left = 0
+                        },
+                        html = entry.Value
+                    });
+            }
+
+            foreach (var entry in activeActivityRefs)
+            {
+                await overlays.InvokeVoidAsync("add", entry.Key,
+                    new
+                    {
+                        position = new
+                        {
+                            bottom = 16,
+                            right = 16
+                        },
+                        html = entry.Value
+                    });
+            }
+
+            foreach (var entry in completedActivityInstanceRefs)
+            {
+                await overlays.InvokeVoidAsync("add", entry.Key,
+                    new
+                    {
+                        position = new
+                        {
+                            top = -10,
+                            right = 16
+                        },
+                        html = entry.Value
+                    });
+            }
+
+            if (applyCompletedActivityMarker)
+            {
+                if (completedActivityMarkerConfig != null)
+                {
+                    foreach(var activityId in completedActivityInstanceCounts.Keys)
+                    {
+                        await canvas.InvokeVoidAsync("addMarker", activityId, completedActivityMarkerConfig);
+                    }
+
+                }
+            }
+
+            await canvas.InvokeVoidAsync("zoom", "fit-viewport", "auto");
+
+        }
+
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await bpmnJsInstance.DisposeAsync();
+        await bpmnJsModule.DisposeAsync();
+    }
+}
+
