@@ -1,4 +1,5 @@
-﻿using Camunda.Http.Api.Api;
+﻿using Camunda.Http.Api;
+using Camunda.Http.Api.Api;
 using Camunda.Http.Api.Client;
 using Camunda.Http.Api.Model;
 

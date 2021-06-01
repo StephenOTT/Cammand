@@ -1,64 +1,87 @@
 ﻿@inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<div @ref="formioElement"></div>
-
-
-
+<div @ref="@formioElement"></div>
 
 
 @code
 {
     ElementReference formioElement;
-    IJSObjectReference formioModule;
+    IJSObjectReference FormioModule;
     IJSObjectReference FormInstance;
 
     [Parameter]
-    public object formSchema { get; set; }
+    public FormSchema FormSchema { get; set; } = null;
+
+    [Parameter]
+    public EventCallback<FormSchema> FormSchemaChanged { get; set; }
+
+    [Parameter]
+    public RenderFragment NoSchemaDisplay { get; set; }
+
+    [Parameter]
+    public object FormOptions { get; set; } = null;
+
+    [Parameter]
+    public object FormDefaultData { get; set; } = null;
     
     [Parameter]
-    public RenderFragment noSchemaDisplay { get; set; }
+    public EventCallback<object> OnFormSubmit { get; set; }
 
-    [Parameter]
-    public object formOptions { get; set; } = null;
+
     
-    [Parameter]
-    public object formDefaultData { get; set; } = null;
-    
-    [Parameter]
-    public Action<object> submissionHandler { get; set; } = null;
-
-
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-
         if (firstRender)
         {
-            formioModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Formio/js/formio-interop.js");
-            FormInstance = await formioModule.InvokeAsync<IJSObjectReference>("createForm", formioElement, formSchema);
-            // await FormInstance.InvokeVoidAsync("setNoSubmit", FormInstance, true);
-
-            // if (formDefaultData != null)
-            // {
-            //     await FormInstance.InvokeVoidAsync("setDefaultData", formDefaultData, true);
-            // }
-            
-            
-            // form.on('bpmn-error', submission => { <--- @TODO add support for list of listeners to be injected
+            FormioModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Formio/js/formio-interop.js");
+            await BuildForm();
         }
-
     }
+
+    private async Task BuildForm()
+    {
+        var dotNetReference = DotNetObjectReference.Create(this);
+        FormInstance = await FormioModule.InvokeAsync<IJSObjectReference>("createForm", formioElement, FormSchema, FormOptions, dotNetReference);
+        
+        await FormioModule.InvokeVoidAsync("setNoSubmit", FormInstance, "true");
+
+        if (FormDefaultData != null)
+        {
+            await FormioModule.InvokeVoidAsync("setDefaultData", FormInstance, FormDefaultData);
+        }
+    }
+    
 
     void LogNoSchema()
     {
         Console.WriteLine("No Form Schema found for Formio Render");
     }
 
-    async ValueTask IAsyncDisposable.DisposeAsync()
+    
+    public async Task RebuildForm()
+    {
+        await CleanForm();
+        await BuildForm();
+    }
+    
+    
+    async ValueTask CleanForm()
     {
         await FormInstance.DisposeAsync();
-        await formioModule.DisposeAsync();
+    }
+    
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await CleanForm();
+        await FormioModule.DisposeAsync();
+    }
+    
+    [JSInvokable("SubmitEvent")]
+    public async void SubmitFormEvent(object submission)
+    {
+        await OnFormSubmit.InvokeAsync(submission);
+        await FormioModule.InvokeVoidAsync("emitFormioEvent", FormInstance, "submitDone", submission);
     }
 }
 

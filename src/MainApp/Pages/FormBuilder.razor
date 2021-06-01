@@ -1,0 +1,193 @@
+@page "/forms/builder"
+@using System.Text.Json
+@using Formio.Components
+@inject IJSRuntime _jsRuntime
+
+
+<Container>
+    <Row Margin="Margin.Is1">
+        <Heading Size="HeadingSize.Is3">Form Builder</Heading>
+    </Row>
+    <Row Margin="Margin.Is1">
+        <Column ColumnSize="ColumnSize.IsFull">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Builder
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <FileEdit Changed="@OpenBuilderSchema">Open Schema JSON File</FileEdit>
+                </CardBody>
+                <CardBody>
+                    <RadioGroup TValue="@string"
+                                Name="displayMode"
+                                Orientation="Orientation.Horizontal"
+                                CheckedValue="@SelectedDisplayMode"
+                                CheckedValueChanged="@OnSelectedDisplayModeChanged">
+                        <Radio TValue="@string" Value="@("form")">Form</Radio>
+                        <Radio TValue="@string" Value="@("wizard")">Wizard</Radio>
+                    </RadioGroup>
+                </CardBody>
+                <CardBody>
+                    <FormioBuilder @ref="@Builder"
+                                   OnBuilderChange="@HandleBuilderChangeEvent"
+                                   FormSchema="@BuilderSchema">
+                    </FormioBuilder>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is1">
+        <Column ColumnSize="ColumnSize.IsFull">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Builder Schema
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <MemoEdit Rows="10" @bind-Text="@BuilderSchemaText"/>
+                </CardBody>
+                <CardBody>
+                    <Button Clicked="@(() => DownloadJson(FileName, BuilderSchemaText))"
+                            Color="Color.Link">
+                        Download Schema
+                    </Button>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is1">
+        <Column>
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Form Viewer
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Button Color="Color.Info" Clicked="@UpdateViewerSchema">Load Form from Builder</Button>
+                </CardBody>
+                <CardBody>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Form</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            @if (ViewerSchema != null)
+                            {
+                                <FormioViewer @ref="@Viewer" @bind-FormSchema="@ViewerSchema" OnFormSubmit="@HandleFormSubmission"></FormioViewer>
+                            }
+                            else
+                            {
+                                <Text>Nothing to Render: No Form Schema Found.</Text>
+                            }
+                        </CardBody>
+                    </Card>
+
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is1">
+        <Column ColumnSize="ColumnSize.IsFull">
+            <Card>
+                <CardHeader>
+                    <CardTitle>
+                        Form Submission
+                    </CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <MemoEdit Rows="10" @bind-Text="@FormSubmissionText"/>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+
+    FormSchema BuilderSchema;
+    string BuilderSchemaText;
+
+    object FormSubmission;
+    string FormSubmissionText;
+
+    FormSchema ViewerSchema;
+
+    string SelectedDisplayMode = "form";
+
+    private FormioBuilder Builder;
+    private FormioViewer Viewer;
+
+    string FileName = "form_schema.json";
+
+    IJSObjectReference InteropHelpers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        BuilderSchema = new FormSchema
+        {
+            Display = SelectedDisplayMode
+        };
+
+        InteropHelpers = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop-helpers.js");
+    }
+
+    async Task OnSelectedDisplayModeChanged(string value)
+    {
+        SelectedDisplayMode = value;
+        BuilderSchema.Display = value;
+        BuilderSchemaText = JsonSerializer.Serialize(BuilderSchema, new JsonSerializerOptions {WriteIndented = true});
+        await Builder.RebuildForm();
+    }
+
+
+    void HandleBuilderChangeEvent(FormSchema schema)
+    {
+        BuilderSchema = schema;
+        BuilderSchemaText = JsonSerializer.Serialize(schema, new JsonSerializerOptions {WriteIndented = true});
+    }
+
+    void HandleFormSubmission(object submission)
+    {
+        FormSubmission = submission;
+        FormSubmissionText = JsonSerializer.Serialize(submission, new JsonSerializerOptions {WriteIndented = true});
+    }
+
+    async Task UpdateViewerSchema()
+    {
+        ViewerSchema = JsonSerializer.Deserialize<FormSchema>(BuilderSchemaText);
+        await Viewer.RebuildForm();
+    }
+
+    private async void DownloadJson(string fileName, string content)
+    {
+        await InteropHelpers.InvokeAsync<object>("saveFile", fileName, content);
+    }
+
+    async Task OpenBuilderSchema(FileChangedEventArgs e)
+    {
+        Console.WriteLine("file Count: " + e.Files.Length);
+        foreach (var file in e.Files)
+        {
+            Console.WriteLine("running!");
+            try
+            {
+                BuilderSchema = await JsonSerializer.DeserializeAsync<FormSchema>(file.OpenReadStream());
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                StateHasChanged();
+                await Builder.RebuildForm();
+            }
+        }
+    }
+
+}

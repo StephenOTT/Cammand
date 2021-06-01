@@ -3,9 +3,8 @@ using System;
 using System.Net.Http;
 using Camunda.Http.Api.Api;
 using Camunda.Http.Api.Client;
-using Microsoft.AspNetCore.Authorization;
 
-namespace MainApp.Shared
+namespace Camunda.Http.Api
 {
     public class CamundaClient
     {

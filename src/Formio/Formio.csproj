@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <Folder Include="Components\" />
+    <Folder Include="wwwroot\css\fonts" />
   </ItemGroup>
 
   <ItemGroup>

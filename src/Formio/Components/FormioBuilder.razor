@@ -1,28 +1,88 @@
 ﻿@inject IJSRuntime JS
+@using System.Text.Json
 @implements IAsyncDisposable
 
-<div @ref="bpmnJsElement" style='height: 100%;'></div>
-
-
+<div @ref="@FormioElement"></div>
 
 
 @code
 {
-    public ElementReference bpmnJsElement;
-    public IJSObjectReference bpmnJsModule;
-    public IJSObjectReference bpmnJsInstance;
-
-
-    
+    ElementReference FormioElement;
+    IJSObjectReference FormioModule;
+    IJSObjectReference FormInstance;
 
     [Parameter]
-    public string bpmnXml { get; set; }
+    public FormSchema FormSchema { get; set; } = null;
     
+    [Parameter]
+    public RenderFragment NoSchemaDisplay { get; set; }
 
+    [Parameter]
+    public object BuilderConfig { get; set; } = null;
+    
+    [Parameter]
+    public EventCallback OnBuilderSaveComponent { get; set; }
+    
+    [Parameter]
+    public EventCallback<FormSchema> OnBuilderChange { get; set; }
+    
+    // [Parameter]
+    // public string GeneratedSchema { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            FormioModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Formio/js/formio-interop.js");
+            await BuildForm();
+        }
+    }
+
+    
+    private async Task BuildForm()
+    {
+        var dotNetReference = DotNetObjectReference.Create(this);
+        FormInstance = await FormioModule.InvokeAsync<IJSObjectReference>("createBuilder", FormioElement, FormSchema, BuilderConfig, dotNetReference);
+    }
+    
+    
+    public async Task RebuildForm()
+    {
+        await CleanForm();
+        await BuildForm();
+    }
+    
+    async ValueTask CleanForm()
+    {
+        await FormInstance.DisposeAsync();
+    }
+    
+    
+    
+    
+    void LogNoSchema()
+    {
+        Console.WriteLine("No Form Schema found for Formio Builder");
+    }
+
+    
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        await bpmnJsInstance.DisposeAsync();
-        await bpmnJsModule.DisposeAsync();
+        await FormInstance.DisposeAsync();
+        await FormioModule.DisposeAsync();
+    }
+
+    
+    
+    [JSInvokable("BuilderSaveComponentEvent")]
+    public void SaveComponentEvent(FormSchema schema)
+    {
+        OnBuilderSaveComponent.InvokeAsync(schema);
+    }
+    
+    [JSInvokable("BuilderChangeEvent")]
+    public void SaveChangeEvent(FormSchema schema)
+    {
+        OnBuilderChange.InvokeAsync(schema);
     }
 }
-

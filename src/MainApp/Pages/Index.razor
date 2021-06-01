@@ -1,6 +1,4 @@
 ﻿@page "/"
-
-@using Formio.Components
 @inject AppData AppData
 
 <Container>
@@ -9,48 +7,9 @@
             <Heading Size="HeadingSize.Is1">Welcome to Cammand</Heading>
         </Column>
     </Row>
-    <Row>
-        <FormioViewer formSchema="@mySchema"></FormioViewer>
-    </Row>
 </Container>
 
 
 @code {
-
-    object mySchema;
-    
-
-    protected override async Task OnInitializedAsync()
-    {
-        
-        
-        mySchema = new
-        {
-            components = new object[]
-            {
-                new
-                {
-                    type = "textfield",
-                    key = "firstName",
-                    input = true,
-                    label = "First Name"
-                },
-                new
-                {
-                    type = "textfield",
-                    key = "lastName",
-                    input = true,
-                    label = "Last Name"
-                },
-                new
-                {
-                    type = "button",
-                    action = "submit",
-                    label = "Submit",
-                    theme = "primary"
-                }
-            }
-        };
-    }
 
 }
