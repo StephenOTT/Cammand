@@ -1,9 +1,7 @@
-﻿/*.sidebar {
-    background: rgb(222,43,43);
-    background: linear-gradient(180deg, rgba(222,43,43,1) 0%, rgba(190,58,93,1) 88%);
+﻿/*Fix for https://github.com/Megabit/Blazorise/issues/2330#issuecomment-852072334*/
+.b-bar-toggler-inline {
+    height: 42px !important;
+    padding: 0 !important;
+    padding-right: 12px !important;
 }
-*/
 
-.sidebar {
-    background-color: red;
-}

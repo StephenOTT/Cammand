@@ -1,5 +1,7 @@
 ﻿@using MainApp.Components.ProcessInstance
 @using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using BpmnJs.Components
 
 @inject AppData AppData
 
@@ -8,12 +10,39 @@
 <Container>
     <Row>
         <Column>
-            <Heading Size="HeadingSize.Is1">Process Instances</Heading>
+            <Heading Size="HeadingSize.Is1">Process Instances for definition <code>@definitionId</code></Heading>
         </Column>
     </Row>
-    <Row>
+    <Row Margin="Margin.Is1.OnY">
         <Column>
-            <HistoricProcessInstanceDataGrid camunda="@camunda" processDefinitionId="@definitionId" />
+            <Card>
+                <CardHeader>BPMN Diagram</CardHeader>
+                <CardBody Style="height: 500px">
+                    @if (bpmnXml != null)
+                    {
+                        <BpmnViewer bpmnXml="@bpmnXml"
+                                    activityIncidentCounts="@activityIncidentCounts"
+                                    activeActivityCounts="@activeActivityCounts">
+                            <activityIncidentCountDisplay>
+                                <Badge Color="Color.Danger">@context</Badge>
+                            </activityIncidentCountDisplay>
+                            <activeActivityCountDisplay>
+                                <Badge Color="Color.Primary">@context</Badge>
+                            </activeActivityCountDisplay>
+                        </BpmnViewer>
+                    }
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is1.OnY">
+        <Column>
+            <Card>
+                <CardHeader>Process Instances for definition <code>@definitionId</code></CardHeader>
+                <CardBody>
+                    <HistoricProcessInstanceDataGrid camunda="@camunda" processDefinitionId="@definitionId"/>
+                </CardBody>
+            </Card>
         </Column>
     </Row>
 </Container>
@@ -26,9 +55,54 @@
 
     CamundaClient camunda;
 
-    protected override void OnInitialized()
+    private string bpmnXml;
+
+    private Dictionary<string, int> activityIncidentCounts = new();
+
+    private Dictionary<string, int> activeActivityCounts = new();
+
+    private List<ActivityStatisticsResultDto> definitionStats;
+
+    
+    
+    protected override async Task OnInitializedAsync()
     {
         camunda = AppData.CamundaClient;
+
+        definitionStats = await GetDefinitionStats(definitionId);
+        activityIncidentCounts = definitionStats
+            .FindAll(i => i.Incidents.Count != 0)
+            .GroupBy(i => i.Id)
+            .Select(i => new
+            {
+                ActivityId = i.Key,
+                Count = i.Sum(s => s.Incidents.Count)
+            }).ToDictionary(k => k.ActivityId, v => v.Count);
+
+        activeActivityCounts = definitionStats
+            .FindAll(i => i.Instances > 0)
+            .Select(i => new
+            {
+                ActivityId = i.Id,
+                Count = i.Instances
+            }).ToDictionary(k => k.ActivityId, v => v.Count);
+
+        bpmnXml = await GetBpmnXml(definitionId);
+
+        StateHasChanged();
+    }
+
+    private async Task<string> GetBpmnXml(string processDefinitionId)
+    {
+        var result = await camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
+        return result.Bpmn20Xml;
+    }
+
+    private async Task<List<ActivityStatisticsResultDto>> GetDefinitionStats(string processDefinitionId)
+    {
+        return await camunda.Api.ProcessDefinitionApi.GetActivityStatisticsAsync(
+            id: processDefinitionId,
+            incidents: true);
     }
 
 }

@@ -27,7 +27,10 @@
     <ChildContent>
         <DataGridCommandColumn TItem="ProcessDefinitionDto" Caption="Commands" />
         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Key)" Caption="Key" />
+        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Name)" Caption="Name" />
         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.TenantId)" Caption="Tenant" />
+        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Resource)" Caption="Resource" />
+        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Version)" Caption="Latest Version" />
     </ChildContent>
 
     <DetailRowTemplate>
@@ -61,6 +64,8 @@
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Name)" Caption="Name" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Id)" Caption="Definition Id" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.DeploymentId)" Caption="Deployment Id" />
+                        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Resource)" Caption="Resource" />
+                        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.StartableInTasklist)" Caption="Tasklist Startable" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Id)">
                             <DisplayTemplate Context="subContext">
                                 <Blazorise.Button Color="Color.Primary" Type="ButtonType.Link" To="@("process-definitions/" + subContext.Id)">Process Instances</Blazorise.Button>

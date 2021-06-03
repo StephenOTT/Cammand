@@ -52,45 +52,36 @@
     public ElementReference bpmnJsElement;
     public IJSObjectReference bpmnJsModule;
     public IJSObjectReference bpmnJsInstance;
-
-
-
+    
     [Parameter]
     public RenderFragment<int> activityIncidentCountDisplay { get; set; }
 
     [Parameter]
-    public Dictionary<string, int> activityIncidentCounts { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> activityIncidentCounts { get; set; } = new();
 
-    Dictionary<string, ElementReference> activityIncidentRefs = new Dictionary<string, ElementReference>();
-
-
-
+    Dictionary<string, ElementReference> activityIncidentRefs = new();
+    
     [Parameter]
     public RenderFragment<int> activeActivityCountDisplay { get; set; }
 
     [Parameter]
-    public Dictionary<string, int> activeActivityCounts { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> activeActivityCounts { get; set; } = new();
 
-    Dictionary<string, ElementReference> activeActivityRefs = new Dictionary<string, ElementReference>();
-
-
-
+    Dictionary<string, ElementReference> activeActivityRefs = new();
+    
     [Parameter]
     public RenderFragment<int> completedActivityInstanceCountDisplay { get; set; }
 
     [Parameter]
-    public Dictionary<string, int> completedActivityInstanceCounts { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> completedActivityInstanceCounts { get; set; } = new();
 
-    Dictionary<string, ElementReference> completedActivityInstanceRefs = new Dictionary<string, ElementReference>();
-
-
+    Dictionary<string, ElementReference> completedActivityInstanceRefs = new();
+    
     [Parameter]
     public bool applyCompletedActivityMarker { get; set; }
 
     [Parameter]
     public string completedActivityMarkerConfig { get; set; }
-
-
 
     [Parameter]
     public string bpmnXml { get; set; }
@@ -99,12 +90,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-
         if (firstRender)
         {
             bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
             bpmnJsInstance = await bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", bpmnJsElement);
-
+            Console.WriteLine("XML " + bpmnXml);
             await bpmnJsInstance.InvokeVoidAsync("importXML", bpmnXml);
 
             var overlays = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "overlays");
@@ -167,9 +157,7 @@
             }
 
             await canvas.InvokeVoidAsync("zoom", "fit-viewport", "auto");
-
         }
-
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
