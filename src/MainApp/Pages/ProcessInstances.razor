@@ -18,6 +18,7 @@
             <Card>
                 <CardHeader>BPMN Diagram</CardHeader>
                 <CardBody Style="height: 500px">
+                    @* Review why this is needed:*@
                     @if (bpmnXml != null)
                     {
                         <BpmnViewer bpmnXml="@bpmnXml"

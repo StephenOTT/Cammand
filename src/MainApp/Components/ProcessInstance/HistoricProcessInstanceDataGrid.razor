@@ -1,11 +1,11 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Model
 
-<DataGrid TItem="HistoricProcessInstanceDto" 
-          Data="@instances" 
+<DataGrid TItem="HistoricProcessInstanceDto"
+          Data="@instances"
           ReadData="@OnReadData"
-          ShowPager="true" 
-          TotalItems="@totalInstances" 
+          ShowPager="true"
+          TotalItems="@totalInstances"
           PageSize="@pageSize">
     <EmptyTemplate>
         <div class="box">
@@ -15,22 +15,40 @@
 
     <LoadingTemplate>
         <div class="box">
-            <progress class="progress is-small is-primary" max="100">LOADING...............</progress>
+            Loading...
         </div>
     </LoadingTemplate>
 
     <ChildContent>
-        <DataGridCommandColumn TItem="HistoricProcessInstanceDto" Caption="Commands" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.State)" Caption="State" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.Id)" Caption="Process Instance Id" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.BusinessKey)" Caption="Business Key" />
-        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartTime)" Caption="Start Time" />
-        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.EndTime)" Caption="End Time" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.TenantId)" Caption="Tenant" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartUserId)" Caption="Start User Id" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionId)" Caption="Process Definition Id" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionKey)" Caption="Process Definition Key" />
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionName)" Caption="Process Definition Name" />
+        <DataGridCommandColumn TItem="HistoricProcessInstanceDto" Caption="Commands"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.State)">
+            <DisplayTemplate Context="stateContext">
+                @if (stateContext.State == HistoricProcessInstanceDto.StateEnum.ACTIVE)
+                {
+                    <Badge Color="Color.Success">Active</Badge>
+                }
+                else if (stateContext.State == HistoricProcessInstanceDto.StateEnum.SUSPENDED)
+                {
+                    <Badge Color="Color.Secondary">Suspended</Badge>
+                }
+                else if (stateContext.State == HistoricProcessInstanceDto.StateEnum.COMPLETED)
+                {
+                    <Badge Color="Color.Success">Completed</Badge>
+                }
+                else
+                {
+                    <Badge Color="Color.Light">@stateContext.State.ToString()</Badge>
+                }
+            </DisplayTemplate>
+        </DataGridColumn>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.Id)" Caption="Process Instance Id"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.BusinessKey)" Caption="Business Key"/>
+        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartTime)" Caption="Start Time"/>
+        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.EndTime)" Caption="End Time"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.TenantId)" Caption="Tenant"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartUserId)" Caption="Start User Id"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionKey)" Caption="Process Definition Key"/>
+        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionName)" Caption="Process Definition Name"/>
 
         <DataGridColumn TItem="HistoricProcessInstanceDto" Caption="Actions" Field="@nameof(HistoricProcessInstanceDto.Id)" Sortable="false" Filterable="false">
             <DisplayTemplate>
@@ -56,16 +74,18 @@
     private int totalInstances;
 
 
-
     async Task OnReadData(DataGridReadDataEventArgs<HistoricProcessInstanceDto> e)
     {
         var query = new HistoricProcessInstanceQueryDto()
         {
             ProcessDefinitionId = processDefinitionId,
-            Sorting = new List<HistoricProcessInstanceQueryDtoSorting> {
-                new() {
+            Sorting = new List<HistoricProcessInstanceQueryDtoSorting>
+            {
+                new()
+                {
                     SortBy = HistoricProcessInstanceQueryDtoSorting.SortByEnum.StartTime,
-                    SortOrder = HistoricProcessInstanceQueryDtoSorting.SortOrderEnum.Desc }
+                    SortOrder = HistoricProcessInstanceQueryDtoSorting.SortOrderEnum.Desc
+                }
             }
         };
 
@@ -74,7 +94,7 @@
             ProcessDefinitionId = processDefinitionId
         };
 
-        instances = await camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesAsync( e.PageSize * (e.Page - 1), e.PageSize, query);
+        instances = await camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
 
         totalInstances = Convert.ToInt32((await camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesCountAsync(queryCount)).Count);
 

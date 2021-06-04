@@ -15,16 +15,18 @@
 
     <LoadingTemplate>
         <div class="box">
-            <progress class="progress is-small is-primary" max="100">LOADING...............</progress>
+            Loading...
         </div>
     </LoadingTemplate>
 
     <ChildContent>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Id)" Caption="" />
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Id)" Caption="Task Instance Id" />
         <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Assignee)" Caption="Assignee" />
         <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.StartTime)" Caption="Start Time" />
         <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Name)" Caption="Name" />
         <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Priority)" Caption="Priority" />
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.TaskDefinitionKey)" Caption="Task Definition Key" />
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Duration)" Caption="Duration" />
     </ChildContent>
 </DataGrid>
 

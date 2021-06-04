@@ -20,7 +20,7 @@
 
     <LoadingTemplate>
         <div class="box">
-            <progress class="progress is-small is-primary" max="100">LOADING...............</progress>
+            Loading...
         </div>
     </LoadingTemplate>
 
@@ -59,10 +59,10 @@
                                 }
                             </DisplayTemplate>
                         </DataGridColumn>
+                        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Id)" Caption="Definition Id" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Version)" Caption="Version" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.VersionTag)" Caption="Version Tag" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Name)" Caption="Name" />
-                        <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Id)" Caption="Definition Id" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.DeploymentId)" Caption="Deployment Id" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.Resource)" Caption="Resource" />
                         <DataGridColumn TItem="ProcessDefinitionDto" Field="@nameof(ProcessDefinitionDto.StartableInTasklist)" Caption="Tasklist Startable" />

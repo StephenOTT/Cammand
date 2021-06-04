@@ -94,14 +94,12 @@
         {
             bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
             bpmnJsInstance = await bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", bpmnJsElement);
-            Console.WriteLine("XML " + bpmnXml);
+            
             await bpmnJsInstance.InvokeVoidAsync("importXML", bpmnXml);
 
             var overlays = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "overlays");
             var canvas = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "canvas");
-
-
-
+            
             foreach (var entry in activityIncidentRefs)
             {
                 await overlays.InvokeVoidAsync("add", entry.Key,
