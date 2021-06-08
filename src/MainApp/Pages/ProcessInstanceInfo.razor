@@ -2,6 +2,8 @@
 @using MainApp.Components.Incident
 @using MainApp.Components.UserTask
 @using MainApp.Components.ProcessInstance
+@using MainApp.Components.Job
+@using MainApp.Components.ExternalTask
 @using BpmnJs.Components
 @using Camunda.Http.Api
 @using Camunda.Http.Api.Model
@@ -11,60 +13,60 @@
 @page "/process-instances/{instanceId}"
 
 <Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Process Instance <code>@instanceId</code> Details</Heading>
+<Row>
+    <Column>
+        <Heading Size="HeadingSize.Is1">Process Instance <code>@InstanceId</code> Details</Heading>
+    </Column>
+</Row>
+@if (_instance != null)
+{
+    <Row Margin="Margin.Is1.OnY">
+        <Column ColumnSize="ColumnSize.Is4.OnDesktop">
+            <Card Style="height:100%">
+                <CardHeader>
+                    <CardTitle>Process Instance Attributes</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Paragraph>Process Instance ID: <code>@_instance.Id</code></Paragraph>
+                    <Paragraph>State: <code>@_instance.State</code></Paragraph>
+                    <Paragraph>Process Definition ID: <code>@_instance.ProcessDefinitionId</code></Paragraph>
+                    <Paragraph>Process Definition Key: <code>@_instance.ProcessDefinitionKey</code></Paragraph>
+                    <Paragraph>Process Definition Name: <code>@_instance.ProcessDefinitionName</code></Paragraph>
+                    <Paragraph>Super Process Instance Id: <code>@_instance.SuperProcessInstanceId</code></Paragraph>
+                    <Paragraph>Tenant ID: <code>@_instance.TenantId</code></Paragraph>
+                    <Paragraph>Business Key: <code>@_instance.BusinessKey</code></Paragraph>
+                    <Paragraph>Started At: <code>@_instance.StartTime</code></Paragraph>
+                    <Paragraph>Ended At: <code>@_instance.EndTime</code></Paragraph>
+                    <Paragraph>Duration: <code>@_instance.DurationInMillis</code></Paragraph>
+                    <Paragraph>Started By User ID: <code>@_instance.StartUserId</code></Paragraph>
+                    <Paragraph>Start Activity Id: <code>@_instance.StartActivityId</code></Paragraph>
+                </CardBody>
+            </Card>
         </Column>
-    </Row>
-    @if (instance != null)
-    {
-        <Row Margin="Margin.Is1.OnY">
-            <Column ColumnSize="ColumnSize.Is4.OnDesktop">
-                <Card Style="height:100%">
-                    <CardHeader>
-                        <CardTitle>Process Instance Attributes</CardTitle>
-                    </CardHeader>
-                    <CardBody>
-                        <Paragraph>Process Instance ID: <code>@instance.Id</code></Paragraph>
-                        <Paragraph>State: <code>@instance.State</code></Paragraph>
-                        <Paragraph>Process Definition ID: <code>@instance.ProcessDefinitionId</code></Paragraph>
-                        <Paragraph>Process Definition Key: <code>@instance.ProcessDefinitionKey</code></Paragraph>
-                        <Paragraph>Process Definition Name: <code>@instance.ProcessDefinitionName</code></Paragraph>
-                        <Paragraph>Super Process Instance Id: <code>@instance.SuperProcessInstanceId</code></Paragraph>
-                        <Paragraph>Tenant ID: <code>@instance.TenantId</code></Paragraph>
-                        <Paragraph>Business Key: <code>@instance.BusinessKey</code></Paragraph>
-                        <Paragraph>Started At: <code>@instance.StartTime</code></Paragraph>
-                        <Paragraph>Ended At: <code>@instance.EndTime</code></Paragraph>
-                        <Paragraph>Duration: <code>@instance.DurationInMillis</code></Paragraph>
-                        <Paragraph>Started By User ID: <code>@instance.StartUserId</code></Paragraph>
-                        <Paragraph>Start Activity Id: <code>@instance.StartActivityId</code></Paragraph>
-                    </CardBody>
-                </Card>
-            </Column>
-            <Column>
-                <Card>
-                    <CardHeader>BPMN Diagram</CardHeader>
-                    <CardBody Style="height: 700px">
-                        <BpmnViewer bpmnXml="@bpmnXml"
-                                    activityIncidentCounts="@activityIncidentCounts"
-                                    activeActivityCounts="@activeActivityCounts"
-                                    completedActivityInstanceCounts="@completedActivityInstanceCounts"
-                                    applyCompletedActivityMarker="true"
-                                    completedActivityMarkerConfig="highlight">
-                            <activityIncidentCountDisplay>
-                                <Badge Color="Color.Danger">@context</Badge>
-                            </activityIncidentCountDisplay>
-                            <activeActivityCountDisplay>
-                                <Badge Color="Color.Primary">@context</Badge>
-                            </activeActivityCountDisplay>
-                            <completedActivityInstanceCountDisplay>
-                                <Badge Color="Color.Success">@context</Badge>
-                            </completedActivityInstanceCountDisplay>
-                        </BpmnViewer>
-                    </CardBody>
-                </Card>
-            </Column>
-            @*<Column ColumnSize="ColumnSize.Is3.OnDesktop">
+        <Column>
+            <Card>
+                <CardHeader>BPMN Diagram</CardHeader>
+                <CardBody Style="height: 700px">
+                    <BpmnViewer bpmnXml="@bpmnXml"
+                                activityIncidentCounts="@_activityIncidentCounts"
+                                activeActivityCounts="@_activeActivityCounts"
+                                completedActivityInstanceCounts="@_completedActivityInstanceCounts"
+                                applyCompletedActivityMarker="true"
+                                completedActivityMarkerConfig="highlight">
+                        <activityIncidentCountDisplay>
+                            <Badge Color="Color.Danger">@context</Badge>
+                        </activityIncidentCountDisplay>
+                        <activeActivityCountDisplay>
+                            <Badge Color="Color.Primary">@context</Badge>
+                        </activeActivityCountDisplay>
+                        <completedActivityInstanceCountDisplay>
+                            <Badge Color="Color.Success">@context</Badge>
+                        </completedActivityInstanceCountDisplay>
+                    </BpmnViewer>
+                </CardBody>
+            </Card>
+        </Column>
+        @*<Column ColumnSize="ColumnSize.Is3.OnDesktop">
                     <Card Style="height:100%">
                         <CardHeader>Selected Element Properties</CardHeader>
                         <CardBody Style="max-height: 700px">
@@ -72,136 +74,231 @@
                         </CardBody>
                     </Card>
                 </Column>*@
-        </Row>
-        <Row Margin="Margin.Is1.OnY">
-            <Column>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Process Instance Details</CardTitle>
-                    </CardHeader>
-                    <CardBody>
-                        <Tabs SelectedTab="@selectedTabName" SelectedTabChanged="@OnSelectedTabChanged" Justified=true Pills=true>
-                            <Items>
-                                <Tab Name="variables">Variables</Tab>
-                                <Tab Name="incidents">Incidents</Tab>
-                                <Tab Name="calledProcessInstances">Called Process Instances</Tab>
-                                <Tab Name="userTasks">User Tasks</Tab>
-                                <Tab Name="jobs">Jobs</Tab>
-                                <Tab Name="externalTasks">External Tasks</Tab>
-                                <Tab Name="actions">Actions</Tab>
-                            </Items>
-                            <Content>
-                                <TabPanel Name="variables">
-                                    <Card Margin="Margin.Is2.OnY">
-                                        <CardBody>
-                                            @if (selectedTabName == "variables")
-                                            {
-                                                <HistoricVariableInstanceDataGrid camunda="@camunda" processInstanceId="@instanceId" />
-                                            }
-                                        </CardBody>
-                                    </Card>
-                                </TabPanel>
-                                <TabPanel Name="incidents">
-                                    <Card Margin="Margin.Is2.OnY">
-                                        <CardBody>
-                                            @if (selectedTabName == "incidents")
-                                            {
-                                                <HistoricIncidentDataGrid camunda="@camunda" processInstanceId="@instanceId" />
-                                            }
-                                        </CardBody>
-                                    </Card>
-                                </TabPanel>
-                                <TabPanel Name="calledProcessInstances">
-                                    @if (selectedTabName == "calledProcessInstances")
-                                    {
-                                        <CalledHistoricProcessInstancesDataGrid camunda="@camunda" superProcessInstanceId="@instanceId" />
-                                    }
-                                </TabPanel>
-                                <TabPanel Name="userTasks">
-                                    @if (selectedTabName == "userTasks")
-                                    {
-                                        <HistoricUserTaskDataGrid camunda="@camunda" processInstanceId="@instanceId" />
-                                    }
-                                </TabPanel>
-                                <TabPanel Name="jobs">
-                                    ...
-                                </TabPanel>
-                                <TabPanel Name="externalTasks">
-                                    ...
-                                </TabPanel>
-                                <TabPanel Name="actions">
-                                    Suspend, Add Variables, Increment Retries, Delete Instance, Migrate
-                                </TabPanel>
-
-                            </Content>
-                        </Tabs>
-                    </CardBody>
-                </Card>
-            </Column>
-        </Row>
-    }
-    else
-    {
-        <Row>
+    </Row>
+    <Row Margin="Margin.Is1.OnY">
+        <Column>
             <Card>
+                <CardHeader>
+                    <CardTitle>Process Instance Details</CardTitle>
+                </CardHeader>
                 <CardBody>
-                    No process instance found: @instanceId
+                    <Tabs SelectedTab="@_selectedTabName" SelectedTabChanged="@OnSelectedTabChanged" Justified=true Pills=true>
+                        <Items>
+                            <Tab Name="variables">Variables</Tab>
+                            <Tab Name="incidents">Incidents</Tab>
+                            <Tab Name="calledProcessInstances">Called Process Instances</Tab>
+                            <Tab Name="userTasks">User Tasks</Tab>
+                            <Tab Name="jobs">Jobs</Tab>
+                            <Tab Name="externalTasks">External Tasks</Tab>
+                            <Tab Name="actions">Actions</Tab>
+                        </Items>
+                        <Content>
+                            <TabPanel Name="variables">
+                                <Card Margin="Margin.Is2.OnY">
+                                    <CardBody>
+                                        @if (_selectedTabName == "variables")
+                                        {
+                                            <Card Margin="Margin.Is1.OnY">
+                                                <CardHeader>
+                                                    <CardTitle>Runtime</CardTitle>
+                                                </CardHeader>
+                                                <CardBody>
+                                                    <RuntimeVariableInstanceDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                                </CardBody>
+                                            </Card>
+                                            <Card Margin="Margin.Is1.OnY">
+                                                <CardHeader>
+                                                    <CardTitle>Historic</CardTitle>
+                                                </CardHeader>
+                                                <CardBody>
+                                                    <HistoricVariableInstanceDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                                </CardBody>
+                                            </Card>
+                                        }
+                                    </CardBody>
+                                </Card>
+                            </TabPanel>
+                            <TabPanel Name="incidents">
+                                <Card Margin="Margin.Is2.OnY">
+                                    <CardBody>
+                                        @if (_selectedTabName == "incidents")
+                                        {
+                                            <Card Margin="Margin.Is1.OnY">
+                                                <CardHeader>
+                                                    <CardTitle>Runtime</CardTitle>
+                                                </CardHeader>
+                                                <CardBody>
+                                                    <RuntimeIncidentDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                                </CardBody>
+                                            </Card>
+                                            <Card Margin="Margin.Is1.OnY">
+                                                <CardHeader>
+                                                    <CardTitle>Historic</CardTitle>
+                                                </CardHeader>
+                                                <CardBody>
+                                                    <HistoricIncidentDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                                </CardBody>
+                                            </Card>
+                                        }
+                                    </CardBody>
+                                </Card>
+                            </TabPanel>
+                            <TabPanel Name="calledProcessInstances">
+                                @if (_selectedTabName == "calledProcessInstances")
+                                {
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Runtime</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <CalledRuntimeProcessInstancesDataGrid Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Historic</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <CalledHistoricProcessInstancesDataGrid Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                }
+                            </TabPanel>
+                            <TabPanel Name="userTasks">
+                                @if (_selectedTabName == "userTasks")
+                                {
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Runtime</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <RuntimeUserTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"></RuntimeUserTaskDataGrid>
+                                        </CardBody>
+                                    </Card>
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Historic</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <HistoricUserTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                }
+                            </TabPanel>
+                            <TabPanel Name="jobs">
+                                @if (_selectedTabName == "jobs")
+                                {
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Runtime</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <RuntimeJobDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Historic Job Log</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <HistoricJobDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                }
+                            </TabPanel>
+                            <TabPanel Name="externalTasks">
+                                @if (_selectedTabName == "externalTasks")
+                                {
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Runtime</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <RuntimeExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                    <Card Margin="Margin.Is1.OnY">
+                                        <CardHeader>
+                                            <CardTitle>Historic External Task Log</CardTitle>
+                                        </CardHeader>
+                                        <CardBody>
+                                            <HistoricExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        </CardBody>
+                                    </Card>
+                                }
+                            </TabPanel>
+                            <TabPanel Name="actions">
+                                Suspend, Add Variables, Increment Retries, Delete Instance, Migrate
+                            </TabPanel>
+
+                        </Content>
+                    </Tabs>
                 </CardBody>
             </Card>
-        </Row>
-    }
+        </Column>
+    </Row>
+}
+else
+{
+    <Row>
+        <Card>
+            <CardBody>
+                No process instance found: @InstanceId
+            </CardBody>
+        </Card>
+    </Row>
+}
 </Container>
-
 
 
 @code {
 
     [Parameter]
-    public string definitionId { get; set; }
+    public string DefinitionId { get; set; }
 
     [Parameter]
-    public string instanceId { get; set; }
+    public string InstanceId { get; set; }
 
-    CamundaClient camunda;
+    CamundaClient _camunda;
 
-    HistoricProcessInstanceDto instance;
+    HistoricProcessInstanceDto _instance;
 
-    private Dictionary<string, int> activityIncidentCounts = new Dictionary<string, int>();
+    private Dictionary<string, int> _activityIncidentCounts = new();
 
-    private Dictionary<string, int> activeActivityCounts = new Dictionary<string, int>();
+    private Dictionary<string, int> _activeActivityCounts = new();
 
-    private Dictionary<string, int> completedActivityInstanceCounts = new Dictionary<string, int>();
+    private Dictionary<string, int> _completedActivityInstanceCounts = new();
 
-    private string selectedTabName;
+    private string _selectedTabName;
 
     private ElementReference canvasReference;
 
     private string bpmnXml;
 
-    private ActivityInstanceDto activityInstanceData;
+    private ActivityInstanceDto _activityInstanceData;
 
     private void OnSelectedTabChanged(string name)
     {
-        selectedTabName = name;
+        _selectedTabName = name;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        camunda = AppData.CamundaClient;
+        _camunda = AppData.CamundaClient;
 
-        instance = await camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: instanceId);
+        _instance = await _camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: InstanceId);
 
-        activityInstanceData = await GetActivityInstanceData(); //runtime data
+        _activityInstanceData = await GetActivityInstanceData(); //runtime data
 
-        activityIncidentCounts = activityInstanceData.ChildActivityInstances
+        _activityIncidentCounts = _activityInstanceData.ChildActivityInstances
             .SelectMany(i => i.Incidents)
             .GroupBy(i => i.ActivityId)
-            .Select(i => new { activityId = i.Key, count = i.Count() })
+            .Select(i => new {activityId = i.Key, count = i.Count()})
             .ToDictionary(x => x.activityId, x => x.count);
 
-        //@TODO review how Transition Instance incidents are calculated
+    //@TODO review how Transition Instance incidents are calculated
 
-        activeActivityCounts = activityInstanceData.ChildActivityInstances.ToDictionary(k => k.ActivityId, v => v.ExecutionIds.Count());
+        _activeActivityCounts = _activityInstanceData.ChildActivityInstances.ToDictionary(k => k.ActivityId, v => v.ExecutionIds.Count());
 
 
         @*completedActivityInstanceCounts = (await camunda.History.ActivityInstances
@@ -210,36 +307,36 @@
             .Select(i => new { activityId = i.Key, count = i.Count() })
             .ToDictionary(x => x.activityId, x => x.count);*@
 
-        bpmnXml = await GetBpmnXml(instance.ProcessDefinitionId);
+        bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId);
 
         StateHasChanged();
-
     }
 
     private Task<ActivityInstanceDto> GetActivityInstanceData()
     {
-        return camunda.Api.ProcessInstanceApi.GetActivityInstanceTreeAsync(instanceId);
+        return _camunda.Api.ProcessInstanceApi.GetActivityInstanceTreeAsync(InstanceId);
     }
 
-    @*private Task<Dictionary<string, int>> CalcIncidents(ActivityInstanceInfo data)
+        @*private Task<Dictionary<string, int>> CalcIncidents(ActivityInstanceInfo data)
         {
             return Task.FromResult(new Dictionary<string, int>());
         }*@
 
-    @*private Task<Dictionary<string, int>> CalcActiveActivities(ActivityInstanceInfo data)
+        @*private Task<Dictionary<string, int>> CalcActiveActivities(ActivityInstanceInfo data)
         {
             return Task.FromResult(new Dictionary<string, int>());
         }*@
 
-    @*private Task<Dictionary<string, int>> CalcWaitingJobs(ActivityInstanceInfo data)
+        @*private Task<Dictionary<string, int>> CalcWaitingJobs(ActivityInstanceInfo data)
         {
             return Task.FromResult(new Dictionary<string, int>());
         }*@
 
 
-    protected async Task<string> GetBpmnXml(string processDefinitionId)
+    private async Task<string> GetBpmnXml(string processDefinitionId)
     {
-        var result = await camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
+        var result = await _camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
         return result.Bpmn20Xml;
     }
+
 }

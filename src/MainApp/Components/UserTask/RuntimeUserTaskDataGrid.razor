@@ -6,7 +6,7 @@
           ReadData="@OnReadData" 
           ShowPager="true" 
           TotalItems="@totalUserTasks" 
-          PageSize="@pageSize">
+          PageSize="@PageSize">
     <EmptyTemplate>
         <div class="box">
             No variable instances found!
@@ -20,11 +20,12 @@
     </LoadingTemplate>
 
     <ChildContent>
-        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Id)" Caption="" />
+        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Id)" Caption="Task Instance Id" />
         <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Assignee)" Caption="Assignee" />
         <DataGridDateColumn TItem="TaskDto" Field="@nameof(TaskDto.Created)" Caption="Created At" />
         <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Name)" Caption="Name" />
         <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Priority)" Caption="Priority" />
+        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.TaskDefinitionKey)" Caption="Task Definition key" />
     </ChildContent>
 </DataGrid>
 
@@ -32,13 +33,13 @@
 @code {
 
     [Parameter]
-    public CamundaClient camunda { get; set; }
+    public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int pageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 25;
 
     [Parameter]
-    public string processInstanceId { get; set; }
+    public string ProcessInstanceId { get; set; }
 
     private List<TaskDto> userTasks;
 
@@ -48,7 +49,7 @@
     {
         var query = new TaskQueryDto()
         {
-            ProcessInstanceId = processInstanceId,
+            ProcessInstanceId = ProcessInstanceId,
             Sorting = new List<TaskQueryDtoSorting>()
             {
                 new()
@@ -61,12 +62,12 @@
 
         var totalQuery = new TaskQueryDto()
         {
-            ProcessInstanceId = processInstanceId
+            ProcessInstanceId = ProcessInstanceId
         };
 
-        userTasks = await camunda.Api.TaskApi.QueryTasksAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
+        userTasks = await Camunda.Api.TaskApi.QueryTasksAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
 
-        totalUserTasks = Convert.ToInt32((await camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
+        totalUserTasks = Convert.ToInt32((await Camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
 
         StateHasChanged();
     }

@@ -6,7 +6,7 @@
           ReadData="@OnReadData" 
           ShowPager="true" 
           TotalItems="@totalUserTasks" 
-          PageSize="@pageSize">
+          PageSize="@PageSize">
     <EmptyTemplate>
         <div class="box">
             No variable instances found!
@@ -20,13 +20,14 @@
     </LoadingTemplate>
 
     <ChildContent>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Id)" Caption="Task Instance Id" />
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Assignee)" Caption="Assignee" />
-        <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.StartTime)" Caption="Start Time" />
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Name)" Caption="Name" />
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Priority)" Caption="Priority" />
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.TaskDefinitionKey)" Caption="Task Definition Key" />
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Duration)" Caption="Duration" />
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Id)" Caption="Task Instance Id"/>
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Assignee)" Caption="Assignee"/>
+        <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.StartTime)" Caption="Start Time"/>
+        <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.EndTime)" Caption="End Time"/>
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Name)" Caption="Name"/>
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Priority)" Caption="Priority"/>
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.TaskDefinitionKey)" Caption="Task Definition Key"/>
+        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Duration)" Caption="Duration"/>
     </ChildContent>
 </DataGrid>
 
@@ -34,13 +35,13 @@
 @code {
 
     [Parameter]
-    public CamundaClient camunda { get; set; }
+    public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int pageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 25;
 
     [Parameter]
-    public string processInstanceId { get; set; }
+    public string ProcessInstanceId { get; set; }
 
     private List<HistoricTaskInstanceDto> userTasks;
 
@@ -50,7 +51,7 @@
     {
         var query = new HistoricTaskInstanceQueryDto()
         {
-            ProcessInstanceId = processInstanceId,
+            ProcessInstanceId = ProcessInstanceId,
             Sorting = new List<HistoricTaskInstanceQueryDtoSorting>()
             {
                 new()
@@ -63,12 +64,12 @@
 
         var totalQuery = new HistoricTaskInstanceQueryDto()
         {
-            ProcessInstanceId = processInstanceId
+            ProcessInstanceId = ProcessInstanceId
         };
 
-        userTasks = await camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
+        userTasks = await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
 
-        totalUserTasks = Convert.ToInt32((await camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesCountAsync(totalQuery)).Count);
+        totalUserTasks = Convert.ToInt32((await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesCountAsync(totalQuery)).Count);
 
         StateHasChanged();
     }

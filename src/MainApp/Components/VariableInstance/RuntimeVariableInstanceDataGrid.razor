@@ -1,0 +1,58 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+
+<DataGrid TItem="VariableInstanceDto" 
+          Data="@instances" 
+          ReadData="@OnReadData" 
+          ShowPager="true" 
+          TotalItems="@totalInstances" 
+          PageSize="@PageSize">
+    <EmptyTemplate>
+        <div class="box">
+            No variable instances found!
+        </div>
+    </EmptyTemplate>
+
+    <LoadingTemplate>
+        <div class="box">
+            Loading...
+        </div>
+    </LoadingTemplate>
+
+    <ChildContent>
+        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Id)" Caption="Variable Instance Id" />
+        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Name)" Caption="Name" />
+        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Type)" Caption="Type" />
+        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Value)" Caption="Value" />
+    </ChildContent>
+</DataGrid>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 25;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    private List<VariableInstanceDto> instances;
+    
+    private int totalInstances;
+
+
+    async Task OnReadData(DataGridReadDataEventArgs<VariableInstanceDto> e)
+    {
+        var query = new VariableInstanceQueryDto() { ProcessInstanceIdIn = new List<string> {ProcessInstanceId} };
+        
+        instances = await Camunda.Api.VariableInstanceApi.QueryVariableInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, false, query);
+
+        totalInstances = Convert.ToInt32((await Camunda.Api.VariableInstanceApi.QueryVariableInstancesCountAsync(query)).Count);
+
+        StateHasChanged();
+    }
+}

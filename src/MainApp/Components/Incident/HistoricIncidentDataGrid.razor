@@ -7,7 +7,7 @@
           ReadData="@OnReadData" 
           ShowPager="true" 
           TotalItems="@totalIncidents" 
-          PageSize="@pageSize">
+          PageSize="@PageSize">
     <EmptyTemplate>
         <div class="box">
             No incidents found!
@@ -56,13 +56,13 @@
 @code {
 
     [Parameter]
-    public CamundaClient camunda { get; set; }
+    public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int pageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 25;
 
     [Parameter]
-    public string processInstanceId { get; set; }
+    public string ProcessInstanceId { get; set; }
 
     private List<HistoricIncidentDto> incidents;
 
@@ -70,13 +70,13 @@
 
     async Task OnReadData(DataGridReadDataEventArgs<HistoricIncidentDto> e)
     {
-        incidents = await camunda.Api.HistoricIncidentApi.GetHistoricIncidentsAsync(
-            processInstanceId: processInstanceId,
+        incidents = await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsAsync(
+            processInstanceId: ProcessInstanceId,
             sortBy: "createTime",
             sortOrder: "desc"
             );
 
-        totalIncidents = Convert.ToInt32((await camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: processInstanceId)).Count);
+        totalIncidents = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
 
         StateHasChanged();
     }
