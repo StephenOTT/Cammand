@@ -10,11 +10,11 @@
                     <BarLabel>Cammand</BarLabel>
                 </BarItem>
             </BarBrand>
-            <BarToggler />
+            <BarToggler/>
             <BarMenu>
                 <BarEnd>
                     <BarItem>
-                        <LoginDisplay />
+                        <LoginDisplay/>
                     </BarItem>
                     <BarItem>
                         <BarLink To="#">About</BarLink>
@@ -31,19 +31,19 @@
             <LayoutSiderContent>
                 <Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Light" Background="Background.Light"
                      Mode="BarMode.VerticalInline" CollapseMode="BarCollapseMode.Small">
-                    <BarToggler />
+                    <BarToggler/>
                     <BarMenu>
                         <BarStart>
                             <BarItem>
                                 <BarLink To="">
-                                    <BarIcon IconName="IconName.Dashboard" />
+                                    <BarIcon IconName="IconName.Dashboard"/>
                                     Dashboard
                                 </BarLink>
                             </BarItem>
                             <BarItem>
                                 <BarDropdown @bind-Visible="uiElementsVisible">
                                     <BarDropdownToggle>
-                                        <BarIcon IconName="IconName.Wrench" />
+                                        <BarIcon IconName="IconName.Wrench"/>
                                         Mgmt
                                     </BarDropdownToggle>
                                     <BarDropdownMenu>
@@ -59,6 +59,9 @@
                                         <BarDropdownItem To="forms/builder">
                                             Form Builder
                                         </BarDropdownItem>
+                                        <BarDropdownItem To="start">
+                                            Start Process Instance
+                                        </BarDropdownItem>
                                         <BarDropdownItem To="settings">
                                             Settings
                                         </BarDropdownItem>
@@ -68,7 +71,7 @@
                             <BarItem>
                                 <BarDropdown>
                                     <BarDropdownToggle>
-                                        <BarIcon IconName="IconName.Edit" />
+                                        <BarIcon IconName="IconName.Edit"/>
                                         Tasklist
                                     </BarDropdownToggle>
                                 </BarDropdown>
@@ -76,7 +79,7 @@
                             <BarItem>
                                 <BarDropdown>
                                     <BarDropdownToggle>
-                                        <BarIcon IconName="IconName.PuzzlePiece" />
+                                        <BarIcon IconName="IconName.PuzzlePiece"/>
                                         Admin
                                     </BarDropdownToggle>
                                 </BarDropdown>

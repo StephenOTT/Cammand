@@ -1,0 +1,30 @@
+﻿@using MainApp.Components.ProcessDefinition
+@using Camunda.Http.Api
+
+@inject AppData AppData
+
+@page "/start"
+
+<Container>
+    <Row>
+        <Column>
+            <Heading Size="HeadingSize.Is1">Startable Process Definitions</Heading>
+        </Column>
+    </Row>
+    <Row>
+        <Column>
+            <StartProcessInstanceDataGrid Camunda="@camunda" />
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+    CamundaClient camunda;
+
+    protected override void OnInitialized()
+    {
+        camunda = AppData.CamundaClient;
+    }
+
+}

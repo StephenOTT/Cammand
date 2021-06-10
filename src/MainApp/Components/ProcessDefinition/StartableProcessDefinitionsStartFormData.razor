@@ -1,0 +1,94 @@
+﻿@using MainApp.Components.ProcessDefinition
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using System.Text
+@using System.IO
+
+@inject AppData AppData
+
+@if (_formSchema != null)
+{
+    <MemoEdit Text="@_formSchema"
+              Rows="10"
+              ReadOnly="true" />
+}
+else
+{
+    <Paragraph>Loading Start Form...</Paragraph>
+}
+
+
+@code {
+
+    [Parameter]
+    public string ProcessDefinitionId { get; set; }
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    private FormDto _formDto;
+
+    private string _formSchema;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Camunda = AppData.CamundaClient;
+
+        _formDto = await GetProcessDefinitionStartFormDetails(ProcessDefinitionId);
+
+        _formSchema = await GetFormSchema(_formDto.Key, ProcessDefinitionId);
+    }
+
+    private async Task<string> GetFormSchema(string formKey, string definitionId)
+    {
+        var type = GetFormType(formKey);
+
+        return type switch
+        {
+            FormType.Embedded => await GetRenderedStartForm(definitionId),
+            FormType.Deployed => await GetDeployedStartForm(definitionId),
+            _ => null
+        };
+    }
+
+    private FormType GetFormType(string formKey)
+    {
+        if (_formDto.Key.StartsWith("embedded:"))
+        {
+            return FormType.Embedded;
+        }
+        else if (_formDto.Key.StartsWith("deployment:"))
+        {
+            return FormType.Deployed;
+        }
+        else
+        {
+            return FormType.Custom;
+        }
+    }
+
+    private async Task<FormDto> GetProcessDefinitionStartFormDetails(string definitionId)
+    {
+        return await Camunda.Api.ProcessDefinitionApi.GetStartFormAsync(definitionId);
+    }
+
+    private async Task<string> GetRenderedStartForm(string definitionId)
+    {
+        using var reader = new StreamReader(await Camunda.Api.ProcessDefinitionApi.GetRenderedStartFormAsync(definitionId));
+        return await reader.ReadToEndAsync();
+    }
+
+    private async Task<string> GetDeployedStartForm(string definitionId)
+    {
+        using var reader = new StreamReader(await Camunda.Api.ProcessDefinitionApi.GetDeployedStartFormAsync(definitionId));
+        return await reader.ReadToEndAsync();
+    }
+
+    private enum FormType
+    {
+        Embedded,
+        Deployed,
+        Custom
+    }
+
+}

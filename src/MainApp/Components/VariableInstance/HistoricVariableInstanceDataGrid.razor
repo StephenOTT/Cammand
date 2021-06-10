@@ -3,10 +3,10 @@
 
 
 <DataGrid TItem="HistoricVariableInstanceDto" 
-          Data="@instances" 
+          Data="@_instances" 
           ReadData="@OnReadData" 
           ShowPager="true" 
-          TotalItems="@totalInstances" 
+          TotalItems="@_totalInstances" 
           PageSize="@PageSize">
     <EmptyTemplate>
         <div class="box">
@@ -41,9 +41,9 @@
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<HistoricVariableInstanceDto> instances;
+    private List<HistoricVariableInstanceDto> _instances;
     
-    private int totalInstances;
+    private int _totalInstances;
 
 
     async Task OnReadData(DataGridReadDataEventArgs<HistoricVariableInstanceDto> e)
@@ -57,9 +57,9 @@
             }
         };
         
-        instances = await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, false, query);
+        _instances = await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, false, query);
 
-        totalInstances = Convert.ToInt32((await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesCountAsync(query)).Count);
+        _totalInstances = Convert.ToInt32((await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesCountAsync(query)).Count);
 
         StateHasChanged();
     }

@@ -6348,8 +6348,8 @@ namespace Camunda.Http.Api.Api
 
             // to determine the Accept header
             String[] _accepts = new String[] {
-                "application/xhtml+xml",
-                "application/json"
+                "application/xhtml+xml"
+                // "application/json"
             };
 
 
