@@ -46,6 +46,20 @@
     </div>
 }
 
+@foreach (KeyValuePair<string, int> entry in waitingExecutionCounts)
+{
+    <div @ref=waitingExecutionCountsRefs[entry.Key]>
+        @if (waitingExecutionCountDisplay != null)
+        {
+            @waitingExecutionCountDisplay(waitingExecutionCounts[entry.Key])
+        }
+        else
+        {
+            <div>@waitingExecutionCounts[entry.Key]</div>
+        }
+    </div>
+}
+
 
 @code
 {
@@ -76,6 +90,14 @@
     public Dictionary<string, int> completedActivityInstanceCounts { get; set; } = new();
 
     Dictionary<string, ElementReference> completedActivityInstanceRefs = new();
+    
+    [Parameter]
+    public RenderFragment<int> waitingExecutionCountDisplay { get; set; }
+    
+    [Parameter]
+    public Dictionary<string, int> waitingExecutionCounts { get; set; } = new();
+
+    Dictionary<string, ElementReference> waitingExecutionCountsRefs = new();
     
     [Parameter]
     public bool applyCompletedActivityMarker { get; set; }
@@ -152,6 +174,20 @@
                     }
 
                 }
+            }
+            
+            foreach (var entry in waitingExecutionCountsRefs)
+            {
+                await overlays.InvokeVoidAsync("add", entry.Key,
+                    new
+                    {
+                        position = new
+                        {
+                            bottom = 38,
+                            right = 8
+                        },
+                        html = entry.Value
+                    });
             }
 
             await canvas.InvokeVoidAsync("zoom", "fit-viewport", "auto");

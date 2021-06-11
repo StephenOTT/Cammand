@@ -1,0 +1,39 @@
+﻿@using MainApp.Components.Tasklist
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+@inject AppData AppData
+
+@page "/tasklist"
+
+<Container>
+    <Row>
+        <Column>
+            <Heading Size="HeadingSize.Is1">Tasklist</Heading>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is1.OnY">
+        <Column>
+            <Card>
+                <CardHeader>Tasks</CardHeader>
+                <CardBody>
+                    <HistoricTasklistDataGrid camunda="@_camunda"/>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+
+@code {
+
+    CamundaClient _camunda;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _camunda = AppData.CamundaClient;
+
+        StateHasChanged();
+    }
+
+}
