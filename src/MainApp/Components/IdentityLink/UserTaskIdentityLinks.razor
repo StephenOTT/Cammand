@@ -1,0 +1,63 @@
+﻿@using Camunda.Http.Api.Model
+@using Camunda.Http.Api
+
+
+@if (_identityLinks != null)
+{
+    <Paragraph>Assignee: <UserTaskIdentityLinkItem Items="@ProcessAssignees(_identityLinks)"/></Paragraph>
+    <Paragraph>Candidate Users: <UserTaskIdentityLinkItem Items="@ProcessCandidateUsers(_identityLinks)"/></Paragraph>
+    <Paragraph>Candidate Groups: <UserTaskIdentityLinkItem Items="@ProcessCandidateGroups(_identityLinks)"/></Paragraph>
+    <Paragraph>Owner: <UserTaskIdentityLinkItem Items="@ProcessOwners(_identityLinks)"/></Paragraph>
+}
+else
+{
+    <Text>Loading Identity Links...</Text>
+}
+
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string UserTaskId { get; set; }
+
+    private List<IdentityLinkDto> _identityLinks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserTaskId == null)
+        {
+            throw new Exception("A UserTaskId must be provided for User Task Identity links component");
+        }
+        _identityLinks = await GetUserTaskIdentityLinks(UserTaskId);
+    }
+
+    private async Task<List<IdentityLinkDto>> GetUserTaskIdentityLinks(string userTaskId)
+    {
+        return await Camunda.Api.TaskIdentityLinkApi.GetIdentityLinksAsync(userTaskId);
+    }
+
+    private IEnumerable<string> ProcessAssignees(List<IdentityLinkDto> identityLinks)
+    {
+        return identityLinks.FindAll(i => i.Type == "assignee").Select(i => i.UserId).AsEnumerable();
+    }
+
+    private IEnumerable<string> ProcessCandidateUsers(List<IdentityLinkDto> identityLinks)
+    {
+        return identityLinks.FindAll(i => i.Type == "candidate" && i.UserId != null).Select(i => i.UserId).AsEnumerable();
+    }
+
+    private IEnumerable<string> ProcessCandidateGroups(List<IdentityLinkDto> identityLinks)
+    {
+        return identityLinks.FindAll(i => i.Type == "candidate" && i.GroupId != null).Select(i => i.GroupId).AsEnumerable();
+    }
+
+    private IEnumerable<string> ProcessOwners(List<IdentityLinkDto> identityLinks)
+    {
+        return identityLinks.FindAll(i => i.Type == "owner" && i.UserId != null).Select(i => i.UserId).AsEnumerable();
+    }
+
+}

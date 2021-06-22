@@ -1,0 +1,39 @@
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+
+<Button @ref="@_theButton" @bind-Loading="@_isLoading" Clicked="@OnClaimClicked" @bind-disabled="@_isDisabled">Claim</Button>
+
+@code {
+    
+    // [Parameter]
+    // public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public HistoricTaskInstanceDto UserTask { get; set; }
+    
+    [Parameter]
+    public EventCallback Clicked { get; set; }
+    
+    private Button _theButton;
+    
+    private bool _isLoading;
+    
+    private bool _isDisabled;
+
+    protected override void OnParametersSet()
+    {
+        if (UserTask.Assignee != null)
+        {
+            _isDisabled = true;
+        }   
+    }
+
+    private async Task OnClaimClicked()
+    {
+        _isLoading = true;
+        await Clicked.InvokeAsync();
+        _isLoading = false;
+    }
+
+}

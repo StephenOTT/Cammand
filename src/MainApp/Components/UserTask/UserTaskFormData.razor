@@ -3,11 +3,14 @@
 @using Camunda.Http.Api.Model
 @using System.Text
 @using System.IO
+@using System.Text.Encodings.Web
 @using System.Text.Json
 @using Formio.Components
 @using MainApp.Components.Form
 
 @inject AppData AppData
+
+
 <Card Margin="Margin.Is1.FromBottom">
     <CardBody>
         <Container>
@@ -35,18 +38,18 @@
         <CardTitle>Form</CardTitle>
     </CardHeader>
     <CardBody>
-        <StartForm Camunda="@Camunda" ProcessDefinitionId="@ProcessDefinitionId" OnFormSubmit="@OnFormSubmit"></StartForm>
+        <UserTaskForm @ref="@_userTaskForm" Camunda="@Camunda" UserTaskId="@UserTaskId" OnFormSubmit="@OnFormSubmit"></UserTaskForm>
     </CardBody>
 </Card>
 
-@if (_startedProcessInstanceResponse != null)
+@if (_completedUserTaskInstanceResponse != null)
 {
     <Card Margin="Margin.Is1.FromTop">
         <CardHeader>
-            <CardText>Started Process Instance Info</CardText>
+            <CardText>Completed User Task Instance Info</CardText>
         </CardHeader>
         <CardBody>
-            <MemoEdit ReadOnly="true" @bind-Text="@_startedProcessInstanceResponse" Rows="10"></MemoEdit>
+            <MemoEdit ReadOnly="true" @bind-Text="@_completedUserTaskInstanceResponse" Rows="10"></MemoEdit>
         </CardBody>
     </Card>
 }
@@ -55,7 +58,7 @@
 @code {
 
     [Parameter]
-    public string ProcessDefinitionId { get; set; }
+    public string UserTaskId { get; set; }
 
     [Parameter]
     public CamundaClient Camunda { get; set; }
@@ -65,14 +68,15 @@
         Camunda = AppData.CamundaClient;
     }
 
-    private string _startedProcessInstanceResponse;
+    private UserTaskForm _userTaskForm;
+
+    private string _completedUserTaskInstanceResponse;
 
     private bool _includeVariablesInResponse = false;
 
     private bool _submitVariablesAsJson = true;
 
     private bool _submitAsTransient = false;
-
 
     private async Task OnFormSubmit(FormSubmission submission)
     {
@@ -82,9 +86,9 @@
             if (_submitVariablesAsJson)
             {
                 variablesForSubmit.Add(
-                    "startFormSubmission", 
+                    UserTaskId + "_FormSubmission",
                     new VariableValueDto(
-                        JsonSerializer.Serialize(submission), 
+                        JsonSerializer.Serialize(submission),
                         "json",
                         new Dictionary<string, object> {{"transient", _submitAsTransient}}));
             }
@@ -96,13 +100,15 @@
                 }
             }
 
-            var response = await Camunda.Api.ProcessDefinitionApi.StartProcessInstanceAsync(ProcessDefinitionId, new StartProcessInstanceDto
+            var response = await Camunda.Api.TaskApi.SubmitAsync(UserTaskId, new CompleteTaskDto
             {
                 Variables = variablesForSubmit,
                 WithVariablesInReturn = _includeVariablesInResponse
             });
 
-            _startedProcessInstanceResponse = response.ToJson();
+            _completedUserTaskInstanceResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions {Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true});
+
+            await Task.Delay(500).ContinueWith(t=>_userTaskForm.resetFormAsync());
         }
         catch (Exception e)
         {

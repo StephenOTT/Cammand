@@ -15,13 +15,23 @@
     <Row Margin="Margin.Is1.OnY">
         <Column>
             <Card>
-                <CardHeader>Tasks</CardHeader>
+                <CardHeader>Runtime Tasks</CardHeader>
                 <CardBody>
-                    <HistoricTasklistDataGrid camunda="@_camunda"/>
+                    <RuntimeTasklistDataGrid camunda="@_camunda" PageSize="5"/>
                 </CardBody>
             </Card>
         </Column>
     </Row>
+        <Row Margin="Margin.Is1.OnY">
+            <Column>
+                <Card>
+                    <CardHeader>Historic Tasks</CardHeader>
+                    <CardBody>
+                        <HistoricTasklistDataGrid camunda="@_camunda" PageSize="5"/>
+                    </CardBody>
+                </Card>
+            </Column>
+        </Row>
 </Container>
 
 

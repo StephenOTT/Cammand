@@ -26,7 +26,7 @@
     public object FormDefaultData { get; set; } = null;
     
     [Parameter]
-    public EventCallback<object> OnFormSubmit { get; set; }
+    public EventCallback<FormSubmission> OnFormSubmit { get; set; }
 
 
     
@@ -78,7 +78,7 @@
     }
     
     [JSInvokable("SubmitEvent")]
-    public async void SubmitFormEvent(object submission)
+    public async void SubmitFormEvent(FormSubmission submission)
     {
         await OnFormSubmit.InvokeAsync(submission);
         await FormioModule.InvokeVoidAsync("emitFormioEvent", FormInstance, "submitDone", submission);

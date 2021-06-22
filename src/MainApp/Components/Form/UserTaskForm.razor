@@ -1,0 +1,121 @@
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using System.IO
+@using System.Text.Json
+@using Formio.Components
+@inject AppData AppData
+
+@if (_formSchema != null)
+{
+    @if (_formType == FormType.Deployed)
+    {
+        <FormioViewer @ref="@_formioViewer" @bind-FormSchema="@_formSchema" OnFormSubmit="@OnFormSubmit"></FormioViewer>
+    }
+    else if (_formType == FormType.Embedded)
+    {
+        <Text>Embedded Forms are not currently supported.</Text>
+    }
+    else if (_formType == FormType.Custom)
+    {
+        <Text>Custom FormKeys are not currently supported.</Text>
+    }
+}
+else
+{
+    <Text>Loading Form...</Text>
+}
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string UserTaskId { get; set; }
+
+    [Parameter]
+    public EventCallback<FormSubmission> OnFormSubmit { get; set; }
+
+    private FormSchema _formSchema;
+
+    private FormType _formType;
+
+    private FormioViewer _formioViewer;
+
+
+    public Task resetFormAsync()
+    {
+        return _formioViewer.RebuildForm();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var formDto = await GetUserTaskFormDetails(UserTaskId);
+            var type = GetFormType(formDto.Key);
+            _formType = type;
+            _formSchema = JsonSerializer.Deserialize<FormSchema>(await GetFormSchema(type, UserTaskId));
+        }
+        catch (Exception e)
+        {
+            //@TODO parse json mess and provide more clean response
+            AppData.PushToSnackBar("Unable to load Start Form: " + e.Message, SnackbarColor.Danger);
+            throw e;
+        }
+    }
+
+
+    private async Task<string> GetFormSchema(FormType formType, string definitionId)
+    {
+        return formType switch
+        {
+            FormType.Embedded => await GetRenderedUserTaskForm(definitionId),
+            FormType.Deployed => await GetDeployedUserTaskForm(definitionId),
+            _ => null
+            };
+    }
+
+    private FormType GetFormType(string formKey)
+    {
+        if (formKey.StartsWith("embedded:"))
+        {
+            return FormType.Embedded;
+        }
+        else if (formKey.StartsWith("deployment:"))
+        {
+            return FormType.Deployed;
+        }
+        else
+        {
+            return FormType.Custom;
+        }
+    }
+
+    private async Task<FormDto> GetUserTaskFormDetails(string userTaskId)
+    {
+        return await Camunda.Api.TaskApi.GetFormAsync(userTaskId);
+    }
+
+    private async Task<string> GetRenderedUserTaskForm(string userTaskId)
+    {
+        using var reader = new StreamReader(await Camunda.Api.TaskApi.GetRenderedFormAsync(userTaskId));
+        return await reader.ReadToEndAsync();
+    }
+
+    private async Task<string> GetDeployedUserTaskForm(string userTaskId)
+    {
+        using var reader = new StreamReader(await Camunda.Api.TaskApi.GetDeployedFormAsync(userTaskId));
+        return await reader.ReadToEndAsync();
+    }
+
+    private enum FormType
+    {
+        Embedded,
+        Deployed,
+        Custom
+    }
+
+}

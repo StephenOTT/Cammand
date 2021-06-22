@@ -41,16 +41,16 @@
                 <Paragraph>Deployment Id: @context.DeploymentId</Paragraph>
                 <Paragraph>Description: @context.Description</Paragraph>
                 <Paragraph>Resource: @context.Resource</Paragraph>
-            </CardBody>
-        </Card>
                 <Card Margin="Margin.Is2.OnY">
                     <CardHeader>
                         <CardTitle>Start Form</CardTitle>
                     </CardHeader>
                     <CardBody>
-                        <StartableProcessDefinitionsStartFormData Camunda="@Camunda" ProcessDefinitionId="@context.Id" />
+                        <StartableProcessDefinitionsStartFormData Camunda="@Camunda" ProcessDefinitionId="@context.Id"/>
                     </CardBody>
                 </Card>
+            </CardBody>
+        </Card>
     </DetailRowTemplate>
 
 </DataGrid>
@@ -69,7 +69,7 @@
 
 
     private List<ProcessDefinitionDto> _definitions;
-    
+
     private int _totalDefinitions;
 
     private ProcessDefinitionDto _selectedDefinition;
@@ -79,19 +79,19 @@
         try
         {
             _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
-                latestVersion: true, 
-                active:true, 
-                startableInTasklist:true, 
-                startablePermissionCheck:true,
+                latestVersion: true,
+                active: true,
+                startableInTasklist: true,
+                startablePermissionCheck: true,
                 firstResult: e.PageSize * (e.Page - 1), maxResults: e.PageSize);
-            
+
             _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(
-                latestVersion: true, 
-                active:true, 
-                startableInTasklist:true, 
-                startablePermissionCheck:true
+                latestVersion: true,
+                active: true,
+                startableInTasklist: true,
+                startablePermissionCheck: true
                 )).Count);
-            
+
             StateHasChanged();
         }
         catch (Exception exception)
@@ -100,4 +100,5 @@
             AppData.PushToSnackBar(exception.Message, SnackbarColor.Danger);
         }
     }
+
 }

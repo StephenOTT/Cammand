@@ -7,7 +7,9 @@
           ReadData="@OnReadData" 
           ShowPager="true" 
           TotalItems="@totalJobs" 
-          PageSize="@PageSize">
+          PageSize="@PageSize"
+          @bind-SelectedRow="@selectedJob"
+          DetailRowTrigger="@((dto) => dto.Id == selectedJob?.Id)">
     <EmptyTemplate>
         <div class="box">
             No Historic Job Logs found!
@@ -27,8 +29,26 @@
         <DataGridColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.ActivityId)" Caption="Activity Id" />
         <DataGridColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.JobId)" Caption="Job Id" />
         <DataGridColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.JobPriority)" Caption="Job Priority" />
-        <DataGridColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.JobRetries)" Caption="Job Retries" />
+        <DataGridDateColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.JobDueDate)" Caption="Job Due Date" />
+        <DataGridColumn TItem="HistoricJobLogDto" Field="@nameof(HistoricJobLogDto.Id)" Caption="Log Type">
+            <DisplayTemplate>
+                <Text>@LogTypeText(context)</Text>
+            </DisplayTemplate>
+        </DataGridColumn>
     </ChildContent>
+    
+    <DetailRowTemplate>
+        <Card>
+            <CardHeader><CardTitle>Job Details</CardTitle></CardHeader>
+            <CardBody>
+                <Paragraph>Failed Activity Id: @context.FailedActivityId</Paragraph>
+                <Paragraph>Job Def Config: @context.JobDefinitionConfiguration</Paragraph>
+                <Paragraph>Job Def Id: @context.JobDefinitionId</Paragraph>
+                <Paragraph>Job Retries: @context.JobRetries</Paragraph>
+                <Paragraph>Job Exception Message: @context.JobExceptionMessage</Paragraph>
+            </CardBody>
+        </Card>
+    </DetailRowTemplate>
 </DataGrid>
 
 
@@ -45,6 +65,8 @@
 
     private List<HistoricJobLogDto> jobs;
 
+    private HistoricJobLogDto selectedJob;
+
     private int totalJobs;
 
     async Task OnReadData(DataGridReadDataEventArgs<HistoricJobLogDto> e)
@@ -58,6 +80,28 @@
         totalJobs = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
 
         StateHasChanged();
+    }
+
+    private string LogTypeText(HistoricJobLogDto log)
+    {
+        if (log.CreationLog == true)
+        {
+            return "Creation";
+        } else if (log.DeletionLog == true)
+        {
+            return "Deletion";
+        } else if (log.FailureLog == true)
+        {
+            return "Failure";
+        } else if (log.SuccessLog == true)
+        {
+            return "Failure";
+        }
+        else
+        {
+            Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
+            return "?";
+        }
     }
 
 

@@ -12,7 +12,7 @@
 
 @page "/process-instances/{instanceId}"
 
-<Container>
+<Container Fluid="true">
 <Row>
     <Column>
         <Heading Size="HeadingSize.Is1">Process Instance <code>@InstanceId</code> Details</Heading>
@@ -304,9 +304,13 @@ else
 
     //@TODO review how Transition Instance incidents are calculated
 
-        _activeActivityCounts = _activityInstanceData.ChildActivityInstances.ToDictionary(k => k.ActivityId, v => v.ExecutionIds.Count());
+        _activeActivityCounts = _activityInstanceData.ChildActivityInstances
+            .GroupBy(i=>i.ActivityId)
+            .ToDictionary(k => k.Key, v => v.Select(i=>i.ExecutionIds).Count());
 
-        _waitingExecutionCounts = _activityInstanceData.ChildTransitionInstances.GroupBy(i=>i.ActivityId).ToDictionary(k => k.Key, v => v.Count());
+        _waitingExecutionCounts = _activityInstanceData.ChildTransitionInstances
+            .GroupBy(i=>i.ActivityId)
+            .ToDictionary(k => k.Key, v => v.Count());
 
         @*completedActivityInstanceCounts = (await camunda.History.ActivityInstances
             .Query(new HistoricActivityInstanceQuery() { ProcessInstanceId = instanceId, Finished = true }).List())
