@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
+using MudBlazor.Services;
 
 namespace MainApp
 {
@@ -35,6 +36,7 @@ namespace MainApp
             });
 
             builder.Services
+            .AddMudServices()
             .AddBlazorise(options => { 
                 options.ChangeTextOnKeyPress = true;
             })

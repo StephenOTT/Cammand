@@ -2,33 +2,71 @@
 @using Camunda.Http.Api.Model
 
 
-<DataGrid TItem="JobDto" 
-          Data="@jobs" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalJobs" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No Jobs found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="JobDto"
+    ServerData="@(new Func<TableState, Task<TableData<JobDto>>>(GetDataFromServer))"
+    Hover="true"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    OnRowClick="@OnRowClicked"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Log Type</MudTh>
+        <MudTh>Hostname</MudTh>
+        <MudTh>Timestamp</MudTh>
+        <MudTh>Activity Id</MudTh>
+        <MudTh>Job Id</MudTh>
+        <MudTh>Job Priority</MudTh>
+        <MudTh>Job Due Date</MudTh>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
+    </HeaderContent>
 
-    <ChildContent>
-        <DataGridColumn TItem="JobDto" Field="@nameof(JobDto.Id)" Caption="Job Id" />
-        <DataGridDateColumn TItem="JobDto" Field="@nameof(JobDto.Priority)" Caption="Priority" />
-        <DataGridColumn TItem="JobDto" Field="@nameof(JobDto.Retries)" Caption="Retries" />
-        <DataGridColumn TItem="JobDto" Field="@nameof(JobDto.CreateTime)" Caption="Create Time" />
-        <DataGridColumn TItem="JobDto" Field="@nameof(JobDto.Suspended)" Caption="Suspended?" />
-        <DataGridColumn TItem="JobDto" Field="@nameof(JobDto.DueDate)" Caption="Due Date" />
-    </ChildContent>
-</DataGrid>
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Suspended == true)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else
+            {
+                <MudText>Active</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Create Time">@context.CreateTime</MudTd>
+        <MudTd DataLabel="Due">@context.DueDate</MudTd>
+        <MudTd DataLabel="Retries">@context.Retries</MudTd>
+        <MudTd DataLabel="Priority">@context.Priority</MudTd>
+    </RowTemplate>
+
+    <ChildRowContent Context="parentContext">
+        @if (_selectedJob?.Id == parentContext.Id)
+        {
+            <MudTr>
+                <td colspan="4">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1">Job Details</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Context="parentContext">
+                            <MudText>Failed Activity Id: @parentContext.FailedActivityId</MudText>
+                            <MudText>Job Def Id: @parentContext.JobDefinitionId</MudText>
+                            <MudText>Job Exception Message: @parentContext.ExceptionMessage</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
@@ -37,7 +75,7 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
@@ -45,9 +83,16 @@
     private List<JobDto> jobs;
 
     private int totalJobs;
+    
+    bool _isLoading;
 
-    async Task OnReadData(DataGridReadDataEventArgs<JobDto> e)
+    private JobDto _selectedJob;
+
+    async Task<TableData<JobDto>> GetDataFromServer(TableState state)
     {
+        _isLoading = true;
+        StateHasChanged();
+
         jobs = await Camunda.Api.JobApi.GetJobsAsync(
             processInstanceId: ProcessInstanceId,
             sortBy: "jobDueDate",
@@ -56,6 +101,25 @@
 
         totalJobs = Convert.ToInt32((await Camunda.Api.JobApi.GetJobsCountAsync(processInstanceId: ProcessInstanceId)).Count);
 
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<JobDto>
+        {
+            Items = jobs,
+            TotalItems = totalJobs,
+        };
+    }
+    
+    void OnRowClicked(TableRowClickEventArgs<JobDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedJob))
+        {
+            _selectedJob = clickedRow.Item;
+        }
+        else
+        {
+            _selectedJob = null;
+        }
     }
 }

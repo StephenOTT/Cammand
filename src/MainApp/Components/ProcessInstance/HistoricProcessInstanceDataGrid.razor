@@ -1,84 +1,86 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
+@inject NavigationManager NavigationManager
 
-<DataGrid TItem="HistoricProcessInstanceDto"
-          Data="@instances"
-          ReadData="@OnReadData"
-          ShowPager="true"
-          TotalItems="@totalInstances"
-          PageSize="@pageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No historic process instances found!
-        </div>
-    </EmptyTemplate>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
+<MudTable
+    T="HistoricProcessInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricProcessInstanceDto>>>(GetProcessInstancesFromServer))"
+    Hover="true"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Instance ID</MudTh>
+        <MudTh>Business Key</MudTh>
+        <MudTh>Start Time</MudTh>
+        <MudTh>End Time</MudTh>
+        <MudTh>Started By</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
 
-    <ChildContent>
-        <DataGridCommandColumn TItem="HistoricProcessInstanceDto" Caption="Commands"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.State)">
-            <DisplayTemplate Context="stateContext">
-                @if (stateContext.State == HistoricProcessInstanceDto.StateEnum.ACTIVE)
-                {
-                    <Badge Color="Color.Success">Active</Badge>
-                }
-                else if (stateContext.State == HistoricProcessInstanceDto.StateEnum.SUSPENDED)
-                {
-                    <Badge Color="Color.Secondary">Suspended</Badge>
-                }
-                else if (stateContext.State == HistoricProcessInstanceDto.StateEnum.COMPLETED)
-                {
-                    <Badge Color="Color.Success">Completed</Badge>
-                }
-                else
-                {
-                    <Badge Color="Color.Light">@stateContext.State.ToString()</Badge>
-                }
-            </DisplayTemplate>
-        </DataGridColumn>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.Id)" Caption="Process Instance Id"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.BusinessKey)" Caption="Business Key"/>
-        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartTime)" Caption="Start Time"/>
-        <DataGridDateColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.EndTime)" Caption="End Time"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.TenantId)" Caption="Tenant"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.StartUserId)" Caption="Start User Id"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionKey)" Caption="Process Definition Key"/>
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Field="@nameof(HistoricProcessInstanceDto.ProcessDefinitionName)" Caption="Process Definition Name"/>
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.State == HistoricProcessInstanceDto.StateEnum.ACTIVE)
+            {
+                <MudText>Active</MudText>
+            }
+            else if (context.State == HistoricProcessInstanceDto.StateEnum.SUSPENDED)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else if (context.State == HistoricProcessInstanceDto.StateEnum.COMPLETED)
+            {
+                <MudText>Completed</MudText>
+            }
+            else
+            {
+                <MudText>@context.State.ToString()</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Instance ID">@context.Id</MudTd>
+        <MudTd DataLabel="Business Key">@context.BusinessKey</MudTd>
+        <MudTd DataLabel="Start Time">@context.StartTime</MudTd>
+        <MudTd DataLabel="End Time">@context.EndTime</MudTd>
+        <MudTd DataLabel="Started By">@context.StartUserId</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
+        </MudTd>
+    </RowTemplate>
 
-        <DataGridColumn TItem="HistoricProcessInstanceDto" Caption="Actions" Field="@nameof(HistoricProcessInstanceDto.Id)" Sortable="false" Filterable="false">
-            <DisplayTemplate>
-                <Blazorise.Button Color="Color.Primary" Type="ButtonType.Link" To="@("process-instances/" + context.Id)">Details</Blazorise.Button>
-            </DisplayTemplate>
-        </DataGridColumn>
-    </ChildContent>
-</DataGrid>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
 
     [Parameter]
-    public CamundaClient camunda { get; set; }
+    public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public string processDefinitionId { get; set; }
+    public string ProcessDefinitionId { get; set; }
 
     [Parameter]
-    public int pageSize { get; set; } = 50;
+    public int PageSize { get; set; } = 10;
 
-    private List<HistoricProcessInstanceDto> instances;
-    private int totalInstances;
+    private List<HistoricProcessInstanceDto> _instances;
+    private int _totalInstances;
+
+    bool _isLoading;
 
 
-    async Task OnReadData(DataGridReadDataEventArgs<HistoricProcessInstanceDto> e)
+    private async Task<TableData<HistoricProcessInstanceDto>> GetProcessInstancesFromServer(TableState state)
     {
-        var query = new HistoricProcessInstanceQueryDto()
+        _isLoading = true;
+        StateHasChanged();
+
+        var query = new HistoricProcessInstanceQueryDto
         {
-            ProcessDefinitionId = processDefinitionId,
+            ProcessDefinitionId = ProcessDefinitionId,
             Sorting = new List<HistoricProcessInstanceQueryDtoSorting>
             {
                 new()
@@ -89,16 +91,29 @@
             }
         };
 
-        var queryCount = new HistoricProcessInstanceQueryDto()
-        {
-            ProcessDefinitionId = processDefinitionId
-        };
+        var queryCount = new HistoricProcessInstanceQueryDto {ProcessDefinitionId = ProcessDefinitionId};
 
-        instances = await camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
+        _instances = await Camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesAsync(
+            state.PageSize * (state.Page),
+            state.PageSize,
+            query);
 
-        totalInstances = Convert.ToInt32((await camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesCountAsync(queryCount)).Count);
+        _totalInstances = Convert.ToInt32((await Camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesCountAsync(queryCount)).Count);
 
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<HistoricProcessInstanceDto>()
+        {
+            Items = _instances,
+            TotalItems = _totalInstances
+        };
     }
+
+    void OnDetailsClick(string instanceId)
+    {
+        NavigationManager.NavigateTo($"process-instances/{instanceId}");
+    }
+
 
 }

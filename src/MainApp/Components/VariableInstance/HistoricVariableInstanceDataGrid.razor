@@ -2,32 +2,33 @@
 @using Camunda.Http.Api.Model
 
 
-<DataGrid TItem="HistoricVariableInstanceDto" 
-          Data="@_instances" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@_totalInstances" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No variable instances found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="HistoricVariableInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricVariableInstanceDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Value</MudTh>
+        <MudTh>Create Time</MudTh>
+        <MudTh>State</MudTh>
+    </HeaderContent>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
-
-    <ChildContent>
-        <DataGridColumn TItem="HistoricVariableInstanceDto" Field="@nameof(HistoricVariableInstanceDto.Id)" Caption="Variable Instance Id" />
-        <DataGridColumn TItem="HistoricVariableInstanceDto" Field="@nameof(HistoricVariableInstanceDto.Name)" Caption="Name" />
-        <DataGridColumn TItem="HistoricVariableInstanceDto" Field="@nameof(HistoricVariableInstanceDto.Type)" Caption="Type" />
-        <DataGridColumn TItem="HistoricVariableInstanceDto" Field="@nameof(HistoricVariableInstanceDto.Value)" Caption="Value" />
-        <DataGridDateColumn TItem="HistoricVariableInstanceDto" Field="@nameof(HistoricVariableInstanceDto.CreateTime)" Caption="Create Time" />
-    </ChildContent>
-</DataGrid>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Type">@context.Type</MudTd>
+        <MudTd DataLabel="Value">@context.Value</MudTd>
+        <MudTd DataLabel="Value">@context.CreateTime</MudTd>
+        <MudTd DataLabel="Value">@context.State</MudTd>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
@@ -36,7 +37,7 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
@@ -45,9 +46,14 @@
     
     private int _totalInstances;
 
+    bool _isLoading;
 
-    async Task OnReadData(DataGridReadDataEventArgs<HistoricVariableInstanceDto> e)
+    
+    async Task<TableData<HistoricVariableInstanceDto>> GetDataFromServer(TableState state)
     {
+        _isLoading = true;
+        StateHasChanged();
+        
         var query = new HistoricVariableInstanceQueryDto()
         {
             ProcessInstanceId = ProcessInstanceId,
@@ -57,10 +63,17 @@
             }
         };
         
-        _instances = await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, false, query);
+        _instances = await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesAsync(state.PageSize * (state.Page ), state.PageSize, false, query);
 
         _totalInstances = Convert.ToInt32((await Camunda.Api.HistoricVariableInstanceApi.QueryHistoricVariableInstancesCountAsync(query)).Count);
-
+        
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<HistoricVariableInstanceDto>
+        {
+            TotalItems = _totalInstances,
+            Items = _instances
+        };
     }
 }

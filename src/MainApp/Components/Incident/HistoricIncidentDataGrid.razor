@@ -1,56 +1,55 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
 
 
-<DataGrid TItem="HistoricIncidentDto" 
-          Data="@incidents" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalIncidents" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No incidents found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="HistoricIncidentDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricIncidentDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Message</MudTh>
+        <MudTh>Create Time</MudTh>
+        <MudTh>End Time</MudTh>
+        <MudTh>Activity Id</MudTh>
+        <MudTh>Failed Activity Id</MudTh>
+        <MudTh>Type</MudTh>
+    </HeaderContent>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
-
-    <ChildContent>
-        <DataGridCommandColumn TItem="HistoricIncidentDto" Caption="Commands" />
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.Open)">
-            <DisplayTemplate Context="stateContext">
-                @if (stateContext.Open == false)
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Open == false)
+            {
+                if (context.Resolved == true)
                 {
-                    if (stateContext.Resolved == true)
-                    {
-                        <Badge Color="Color.Success">Resolved</Badge>
-                    }
-                    else if (stateContext.Deleted == true)
-                    {
-                        <Badge Color="Color.Success">Deleted</Badge>
-                    }
-
+                    <MudBadge Color="Color.Success" Content="@("Resolved")"/>
                 }
-                else
+                else if (context.Deleted == true)
                 {
-                    <Badge Color="Color.Danger">Open</Badge>
+                    <MudBadge Color="Color.Success" Content="@("Deleted")"/>
                 }
-            </DisplayTemplate>
-        </DataGridColumn>
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.IncidentMessage)" Caption="Message" />
-        <DataGridDateColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.CreateTime)" Caption="Create Time" />
-        <DataGridDateColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.EndTime)" Caption="End Time" />
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.ActivityId)" Caption="Activity Id" />
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.CauseIncidentId)" Caption="Cause Incident Id" />
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.RootCauseIncidentId)" Caption="Root Cause Incident Id" />
-        <DataGridColumn TItem="HistoricIncidentDto" Field="@nameof(HistoricIncidentDto.IncidentType)" Caption="Type" />
-    </ChildContent>
-</DataGrid>
+            }
+            else
+            {
+                <MudBadge Color="Color.Error" Content="@("Open")"/>
+            }
+        </MudTd>
+        <MudTd DataLabel="Message">@context.IncidentMessage</MudTd>
+        <MudTd DataLabel="Create Time">@context.CreateTime</MudTd>
+        <MudTd DataLabel="End Time">@context.EndTime</MudTd>
+        <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
+        <MudTd DataLabel="Failed Activity Id">@context.FailedActivityId</MudTd>
+        <MudTd DataLabel="Type">@context.IncidentType</MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
@@ -59,27 +58,38 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<HistoricIncidentDto> incidents;
+    private List<HistoricIncidentDto> _incidents;
 
-    private int totalIncidents;
+    private int _totalIncidents;
 
-    async Task OnReadData(DataGridReadDataEventArgs<HistoricIncidentDto> e)
+    bool _isLoading;
+
+    async Task<TableData<HistoricIncidentDto>> GetDataFromServer(TableState state)
     {
-        incidents = await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsAsync(
+        _isLoading = true;
+        StateHasChanged();
+
+        _incidents = await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsAsync(
             processInstanceId: ProcessInstanceId,
             sortBy: "createTime",
             sortOrder: "desc"
             );
 
-        totalIncidents = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
+        _totalIncidents = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
 
+
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<HistoricIncidentDto>
+        {
+            TotalItems = _totalIncidents,
+            Items = _incidents
+        };
     }
-
-
 }

@@ -2,76 +2,77 @@
 @using Camunda.Http.Api
 @using Camunda.Http.Api.Model
 @using BpmnJs.Components
+@using Color = MudBlazor.Color
 
 @inject AppData AppData
 
 @page "/process-definitions/{definitionId}"
 
-<Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Process Instances for definition <code>@definitionId</code></Heading>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1.OnY">
-        <Column>
-            <Card>
-                <CardHeader>BPMN Diagram</CardHeader>
-                <CardBody Style="height: 500px">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h3" GutterBottom="true">Process Instances</MudText>
+        </MudItem>
+        
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>BPMN Diagram</CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Style="height: 500px">
                     @* Review why this is needed:*@
-                    @if (bpmnXml != null)
+                    @if (_bpmnXml != null)
                     {
-                        <BpmnViewer bpmnXml="@bpmnXml"
-                                    activityIncidentCounts="@activityIncidentCounts"
-                                    activeActivityCounts="@activeActivityCounts">
+                        <BpmnViewer bpmnXml="@_bpmnXml"
+                                    activityIncidentCounts="@_activityIncidentCounts"
+                                    activeActivityCounts="@_activeActivityCounts">
                             <activityIncidentCountDisplay>
-                                <Badge Color="Color.Danger">@context</Badge>
+                                <MudBadge Color="Color.Error" Content="@context"/>
                             </activityIncidentCountDisplay>
                             <activeActivityCountDisplay>
-                                <Badge Color="Color.Primary">@context</Badge>
+                                <MudBadge Color="Color.Primary" Content="@context" />
                             </activeActivityCountDisplay>
                         </BpmnViewer>
                     }
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1.OnY">
-        <Column>
-            <Card>
-                <CardHeader>Process Instances for definition <code>@definitionId</code></CardHeader>
-                <CardBody>
-                    <HistoricProcessInstanceDataGrid camunda="@camunda" processDefinitionId="@definitionId"/>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-</Container>
-
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>Process Instances for definition <code>@DefinitionId</code></CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <HistoricProcessInstanceDataGrid Camunda="@_camunda" ProcessDefinitionId="@DefinitionId"/>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
 
     [Parameter]
-    public string definitionId { get; set; }
+    public string DefinitionId { get; set; }
 
-    CamundaClient camunda;
+    CamundaClient _camunda;
 
-    private string bpmnXml;
+    private string _bpmnXml;
 
-    private Dictionary<string, int> activityIncidentCounts = new();
+    private Dictionary<string, int> _activityIncidentCounts = new();
 
-    private Dictionary<string, int> activeActivityCounts = new();
+    private Dictionary<string, int> _activeActivityCounts = new();
 
-    private List<ActivityStatisticsResultDto> definitionStats;
+    private List<ActivityStatisticsResultDto> _definitionStats;
 
-    
-    
+
     protected override async Task OnInitializedAsync()
     {
-        camunda = AppData.CamundaClient;
+        _camunda = AppData.CamundaClient;
 
-        definitionStats = await GetDefinitionStats(definitionId);
-        activityIncidentCounts = definitionStats
+        _definitionStats = await GetDefinitionStats(DefinitionId);
+        _activityIncidentCounts = _definitionStats
             .FindAll(i => i.Incidents.Count != 0)
             .GroupBy(i => i.Id)
             .Select(i => new
@@ -80,7 +81,7 @@
                 Count = i.Sum(s => s.Incidents.Count)
             }).ToDictionary(k => k.ActivityId, v => v.Count);
 
-        activeActivityCounts = definitionStats
+        _activeActivityCounts = _definitionStats
             .FindAll(i => i.Instances > 0)
             .Select(i => new
             {
@@ -88,20 +89,20 @@
                 Count = i.Instances
             }).ToDictionary(k => k.ActivityId, v => v.Count);
 
-        bpmnXml = await GetBpmnXml(definitionId);
+        _bpmnXml = await GetBpmnXml(DefinitionId);
 
         StateHasChanged();
     }
 
     private async Task<string> GetBpmnXml(string processDefinitionId)
     {
-        var result = await camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
+        var result = await _camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
         return result.Bpmn20Xml;
     }
 
     private async Task<List<ActivityStatisticsResultDto>> GetDefinitionStats(string processDefinitionId)
     {
-        return await camunda.Api.ProcessDefinitionApi.GetActivityStatisticsAsync(
+        return await _camunda.Api.ProcessDefinitionApi.GetActivityStatisticsAsync(
             id: processDefinitionId,
             incidents: true);
     }

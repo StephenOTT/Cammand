@@ -1,32 +1,30 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Model
 
+<MudTable
+    T="VariableInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<VariableInstanceDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Value</MudTh>
+    </HeaderContent>
 
-<DataGrid TItem="VariableInstanceDto" 
-          Data="@instances" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalInstances" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No variable instances found!
-        </div>
-    </EmptyTemplate>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Type">@context.Type</MudTd>
+        <MudTd DataLabel="Value">@context.Value</MudTd>
+    </RowTemplate>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
-
-    <ChildContent>
-        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Id)" Caption="Variable Instance Id" />
-        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Name)" Caption="Name" />
-        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Type)" Caption="Type" />
-        <DataGridColumn TItem="VariableInstanceDto" Field="@nameof(VariableInstanceDto.Value)" Caption="Value" />
-    </ChildContent>
-</DataGrid>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
@@ -35,24 +33,36 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<VariableInstanceDto> instances;
+    List<VariableInstanceDto> _instances;
     
-    private int totalInstances;
+    int _totalInstances;
 
-
-    async Task OnReadData(DataGridReadDataEventArgs<VariableInstanceDto> e)
+    bool _isLoading;
+    
+    
+    private async Task<TableData<VariableInstanceDto>> GetDataFromServer(TableState state)
     {
-        var query = new VariableInstanceQueryDto() { ProcessInstanceIdIn = new List<string> {ProcessInstanceId} };
-        
-        instances = await Camunda.Api.VariableInstanceApi.QueryVariableInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, false, query);
-
-        totalInstances = Convert.ToInt32((await Camunda.Api.VariableInstanceApi.QueryVariableInstancesCountAsync(query)).Count);
-
+        _isLoading = true;
         StateHasChanged();
+        
+        var query = new VariableInstanceQueryDto { ProcessInstanceIdIn = new List<string> {ProcessInstanceId} };
+
+        _instances = await Camunda.Api.VariableInstanceApi.QueryVariableInstancesAsync(state.PageSize * (state.Page), state.PageSize, false, query);
+
+        _totalInstances = Convert.ToInt32((await Camunda.Api.VariableInstanceApi.QueryVariableInstancesCountAsync(query)).Count);
+        
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<VariableInstanceDto>
+        {
+            TotalItems = _totalInstances,
+            Items = _instances
+        };
     }
 }

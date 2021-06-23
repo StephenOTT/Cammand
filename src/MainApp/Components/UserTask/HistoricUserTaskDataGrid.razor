@@ -1,35 +1,44 @@
-﻿@using Camunda.Http.Api.Model
-@using Camunda.Http.Api
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
 
-<DataGrid TItem="HistoricTaskInstanceDto" 
-          Data="@userTasks" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalUserTasks" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No variable instances found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="HistoricTaskInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricTaskInstanceDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Assignee</MudTh>
+        <MudTh>Start Time</MudTh>
+        <MudTh>End Time</MudTh>
+        <MudTh>Due</MudTh>
+        <MudTh>Priority</MudTh>
+        <MudTh>Duration</MudTh>
+        <MudTh>Task Definition Key</MudTh>
+        <MudTh>Task Instance Id</MudTh>
+    </HeaderContent>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Assignee">@context.Assignee</MudTd>
+        <MudTd DataLabel="Start Time">@context.StartTime</MudTd>
+        <MudTd DataLabel="End Time">@context.EndTime</MudTd>
+        <MudTd DataLabel="Due">@context.Due</MudTd>
+        <MudTd DataLabel="Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Duration">@context.Duration</MudTd>
+        <MudTd DataLabel="Task Definition Key">@context.TaskDefinitionKey</MudTd>
+        <MudTd DataLabel="Task Instance Id">@context.Id</MudTd>
 
-    <ChildContent>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Id)" Caption="Task Instance Id"/>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Assignee)" Caption="Assignee"/>
-        <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.StartTime)" Caption="Start Time"/>
-        <DataGridDateColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.EndTime)" Caption="End Time"/>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Name)" Caption="Name"/>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Priority)" Caption="Priority"/>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.TaskDefinitionKey)" Caption="Task Definition Key"/>
-        <DataGridColumn TItem="HistoricTaskInstanceDto" Field="@nameof(HistoricTaskInstanceDto.Duration)" Caption="Duration"/>
-    </ChildContent>
-</DataGrid>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
 
 
 @code {
@@ -38,21 +47,27 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<HistoricTaskInstanceDto> userTasks;
+    private List<HistoricTaskInstanceDto> _userTasks;
 
-    private int totalUserTasks;
+    private int _totalUserTasks;
+    
+    bool _isLoading;
 
-    async Task OnReadData(DataGridReadDataEventArgs<HistoricTaskInstanceDto> e)
+    
+    async Task<TableData<HistoricTaskInstanceDto>> GetDataFromServer(TableState state)
     {
-        var query = new HistoricTaskInstanceQueryDto()
+        _isLoading = true;
+        StateHasChanged();
+        
+        var query = new HistoricTaskInstanceQueryDto
         {
             ProcessInstanceId = ProcessInstanceId,
-            Sorting = new List<HistoricTaskInstanceQueryDtoSorting>()
+            Sorting = new List<HistoricTaskInstanceQueryDtoSorting>
             {
                 new()
                 {
@@ -62,15 +77,23 @@
             }
         };
 
-        var totalQuery = new HistoricTaskInstanceQueryDto()
+        var totalQuery = new HistoricTaskInstanceQueryDto
         {
             ProcessInstanceId = ProcessInstanceId
         };
 
-        userTasks = await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
+        _userTasks = await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesAsync(state.PageSize * (state.Page), state.PageSize, query);
 
-        totalUserTasks = Convert.ToInt32((await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesCountAsync(totalQuery)).Count);
-
+        _totalUserTasks = Convert.ToInt32((await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesCountAsync(totalQuery)).Count);
+        
+        
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<HistoricTaskInstanceDto>
+        {
+            Items = _userTasks,
+            TotalItems = _totalUserTasks,
+        };
     }
 }
