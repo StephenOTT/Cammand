@@ -4,120 +4,136 @@
 @using MainApp.Components.UserTask
 @using MainApp.Components.IdentityLink
 @using System.IO
-@using Margin = Blazorise.Margin
-@using Color = Blazorise.Color
+@using Color = MudBlazor.Color
 @inject AppData AppData
 
-<Card>
-    <CardBody>
-        <Button Color="Color.Primary" Clicked="@OnCreateClicked">Create Custom Task</Button>
-    </CardBody>
-</Card>
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClicked" Disabled="true">Create Custom Task</MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable
+            T="TaskDto"
+            @ref="_table"
+            ServerData="@(new Func<TableState, Task<TableData<TaskDto>>>(GetDataFromServer))"
+            Hover="true"
+            RowsPerPage="PageSize"
+            OnRowClick="@OnRowClicked"
+            @bind-Loading="@_isLoading"
+            Elevation="0">
+            <HeaderContent>
+                <MudTh>State</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Assignee</MudTh>
+                <MudTh>Start Time</MudTh>
+                <MudTh>Due</MudTh>
+                <MudTh>Priority</MudTh>
+            </HeaderContent>
 
-<DataGrid TItem="TaskDto"
-          @ref="@_taskDataGrid"
-          Data="@_userTasks"
-          ReadData="@OnReadData"
-          ShowPager="true"
-          TotalItems="@_totalUserTasks"
-          PageSize="@PageSize"
-          @bind-SelectedRow="@_selectedUserTask"
-          DetailRowTrigger="@((ut) => ut.Id == _selectedUserTask?.Id && shouldOpenRow(ut))">
-    <EmptyTemplate>
-        <div class="box">
-            No variable instances found!
-        </div>
-    </EmptyTemplate>
+            <RowTemplate>
+                <MudTd DataLabel="State">
+                    @if (context.Suspended == true)
+                    {
+                        <MudText>Suspended</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Active</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Assignee">@context.Assignee</MudTd>
+                <MudTd DataLabel="Start Time">@context.Created</MudTd>
+                <MudTd DataLabel="Due">@context.Due</MudTd>
+                <MudTd DataLabel="Priority">@context.Priority</MudTd>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
-    <ChildContent>
-        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Name)" Caption="Title"/>
-        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Assignee)" Caption="Assignee"/>
-        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.TenantId)" Caption="Tenant"/>
-        <DataGridColumn TItem="TaskDto" Field="@nameof(TaskDto.Created)" Caption="Created At"/>
-    </ChildContent>
-    <DetailRowTemplate>
-        <Card>
-            <CardBody>
+            </RowTemplate>
 
-                <Buttons Role="ButtonsRole.Toolbar">
-                    <Buttons Margin="Margin.Is2.FromRight">
-                        <TaskButton UserTask="@context"
-                                    Clicked="@OnClaimClicked"
-                                    Color="@Color.Primary"
-                                    DisabledTrigger="@(t => t.Assignee != null)">
-                            Claim
-                        </TaskButton>
-                        <TaskButton UserTask="@context"
-                                    Clicked="@OnUnClaimClicked"
-                                    Color="@Color.Primary"
-                                    DisabledTrigger="@(t => t.Assignee != AppData.EngineUsername)">
-                            Un-Claim
-                        </TaskButton>
-                    </Buttons>
-                    <Buttons>
-                        <Button Color="Color.Secondary" Clicked="@OnSetAssigneeClicked">Set Assignee</Button>
-                        <Button Color="Color.Secondary" Clicked="@OnDelegateClicked">Delegate</Button>
-                        <Button Color="Color.Secondary" Clicked="@OnResolveClicked">Resolve</Button>
-                    </Buttons>
-                    <Buttons Margin="Margin.Is2.OnX">
-                        <Button Color="Color.Light" Clicked="@OnAddCommentClicked">Comment</Button>
-                        <Button Color="Color.Light" Clicked="@OnAddAttachmentClicked">Add Attachment</Button>
-                    </Buttons>
-                    <Buttons Margin="Margin.Is2.OnX">
-                        <Button Color="Color.Danger" Clicked="@OnDelegateClicked">Delete</Button>
-                    </Buttons>
-                </Buttons>
-            </CardBody>
-        </Card>
+            <ChildRowContent Context="parentContext">
+                @if (parentContext.Id == _selectedUserTask?.Id)
+                {
+                    <MudTr>
+                        <td colspan="4">
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCard>
+                                        <MudCardContent>
 
-        <Card>
-            <CardBody>
-                <Container>
-                    <Row>
-                        <Column>
-                            <Paragraph>StartTime @context.Created</Paragraph>
-                        </Column>
-                    </Row>
-                    <Row>
-                        <Column>
-                            <Paragraph>Due Date @context.Due</Paragraph>
-                        </Column>
-                        <Column>
-                            <Paragraph>Tenant @context.TenantId</Paragraph>
-                        </Column>
-                    </Row>
-                    <Row>
-                        <Column>
-                            <Paragraph>Task Description @context.Description</Paragraph>
-                        </Column>
-                    </Row>
-                    
-                        <Row>
-                            <Column>
-                                <Card>
-                                    <CardBody>
-                                        <UserTaskIdentityLinks Camunda="@Camunda" UserTaskId="@context.Id"/>
-                                    </CardBody>
-                                </Card>
-                            </Column>
-                        </Row>
+                                            @if (parentContext.Assignee == null)
+                                            {
+                                                <MudButton OnClick="@OnClaimClicked" Variant="Variant.Filled" Color="Color.Primary">Claim</MudButton>
+                                            }
+                                            else if (parentContext.Assignee == AppData.EngineUsername)
+                                            {
+                                                <MudButton OnClick="@OnUnClaimClicked" Variant="Variant.Filled" Color="Color.Primary">Un-Claim</MudButton>
+                                            }
+                                            else
+                                            {
+                                                <MudButton Color="Color.Tertiary" OnClick="@OnSetAssigneeClicked">Set Assignee</MudButton>
+                                            }
 
-                        <Row>
-                            <Column>
-                                <UserTaskFormData Camunda="@Camunda" UserTaskId="@context.Id"></UserTaskFormData>
-                            </Column>
-                        </Row>
+                                            <MudButton Color="Color.Tertiary" OnClick="@OnDelegateClicked">Delegate</MudButton>
+                                            <MudButton Color="Color.Tertiary" OnClick="@OnResolveClicked">Resolve</MudButton>
+                                            <MudButton Color="Color.Tertiary" OnClick="@OnAddCommentClicked">Comment</MudButton>
+                                            <MudButton Color="Color.Tertiary" OnClick="@OnAddAttachmentClicked">Add Attachment</MudButton>
+                                            <MudButton Color="Color.Error" OnClick="@OnDelegateClicked">Delete</MudButton>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudCard>
+                                        <MudCardContent>
+                                            <MudGrid>
+                                                <MudItem xs="12">
+                                                    <MudText Typo="Typo.body1">StartTime @parentContext.Created</MudText>
+                                                </MudItem>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">Due Date @parentContext.Due</MudText>
+                                                </MudItem>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">Tenant @parentContext.TenantId</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudText Typo="Typo.body1">Task Description @parentContext.Description</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudCard>
+                                                        <MudCardContent>
 
-                </Container>
-            </CardBody>
-        </Card>
-    </DetailRowTemplate>
-</DataGrid>
+                                                            <UserTaskIdentityLinks Camunda="@Camunda" UserTaskId="@parentContext.Id"/>
+
+                                                        </MudCardContent>
+                                                    </MudCard>
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudCard>
+                                                        <MudCardContent>
+
+                                                            <UserTaskFormData Camunda="@Camunda" UserTaskId="@parentContext.Id"/>
+
+                                                        </MudCardContent>
+                                                    </MudCard>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
 
 
 @code {
@@ -126,67 +142,17 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
-
-    private DataGrid<TaskDto> _taskDataGrid;
+    public int PageSize { get; set; } = 10;
 
     private List<TaskDto> _userTasks;
     private int _totalUserTasks;
 
     private TaskDto _selectedUserTask;
 
-    private bool shouldOpenRow(TaskDto task)
-    {
-        Console.WriteLine(task.Id);
-        Console.WriteLine(_selectedUserTask?.Id);
-        if (task.Id == _selectedUserTask?.Id)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
+    bool _isLoading;
 
-    private async Task ReloadDataGrid(bool resetPage = false)
-    {
-        if (resetPage)
-        {
-            _taskDataGrid.CurrentPage = 1;
-        }
-        await _taskDataGrid.Reload();
-    }
+    MudTable<TaskDto> _table;
 
-    async Task OnReadData(DataGridReadDataEventArgs<TaskDto> e)
-    {
-        var query = new TaskQueryDto()
-        {
-            Sorting = new List<TaskQueryDtoSorting>()
-            {
-                new()
-                {
-                    SortBy = TaskQueryDtoSorting.SortByEnum.Created,
-                    SortOrder = TaskQueryDtoSorting.SortOrderEnum.Desc
-                }
-            }
-        };
-
-        var totalQuery = new TaskQueryDto()
-        {
-        };
-
-        _userTasks = await Camunda.Api.TaskApi.QueryTasksAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
-
-        _totalUserTasks = Convert.ToInt32((await Camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
-
-        StateHasChanged();
-    }
-
-    // private async Task<List<IdentityLinkDto>> GetUserTaskIdentityLinks(string userTaskId)
-    // {
-    //     return await Camunda.Api.TaskIdentityLinkApi.GetIdentityLinksAsync(userTaskId);
-    // }
 
     ///
     /// does a check on server to see if task is currently assigned.
@@ -307,7 +273,7 @@
     {
         var currentUser = AppData.EngineUsername;
         await ClaimUserTask(_selectedUserTask.Id, currentUser);
-        await ReloadDataGrid();
+        await _table.ReloadServerData();
     }
 
     private void OnSetAssigneeClicked()
@@ -317,7 +283,7 @@
     private async void OnUnClaimClicked()
     {
         await UnClaimUserTask(_selectedUserTask.Id);
-        await ReloadDataGrid();
+        await _table.ReloadServerData();
     }
 
     private async void OnDelegateClicked()
@@ -344,6 +310,52 @@
 
     private void OnCreateClicked()
     {
+    }
+
+
+    async Task<TableData<TaskDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var query = new TaskQueryDto()
+        {
+            Sorting = new List<TaskQueryDtoSorting>()
+            {
+                new()
+                {
+                    SortBy = TaskQueryDtoSorting.SortByEnum.Created,
+                    SortOrder = TaskQueryDtoSorting.SortOrderEnum.Desc
+                }
+            }
+        };
+
+        var totalQuery = new TaskQueryDto();
+
+        _userTasks = await Camunda.Api.TaskApi.QueryTasksAsync(state.PageSize * (state.Page), state.PageSize, query);
+        _totalUserTasks = Convert.ToInt32((await Camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<TaskDto>
+        {
+            Items = _userTasks,
+            TotalItems = _totalUserTasks,
+        };
+    }
+
+
+    void OnRowClicked(TableRowClickEventArgs<TaskDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedUserTask))
+        {
+            _selectedUserTask = clickedRow.Item;
+        }
+        else
+        {
+            _selectedUserTask = null;
+        }
     }
 
 

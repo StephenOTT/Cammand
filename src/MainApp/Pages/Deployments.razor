@@ -5,26 +5,21 @@
 
 @page "/deployments"
 
-<Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Deployments</Heading>
-        </Column>
-    </Row>
-    <Row>
-        <Column>
-            <DeploymentDataGrid camunda="@camunda" pageSize="15" />
-        </Column>
-    </Row>
-</Container>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+
+    <MudText Typo="Typo.h3" GutterBottom="true">Deployments</MudText>
+
+    <DeploymentDataGrid Camunda="@_camunda" PageSize="15"/>
+
+</MudContainer>
 
 
 @code {
-    CamundaClient camunda;
+    CamundaClient _camunda;
 
     protected override void OnInitialized()
     {
-        camunda = AppData.CamundaClient;
+        _camunda = AppData.CamundaClient;
     }
 
 }

@@ -6,51 +6,53 @@
 @using System.Text.Json
 @using Formio.Components
 @using MainApp.Components.Form
-@using Margin = Blazorise.Margin
+@using Color = MudBlazor.Color
 
 @inject AppData AppData
-<Card Margin="Margin.Is1.FromBottom">
-    <CardBody>
-        <Container>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_includeVariablesInResponse">Include Variables in Response</Check>
-                </Column>
-            </Row>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_submitVariablesAsJson">Submit Variables as Json (unchecked submits as individual variables)</Check>
-                </Column>
-            </Row>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_submitAsTransient">Submit Variables as Transient</Check>
-                </Column>
-            </Row>
-        </Container>
-    </CardBody>
-</Card>
 
-<Card>
-    <CardHeader>
-        <CardTitle>Form</CardTitle>
-    </CardHeader>
-    <CardBody>
-        <StartForm Camunda="@Camunda" ProcessDefinitionId="@ProcessDefinitionId" OnFormSubmit="@OnFormSubmit"></StartForm>
-    </CardBody>
-</Card>
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_includeVariablesInResponse" Color="Color.Primary">Include Variables in Response</MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_submitVariablesAsJson" Color="Color.Primary">Submit Variables as Json (unchecked submits as individual variables)</MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_submitAsTransient" Color="Color.Primary">Submit Variables as Transient</MudCheckBox>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Form</CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <StartForm Camunda="@Camunda" ProcessDefinitionId="@ProcessDefinitionId" OnFormSubmit="@OnFormSubmit"></StartForm>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
 
-@if (_startedProcessInstanceResponse != null)
-{
-    <Card Margin="Margin.Is1.FromTop">
-        <CardHeader>
-            <CardText>Started Process Instance Info</CardText>
-        </CardHeader>
-        <CardBody>
-            <MemoEdit ReadOnly="true" @bind-Text="@_startedProcessInstanceResponse" Rows="10"></MemoEdit>
-        </CardBody>
-    </Card>
-}
+        @if (_startedProcessInstanceResponse != null)
+        {
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>Started Process Instance Info</CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField T="string" Variant="Variant.Filled" Disabled="true" Text="@_startedProcessInstanceResponse" Lines="15"/>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudItem>
+</MudGrid>
 
 
 @code {
@@ -83,9 +85,9 @@
             if (_submitVariablesAsJson)
             {
                 variablesForSubmit.Add(
-                    "startFormSubmission", 
+                    "startFormSubmission",
                     new VariableValueDto(
-                        JsonSerializer.Serialize(submission), 
+                        JsonSerializer.Serialize(submission),
                         "json",
                         new Dictionary<string, object> {{"transient", _submitAsTransient}}));
             }

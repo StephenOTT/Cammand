@@ -1,33 +1,44 @@
 ﻿@using Camunda.Http.Api.Model
 @using Camunda.Http.Api
 
-<DataGrid TItem="ExternalTaskDto" 
-          Data="@externalTasks" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalExternalTasks" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No External Tasks found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="ExternalTaskDto"
+    ServerData="@(new Func<TableState, Task<TableData<ExternalTaskDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Id</MudTh>
+        <MudTh>Priority</MudTh>
+        <MudTh>Topic Name</MudTh>
+        <MudTh>Worker Id</MudTh>
+        <MudTh>Lock Expiration Date</MudTh>
+    </HeaderContent>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
-
-    <ChildContent>
-        <DataGridColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.Id)" Caption="External Task Id" />
-        <DataGridColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.Priority)" Caption="Priority" />
-        <DataGridColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.Suspended)" Caption="Suspended?" />
-        <DataGridColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.TopicName)" Caption="Topic Name" />
-        <DataGridColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.WorkerId)" Caption="Worker Id" />
-        <DataGridDateColumn TItem="ExternalTaskDto" Field="@nameof(ExternalTaskDto.LockExpirationTime)" Caption="Lock Expiration Time" />
-    </ChildContent>
-</DataGrid>
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Suspended == true)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else
+            {
+                <MudText>Active</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Topic Name">@context.TopicName</MudTd>
+        <MudTd DataLabel="Worker Id">@context.WorkerId</MudTd>
+        <MudTd DataLabel="Lock Expiration Date">@context.LockExpirationTime</MudTd>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
 
 
 @code {
@@ -36,17 +47,22 @@
     public CamundaClient Camunda { get; set; }
 
     [Parameter]
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 10;
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<ExternalTaskDto> externalTasks;
+    private List<ExternalTaskDto> _externalTasks;
 
-    private int totalExternalTasks;
+    private int _totalExternalTasks;
+    
+    bool _isLoading;
 
-    async Task OnReadData(DataGridReadDataEventArgs<ExternalTaskDto> e)
+    async Task<TableData<ExternalTaskDto>> GetDataFromServer(TableState state)
     {
+        _isLoading = true;
+        StateHasChanged();
+        
         var query = new ExternalTaskQueryDto()
         {
             ProcessInstanceId = ProcessInstanceId,
@@ -65,10 +81,17 @@
             ProcessInstanceId = ProcessInstanceId
         };
 
-        externalTasks = await Camunda.Api.ExternalTaskApi.QueryExternalTasksAsync(e.PageSize * (e.Page - 1), e.PageSize, query);
+        _externalTasks = await Camunda.Api.ExternalTaskApi.QueryExternalTasksAsync(state.PageSize * (state.Page), state.PageSize, query);
 
-        totalExternalTasks = Convert.ToInt32((await Camunda.Api.ExternalTaskApi.QueryExternalTasksCountAsync(totalQuery)).Count);
+        _totalExternalTasks = Convert.ToInt32((await Camunda.Api.ExternalTaskApi.QueryExternalTasksCountAsync(totalQuery)).Count);
 
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<ExternalTaskDto>
+        {
+            Items = _externalTasks,
+            TotalItems = _totalExternalTasks,
+        };
     }
 }

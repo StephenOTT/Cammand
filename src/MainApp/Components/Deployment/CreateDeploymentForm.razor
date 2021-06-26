@@ -1,7 +1,5 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Client
-@using Margin = MudBlazor.Margin
-@using Color = MudBlazor.Color
 @using System.IO
 @inject AppData AppData
 
@@ -139,7 +137,7 @@
         }
         else
         {
-            AppData.PushToSnackBar("No Files to upload.", SnackbarColor.Warning);
+            await Console.Error.WriteLineAsync("No Files to Upload");
         }
     }
     

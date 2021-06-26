@@ -55,7 +55,6 @@ else
         catch (Exception e)
         {
             //@TODO parse json mess and provide more clean response
-            AppData.PushToSnackBar("Unable to load Start Form: " + e.Message, SnackbarColor.Danger);
             throw e;
         }
     }

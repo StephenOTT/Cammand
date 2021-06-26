@@ -18,7 +18,6 @@
         <MudTh>Job Id</MudTh>
         <MudTh>Job Priority</MudTh>
         <MudTh>Job Due Date</MudTh>
-
     </HeaderContent>
 
     <RowTemplate>
@@ -56,7 +55,6 @@
         }
     </ChildRowContent>
 
-
     <PagerContent>
         <MudTablePager/>
     </PagerContent>
@@ -74,11 +72,9 @@
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<HistoricJobLogDto> jobs;
+    private List<HistoricJobLogDto> _jobLogs;
 
-    private HistoricJobLogDto selectedJob;
-
-    private int totalJobs;
+    private int _totalJobLogs;
 
     bool _isLoading;
 
@@ -89,13 +85,13 @@
         _isLoading = true;
         StateHasChanged();
 
-        jobs = await Camunda.Api.HistoricJobLogApi.GetHistoricJobLogsAsync(
+        _jobLogs = await Camunda.Api.HistoricJobLogApi.GetHistoricJobLogsAsync(
             processInstanceId: ProcessInstanceId,
             sortBy: "timestamp",
             sortOrder: "desc"
             );
 
-        totalJobs = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
+        _totalJobLogs = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
 
 
         _isLoading = false;
@@ -103,8 +99,8 @@
 
         return new TableData<HistoricJobLogDto>
         {
-            Items = jobs,
-            TotalItems = totalJobs,
+            Items = _jobLogs,
+            TotalItems = _totalJobLogs,
         };
     }
 
@@ -114,23 +110,20 @@
         {
             return "Creation";
         }
-        else if (log.DeletionLog == true)
+        if (log.DeletionLog == true)
         {
             return "Deletion";
         }
-        else if (log.FailureLog == true)
+        if (log.FailureLog == true)
         {
             return "Failure";
         }
-        else if (log.SuccessLog == true)
+        if (log.SuccessLog == true)
         {
-            return "Failure";
+            return "Success";
         }
-        else
-        {
-            Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
-            return "?";
-        }
+        Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
+        return "?";
     }
 
     void OnRowClicked(TableRowClickEventArgs<HistoricJobLogDto> clickedRow)

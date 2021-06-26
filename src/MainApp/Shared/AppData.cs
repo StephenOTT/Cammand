@@ -1,14 +1,11 @@
 ﻿using Camunda.Http.Api;
-using Camunda.Http.Api.Api;
 using Camunda.Http.Api.Client;
-using Camunda.Http.Api.Model;
+
 
 namespace MainApp.Shared
 {
     using System.Net.Http;
-    using Camunda.Http;
     using System;
-    using Blazorise.Snackbar;
 
     public class AppData
         {
@@ -22,9 +19,7 @@ namespace MainApp.Shared
         public string EnginePassword { get; set; } = "admin";
 
         private readonly IHttpClientFactory ClientFactory;
-
-        public SnackbarStack snackbarStack;
-        public int intervalBeforeMsgClose = 8000;
+        
 
         public HttpClient HttpClient { get; set; }
 
@@ -62,12 +57,6 @@ namespace MainApp.Shared
                 this.CamundaClient = new CamundaClient(config, client, handler);
             }
         }
-
-        public void PushToSnackBar(string Message, SnackbarColor color)
-        {
-            snackbarStack.PushAsync(Message, color, options => {
-                options.IntervalBeforeClose = intervalBeforeMsgClose;
-            });
-        }
+        
     }
 }

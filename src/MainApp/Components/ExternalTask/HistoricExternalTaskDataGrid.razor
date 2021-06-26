@@ -1,36 +1,40 @@
 ﻿@using Camunda.Http.Api.Model
 @using Camunda.Http.Api
 
-<DataGrid TItem="HistoricExternalTaskLogDto" 
-          Data="@externalTasks" 
-          ReadData="@OnReadData" 
-          ShowPager="true" 
-          TotalItems="@totalExternalTasks" 
-          PageSize="@PageSize">
-    <EmptyTemplate>
-        <div class="box">
-            No Historic External Task Logs found!
-        </div>
-    </EmptyTemplate>
+<MudTable
+    T="HistoricExternalTaskLogDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricExternalTaskLogDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Log Id</MudTh>
+        <MudTh>Log Type</MudTh>
+        <MudTh>Topic Name</MudTh>
+        <MudTh>Worker Id</MudTh>
+        <MudTh>Activity Instance Id</MudTh>
+        <MudTh>External Task Id</MudTh>
+        <MudTh>External Task Priority</MudTh>
+        <MudTh>Error Message</MudTh>
+    </HeaderContent>
 
-    <LoadingTemplate>
-        <div class="box">
-            Loading...
-        </div>
-    </LoadingTemplate>
+    <RowTemplate>
+        <MudTd DataLabel="Log Id">@context.Id</MudTd>
+        <MudTd DataLabel="Log Type">@LogTypeText(context)</MudTd>
+        <MudTd DataLabel="Topic Name">@context.TopicName</MudTd>
+        <MudTd DataLabel="Worker Id">@context.WorkerId</MudTd>
+        <MudTd DataLabel="Activity Instance Id">@context.ActivityInstanceId</MudTd>
+        <MudTd DataLabel="External Task Id">@context.ExternalTaskId</MudTd>
+        <MudTd DataLabel="External Task Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Error Message">@context.ErrorMessage</MudTd>
+    </RowTemplate>
 
-    <ChildContent>
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.Id)" Caption="External Task Id" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.Priority)" Caption="Priority" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.CreationLog)" Caption="Creation?" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.SuccessLog)" Caption="Success?" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.FailureLog)" Caption="Failure?" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.DeletionLog)" Caption="Deletion?" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.TopicName)" Caption="Topic Name" />
-        <DataGridColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.WorkerId)" Caption="Worker Id" />
-        <DataGridDateColumn TItem="HistoricExternalTaskLogDto" Field="@nameof(HistoricExternalTaskLogDto.Timestamp)" Caption="Timestamp" />
-    </ChildContent>
-</DataGrid>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
 
 @code {
 
@@ -43,12 +47,18 @@
     [Parameter]
     public string ProcessInstanceId { get; set; }
 
-    private List<HistoricExternalTaskLogDto> externalTasks;
+    private List<HistoricExternalTaskLogDto> _externalTasks;
 
-    private int totalExternalTasks;
+    private int _totalExternalTasks;
+    
+    bool _isLoading;
+    
 
-    async Task OnReadData(DataGridReadDataEventArgs<HistoricExternalTaskLogDto> e)
+    async Task<TableData<HistoricExternalTaskLogDto>> GetDataFromServer(TableState state)
     {
+        _isLoading = true;
+        StateHasChanged();
+
         var query = new HistoricExternalTaskLogQueryDto()
         {
             ProcessInstanceId = ProcessInstanceId,
@@ -67,10 +77,39 @@
             ProcessInstanceId = ProcessInstanceId
         };
 
-        externalTasks = await Camunda.Api.HistoricExternalTaskLogApi.QueryHistoricExternalTaskLogsAsync(query);
+        _externalTasks = await Camunda.Api.HistoricExternalTaskLogApi.QueryHistoricExternalTaskLogsAsync(query);
 
-        totalExternalTasks = Convert.ToInt32((await Camunda.Api.HistoricExternalTaskLogApi.QueryHistoricExternalTaskLogsCountAsync(totalQuery)).Count);
+        _totalExternalTasks = Convert.ToInt32((await Camunda.Api.HistoricExternalTaskLogApi.QueryHistoricExternalTaskLogsCountAsync(totalQuery)).Count);
 
+        _isLoading = false;
         StateHasChanged();
+
+        return new TableData<HistoricExternalTaskLogDto>
+        {
+            Items = _externalTasks,
+            TotalItems = _totalExternalTasks,
+        };
+    }
+
+    private string LogTypeText(HistoricExternalTaskLogDto log)
+    {
+        if (log.CreationLog == true)
+        {
+            return "Creation";
+        }
+        if (log.DeletionLog == true)
+        {
+            return "Deletion";
+        }
+        if (log.FailureLog == true)
+        {
+            return "Failure";
+        }
+        if (log.SuccessLog == true)
+        {
+            return "Success";
+        }
+        Console.Error.WriteLine("Unknown Historic External Task Log DTO Log type: " + log.ToJson());
+        return "?";
     }
 }

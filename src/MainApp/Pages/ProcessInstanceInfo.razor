@@ -26,19 +26,19 @@
                 <CardHeaderContent>Process Instance Attributes</CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
-                <MudText>Process Instance ID: <code>@_instance.Id</code></MudText>
-                <MudText>State: <code>@_instance.State</code></MudText>
-                <MudText>Process Definition ID: <code>@_instance.ProcessDefinitionId</code></MudText>
-                <MudText>Process Definition Key: <code>@_instance.ProcessDefinitionKey</code></MudText>
-                <MudText>Process Definition Name: <code>@_instance.ProcessDefinitionName</code></MudText>
-                <MudText>Super Process Instance Id: <code>@_instance.SuperProcessInstanceId</code></MudText>
-                <MudText>Tenant ID: <code>@_instance.TenantId</code></MudText>
-                <MudText>Business Key: <code>@_instance.BusinessKey</code></MudText>
-                <MudText>Started At: <code>@_instance.StartTime</code></MudText>
-                <MudText>Ended At: <code>@_instance.EndTime</code></MudText>
-                <MudText>Duration: <code>@_instance.DurationInMillis</code></MudText>
-                <MudText>Started By User ID: <code>@_instance.StartUserId</code></MudText>
-                <MudText>Start Activity Id: <code>@_instance.StartActivityId</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Process Instance ID: <code>@_instance.Id</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">State: <code>@_instance.State</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition ID: <code>@_instance.ProcessDefinitionId</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition Key: <code>@_instance.ProcessDefinitionKey</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition Name: <code>@_instance.ProcessDefinitionName</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Super Process Instance Id: <code>@_instance.SuperProcessInstanceId</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Tenant ID: <code>@_instance.TenantId</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Business Key: <code>@_instance.BusinessKey</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Started At: <code>@_instance.StartTime</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Ended At: <code>@_instance.EndTime</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Duration: <code>@_instance.DurationInMillis</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Started By User ID: <code>@_instance.StartUserId</code></MudText>
+                <MudText Typo="Typo.body1" GutterBottom="true">Start Activity Id: <code>@_instance.StartActivityId</code></MudText>
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -216,22 +216,28 @@
                     </MudTabPanel>
 
                     <MudTabPanel Text="External Tasks" @ref="_externalTasksPanel">
-                        <MudCard>
-                            <MudCardHeader>
-                                <CardHeaderContent>Runtime</CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                <RuntimeExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                            </MudCardContent>
-                        </MudCard>
-                        <MudCard>
-                            <MudCardHeader>
-                                <CardHeaderContent>Historic External Task Log</CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                <HistoricExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                            </MudCardContent>
-                        </MudCard>
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudCard>
+                                    <MudCardHeader>
+                                        <CardHeaderContent>Runtime</CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <RuntimeExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudCard>
+                                    <MudCardHeader>
+                                        <CardHeaderContent>Historic External Task Log</CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <HistoricExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
                     </MudTabPanel>
 
                     <MudTabPanel Text="Actions" @ref="_actionsPanel">

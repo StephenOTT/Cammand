@@ -147,8 +147,8 @@
 
         return new TableData<ProcessDefinitionDto>()
         {
-            TotalItems = _totalDefinitions,
-            Items = _definitions
+            Items = _definitions,
+            TotalItems = _totalDefinitions
         };
     }
 
@@ -172,8 +172,8 @@
 
         return new TableData<ProcessDefinitionDto>()
         {
-            TotalItems = Convert.ToInt32(total.Count),
-            Items = defs
+            Items = defs,
+            TotalItems = Convert.ToInt32(total.Count)
         };
     }
 

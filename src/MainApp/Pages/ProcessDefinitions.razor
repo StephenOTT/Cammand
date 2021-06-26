@@ -7,14 +7,14 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
     <MudText Typo="Typo.h3" GutterBottom="true">Process Definitions</MudText>
-    <ProcessDefinitionDataGrid Camunda="@camunda" />
+    <ProcessDefinitionDataGrid Camunda="@_camunda" />
 </MudContainer>
 
 @code {
-    CamundaClient camunda;
+    CamundaClient _camunda;
 
     protected override void OnInitialized()
     {
-        camunda = AppData.CamundaClient;
+        _camunda = AppData.CamundaClient;
     }
 }

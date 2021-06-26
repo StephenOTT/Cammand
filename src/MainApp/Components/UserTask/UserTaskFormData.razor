@@ -7,53 +7,55 @@
 @using System.Text.Json
 @using Formio.Components
 @using MainApp.Components.Form
-@using Margin = Blazorise.Margin
+@using Color = MudBlazor.Color
 
 @inject AppData AppData
 
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_includeVariablesInResponse" Color="Color.Primary" Label="Include Variables in Response"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_submitVariablesAsJson" Color="Color.Primary" Label="Submit Variables as Json (unchecked submits as individual variables)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_submitAsTransient" Color="Color.Primary" Label="Submit Variables as Transient"/>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Form</CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
 
-<Card Margin="Margin.Is1.FromBottom">
-    <CardBody>
-        <Container>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_includeVariablesInResponse">Include Variables in Response</Check>
-                </Column>
-            </Row>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_submitVariablesAsJson">Submit Variables as Json (unchecked submits as individual variables)</Check>
-                </Column>
-            </Row>
-            <Row>
-                <Column>
-                    <Check TValue="bool" @bind-Checked="@_submitAsTransient">Submit Variables as Transient</Check>
-                </Column>
-            </Row>
-        </Container>
-    </CardBody>
-</Card>
+                <UserTaskForm @ref="@_userTaskForm" Camunda="@Camunda" UserTaskId="@UserTaskId" OnFormSubmit="@OnFormSubmit"></UserTaskForm>
 
-<Card>
-    <CardHeader>
-        <CardTitle>Form</CardTitle>
-    </CardHeader>
-    <CardBody>
-        <UserTaskForm @ref="@_userTaskForm" Camunda="@Camunda" UserTaskId="@UserTaskId" OnFormSubmit="@OnFormSubmit"></UserTaskForm>
-    </CardBody>
-</Card>
-
-@if (_completedUserTaskInstanceResponse != null)
-{
-    <Card Margin="Margin.Is1.FromTop">
-        <CardHeader>
-            <CardText>Completed User Task Instance Info</CardText>
-        </CardHeader>
-        <CardBody>
-            <MemoEdit ReadOnly="true" @bind-Text="@_completedUserTaskInstanceResponse" Rows="10"></MemoEdit>
-        </CardBody>
-    </Card>
-}
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    @if (_completedUserTaskInstanceResponse != null)
+    {
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardheader>
+                    <CardHeaderContent>Completed User Task Instance Info</CardHeaderContent>
+                </MudCardheader>
+                <MudCardContent>
+                    <MudTextField T="string" Disabled="true" Text="@_completedUserTaskInstanceResponse" Lines="10"></MudTextField>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
 
 
 @code {
@@ -109,7 +111,7 @@
 
             _completedUserTaskInstanceResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions {Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true});
 
-            await Task.Delay(500).ContinueWith(t=>_userTaskForm.resetFormAsync());
+            await Task.Delay(500).ContinueWith(t => _userTaskForm.ResetFormAsync());
         }
         catch (Exception e)
         {
@@ -119,3 +121,4 @@
     }
 
 }
+

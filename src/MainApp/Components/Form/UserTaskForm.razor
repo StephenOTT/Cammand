@@ -13,16 +13,16 @@
     }
     else if (_formType == FormType.Embedded)
     {
-        <Text>Embedded Forms are not currently supported.</Text>
+        <MudText Typo="Typo.body1">Embedded Forms are not currently supported.</MudText>
     }
     else if (_formType == FormType.Custom)
     {
-        <Text>Custom FormKeys are not currently supported.</Text>
+        <MudText Typo="Typo.body1">Custom FormKeys are not currently supported.</MudText>
     }
 }
 else
 {
-    <Text>Loading Form...</Text>
+    <MudText Typo="Typo.body1">Loading Form...</MudText>
 }
 
 
@@ -44,7 +44,7 @@ else
     private FormioViewer _formioViewer;
 
 
-    public Task resetFormAsync()
+    public Task ResetFormAsync()
     {
         return _formioViewer.RebuildForm();
     }
@@ -62,7 +62,6 @@ else
         catch (Exception e)
         {
             //@TODO parse json mess and provide more clean response
-            AppData.PushToSnackBar("Unable to load Start Form: " + e.Message, SnackbarColor.Danger);
             throw e;
         }
     }
