@@ -1,0 +1,75 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+
+<MudTable
+    T="IncidentDto"
+    ServerData="@(new Func<TableState, Task<TableData<IncidentDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Message</MudTh>
+        <MudTh>Timestamp</MudTh>
+        <MudTh>Activity Id</MudTh>
+        <MudTh>Failed Activity Id</MudTh>
+        <MudTh>Incident Type</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Message">@context.IncidentMessage</MudTd>
+        <MudTd DataLabel="Timestamp">@context.IncidentTimestamp</MudTd>
+        <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
+        <MudTd DataLabel="Failed Activity Id">@context.FailedActivityId</MudTd>
+        <MudTd DataLabel="Value">@context.IncidentType</MudTd>
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    private List<IncidentDto> _incidents;
+
+    private int _totalIncidents;
+
+    bool _isLoading;
+    
+    
+    private async Task<TableData<IncidentDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        
+        _incidents = await Camunda.Api.IncidentApi.GetIncidentsAsync(
+            processInstanceId: ProcessInstanceId,
+            sortBy: "incidentTimestamp",
+            sortOrder: "desc"
+            );
+
+        _totalIncidents = Convert.ToInt32((await Camunda.Api.IncidentApi.GetIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
+
+        
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<IncidentDto>
+        {
+            TotalItems = _totalIncidents,
+            Items = _incidents
+        };
+    }
+}

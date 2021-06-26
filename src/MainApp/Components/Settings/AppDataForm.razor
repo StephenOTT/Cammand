@@ -1,61 +1,46 @@
-﻿@inject AppData AppData
+﻿@using Color = MudBlazor.Color
+@inject AppData AppData
 
 
-<Card Margin="Margin.Is4.OnY">
-    <CardHeader>
-        <CardTitle>App Settings</CardTitle>
-    </CardHeader>
-    <CardBody>
-        <CardText>Configure client side App settings.  Settings are lost upon close of browser tab.</CardText>
-    </CardBody>
-    <CardBody>
-        <CardText>Leave username and password blank if you do not want to use authentication.</CardText>
-    </CardBody>
-    <CardBody>
-        <Validations Mode="ValidationMode.Auto" ValidateOnLoad="false">
-            <Validation Validator="@ValidationRule.IsNotEmpty">
-                <Field>
-                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Engine API Url</FieldLabel>
-                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                        <TextEdit Placeholder="Camunda API URL" Text="@AppData.EngineUrl" TextChanged="@EngineUrlChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900">
-                            <Feedback>
-                                <ValidationError>Enter full name!</ValidationError>
-                            </Feedback>
-                        </TextEdit>
-                    </FieldBody>
-                </Field>
-            </Validation>
-            <Validation>
-                <Field>
-                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Username</FieldLabel>
-                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                        <TextEdit Autofocus="true" Placeholder="username" Text="@AppData.EngineUsername" TextChanged="@UserNameCredentialChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900" />
-                    </FieldBody>
-                </Field>
-            </Validation>
-            <Validation>
-                <Field>
-                    <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Password</FieldLabel>
-                    <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                        <TextEdit Role="TextRole.Password" Placeholder="Password" Text="@AppData.EnginePassword" TextChanged="@PasswordCredentialChange" DelayTextOnKeyPress="true" DelayTextOnKeyPressInterval="900">
-                        </TextEdit>
-                    </FieldBody>
-                </Field>
-            </Validation>
-        </Validations>
-        <Button Color="Color.Primary" Clicked="TestConnection">Test Connection</Button>
-    </CardBody>
-</Card>
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>App Settings</CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudText Typo="Typo.body1">Configure client side App settings. Settings are lost upon close of browser tab.</MudText>
+        <MudText Typo="Typo.body1">Leave username and password blank if you do not want to use authentication.</MudText>
+    </MudCardContent>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12">
+                
+                <MudForm>
+                    <MudTextField T="string" Label="Engine Url" Immediate="true" Placeholder="Camunda API URL" Text="@AppData.EngineUrl" TextChanged="@EngineUrlChange" DebounceInterval="900" Required="true"/>
+                    <MudTextField T="string" Label="Username" Immediate="true" AutoFocus="true" Placeholder="username" Text="@AppData.EngineUsername" TextChanged="@UserNameCredentialChange" DebounceInterval="900"/>
+                    <MudTextField T="string" Label="Password" Immediate="true" InputType="InputType.Password" Placeholder="Password" Text="@AppData.EnginePassword" TextChanged="@PasswordCredentialChange" DebounceInterval="900"/>
+                </MudForm>
+
+            </MudItem>
+            <MudItem xs="12">
+                
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="TestConnection">Test Connection</MudButton>
+                
+            </MudItem>
+        </MudGrid>
+
+
+    </MudCardContent>
+</MudCard>
 
 
 @code {
+
     void EngineUrlChange(string value)
     {
         AppData.EngineUrl = value;
         AppData.CreateClient();
     }
-
-
+    
     void UserNameCredentialChange(string value)
     {
         AppData.EngineUsername = value;
@@ -73,13 +58,13 @@
         try
         {
             await AppData.CamundaClient.Api.UserApi.GetUserCountAsync(id: AppData.EngineUsername);
-            AppData.PushToSnackBar("Successfully connected as user: " + AppData.EngineUsername, SnackbarColor.Success);
+            Console.WriteLine($"Success: Connected as {AppData.EngineUsername}");
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            AppData.PushToSnackBar("Connection Failed: " + e.Message, SnackbarColor.Danger);
+            Console.Error.WriteLine(e);
+            throw e;
         }
-
     }
+
 }

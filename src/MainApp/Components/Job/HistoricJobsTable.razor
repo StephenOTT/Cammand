@@ -1,0 +1,141 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+<MudTable
+    T="HistoricJobLogDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricJobLogDto>>>(GetDataFromServer))"
+    Hover="true"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    OnRowClick="@OnRowClicked"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Log Type</MudTh>
+        <MudTh>Hostname</MudTh>
+        <MudTh>Timestamp</MudTh>
+        <MudTh>Activity Id</MudTh>
+        <MudTh>Job Id</MudTh>
+        <MudTh>Job Priority</MudTh>
+        <MudTh>Job Due Date</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Log Type">@LogTypeText(context)</MudTd>
+        <MudTd DataLabel="Hostname">@context.Hostname</MudTd>
+        <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
+        <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
+        <MudTd DataLabel="Job Id">@context.JobId</MudTd>
+        <MudTd DataLabel="Job Priority">@context.JobPriority</MudTd>
+        <MudTd DataLabel="Job Due Date">@context.JobDueDate</MudTd>
+    </RowTemplate>
+
+    <ChildRowContent Context="parentContext">
+        @if (_selectedJobLog?.Id == parentContext.Id)
+        {
+            <MudTr>
+                <td colspan="4">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1">Job Log Details</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Context="parentContext">
+                            <MudText>Failed Activity Id: @parentContext.FailedActivityId</MudText>
+                            <MudText>Job Def Config: @parentContext.JobDefinitionConfiguration</MudText>
+                            <MudText>Job Def Id: @parentContext.JobDefinitionId</MudText>
+                            <MudText>Job Retries: @parentContext.JobRetries</MudText>
+                            <MudText>Job Exception Message: @parentContext.JobExceptionMessage</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    private List<HistoricJobLogDto> _jobLogs;
+
+    private int _totalJobLogs;
+
+    bool _isLoading;
+
+    private HistoricJobLogDto _selectedJobLog;
+
+    async Task<TableData<HistoricJobLogDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _jobLogs = await Camunda.Api.HistoricJobLogApi.GetHistoricJobLogsAsync(
+            processInstanceId: ProcessInstanceId,
+            sortBy: "timestamp",
+            sortOrder: "desc"
+            );
+
+        _totalJobLogs = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
+
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<HistoricJobLogDto>
+        {
+            Items = _jobLogs,
+            TotalItems = _totalJobLogs,
+        };
+    }
+
+    private string LogTypeText(HistoricJobLogDto log)
+    {
+        if (log.CreationLog == true)
+        {
+            return "Creation";
+        }
+        if (log.DeletionLog == true)
+        {
+            return "Deletion";
+        }
+        if (log.FailureLog == true)
+        {
+            return "Failure";
+        }
+        if (log.SuccessLog == true)
+        {
+            return "Success";
+        }
+        Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
+        return "?";
+    }
+
+    void OnRowClicked(TableRowClickEventArgs<HistoricJobLogDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedJobLog))
+        {
+            _selectedJobLog = clickedRow.Item;
+        }
+        else
+        {
+            _selectedJobLog = null;
+        }
+    }
+
+}

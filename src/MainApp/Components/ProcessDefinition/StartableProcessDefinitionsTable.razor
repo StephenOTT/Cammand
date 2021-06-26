@@ -1,0 +1,138 @@
+﻿@using Camunda.Http.Api.Model
+@using Camunda.Http.Api
+
+@inject AppData AppData
+
+
+<MudTable
+    T="ProcessDefinitionDto"
+    ServerData="@(new Func<TableState, Task<TableData<ProcessDefinitionDto>>>(GetLatestStartableDefinitionsFromServer))"
+    Hover="true"
+    OnRowClick="@OnRowClicked"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Key</MudTh>
+        <MudTh>Latest Version</MudTh>
+        <MudTh>Tenant Id</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Key">@context.Key</MudTd>
+        <MudTd DataLabel="Latest Version">@context.Version</MudTd>
+        <MudTd DataLabel="Tenant Id">@context.TenantId</MudTd>
+    </RowTemplate>
+
+    <ChildRowContent Context="parentContext">
+        @if (_selectedDefinition?.Id == parentContext.Id)
+        {
+            <MudTr>
+                <td colspan="4">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>Details</CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCard>
+                                        <MudCardContent>
+                                               <MudText Typo="Typo.body1">Definition Id: @parentContext.Id</MudText>
+                                                                                <MudText Typo="Typo.body1">Deployment Id: @parentContext.DeploymentId</MudText>
+                                                                                <MudText Typo="Typo.body1">Description: @parentContext.Description</MudText>
+                                                                                <MudText Typo="Typo.body1">Resource: @parentContext.Resource</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudCard>
+                                        <MudCardHeader>
+                                            <CardHeaderContent>Start Form</CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            
+                                            <StartableProcessDefinitionsStartFormData Camunda="@Camunda" ProcessDefinitionId="@parentContext.Id"/>
+                                            
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 50;
+
+    [Parameter]
+    public string StartButtonTitle { get; set; } = "Start";
+
+    private List<ProcessDefinitionDto> _definitions;
+
+    private int _totalDefinitions;
+
+    private ProcessDefinitionDto _selectedDefinition;
+
+    bool _isLoading;
+
+
+    private async Task<TableData<ProcessDefinitionDto>> GetLatestStartableDefinitionsFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
+            latestVersion: true,
+            active: true,
+            startableInTasklist: true,
+            startablePermissionCheck: true,
+            firstResult: state.PageSize * (state.Page), maxResults: state.PageSize);
+
+        _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(
+            latestVersion: true,
+            active: true,
+            startableInTasklist: true,
+            startablePermissionCheck: true
+            )).Count);
+
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<ProcessDefinitionDto>()
+        {
+            Items = _definitions,
+            TotalItems = _totalDefinitions
+        };
+    }
+
+    void OnRowClicked(TableRowClickEventArgs<ProcessDefinitionDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedDefinition))
+        {
+            _selectedDefinition = clickedRow.Item;
+        }
+        else
+        {
+            _selectedDefinition = null;
+        }
+    }
+
+
+}

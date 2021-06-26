@@ -1,0 +1,151 @@
+﻿@using Camunda.Http
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@inject AppData AppData
+
+<MudTable
+    T="DeploymentDto"
+    ServerData="@(new Func<TableState, Task<TableData<DeploymentDto>>>(GetDeploymentsFromServer))"
+    Hover="true"
+    OnRowClick="@OnRowClicked"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading">
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Tenant</MudTh>
+        <MudTh>Deployment Time</MudTh>
+        <MudTh>Source</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Tenant">@context.TenantId</MudTd>
+        <MudTd DataLabel="Deployment Time">@context.DeploymentTime</MudTd>
+        <MudTd DataLabel="Source">@context.Source</MudTd>
+    </RowTemplate>
+
+    <ChildRowContent Context="parentContext">
+        @if (_selectedDeployment?.Id == parentContext.Id)
+        {
+            <MudTr>
+                <td colspan="4">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1">Resources for Deplomyment: @parentContext.Id</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudTable
+                                T="DeploymentResourceDto"
+                                ServerData="@(new Func<TableState, Task<TableData<DeploymentResourceDto>>>(GetDeploymentResourcesFromServer))"
+                                RowsPerPage="DeploymentResourcesPageSize"
+                                Elevation="0"
+                                Hover="false"
+                                @bind-Loading="@_isResourcesLoading">
+                                <HeaderContent>
+                                    <MudTh>Name</MudTh>
+                                    <MudTh>Resource Id</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate>
+                                   <MudTd DataLabel="Name">@context.Name</MudTd>
+                                    <MudTd DataLabel="Resource Id">@context.Id</MudTd>
+                                </RowTemplate>
+
+                                <PagerContent>
+                                    <MudTablePager/>
+                                </PagerContent>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public int DeploymentResourcesPageSize { get; set; } = 10;
+
+    private List<DeploymentDto> _deployments;
+    private int _totalDeployments;
+
+    private List<DeploymentResourceDto> _resourcesForSelectedDeployment;
+    private int _totalResourcesForSelectedDeployment;
+
+    private DeploymentDto _selectedDeployment;
+    
+    bool _isLoading;
+
+    bool _isResourcesLoading;
+
+
+    private async Task<TableData<DeploymentDto>> GetDeploymentsFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        
+            _deployments = await Camunda.Api.DeploymentApi.GetDeploymentsAsync(
+                sortBy: "deploymentTime",
+                sortOrder: "desc",
+                firstResult: state.PageSize * (state.Page),
+                maxResults: state.PageSize);
+            
+            _totalDeployments = Convert.ToInt32((await Camunda.Api.DeploymentApi.GetDeploymentsCountAsync()).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<DeploymentDto>()
+        {
+            Items = _deployments,
+            TotalItems = _totalDeployments
+        };
+    }
+
+    private async Task<TableData<DeploymentResourceDto>> GetDeploymentResourcesFromServer(TableState state)
+    {
+        _isResourcesLoading = true;
+        StateHasChanged();
+
+        _resourcesForSelectedDeployment = await Camunda.Api.DeploymentApi.GetDeploymentResourcesAsync(_selectedDeployment.Id);
+
+        _totalResourcesForSelectedDeployment = _resourcesForSelectedDeployment.Count();
+        
+        _isResourcesLoading = false;
+        StateHasChanged();
+
+        return new TableData<DeploymentResourceDto>()
+        {
+            TotalItems = Convert.ToInt32(_totalResourcesForSelectedDeployment),
+            Items = _resourcesForSelectedDeployment
+        };
+    }
+
+    void OnRowClicked(TableRowClickEventArgs<DeploymentDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedDeployment))
+        {
+            _selectedDeployment = clickedRow.Item;
+        }
+        else
+        {
+            _selectedDeployment = null;
+        }
+    }
+}

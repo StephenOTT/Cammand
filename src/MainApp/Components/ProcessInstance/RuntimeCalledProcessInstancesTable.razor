@@ -1,0 +1,97 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
+@inject NavigationManager NavigationManager
+
+
+<MudTable
+    T="ProcessInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<ProcessInstanceDto>>>(GetDataFromServer))"
+    Hover="true"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Instance Id</MudTh>
+        <MudTh>Business Key</MudTh>
+        <MudTh>Definition Id</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Suspended == true)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else
+            {
+                <MudText>Active</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Instance ID">@context.Id</MudTd>
+        <MudTd DataLabel="Business Key">@context.BusinessKey</MudTd>
+        <MudTd DataLabel="Definition Id">@context.DefinitionId</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
+        </MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string SuperProcessInstanceId { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    private List<ProcessInstanceDto> _instances;
+    
+    private int _totalInstances;
+
+    bool _isLoading;
+
+
+    private async Task<TableData<ProcessInstanceDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var query = new ProcessInstanceQueryDto()
+        {
+            SuperProcessInstance = SuperProcessInstanceId
+        };
+
+        var queryCount = new ProcessInstanceQueryDto
+        {
+            SuperProcessInstance = SuperProcessInstanceId
+        };
+
+        _instances = await Camunda.Api.ProcessInstanceApi.QueryProcessInstancesAsync(state.PageSize * (state.Page), state.PageSize, query);
+
+        _totalInstances = Convert.ToInt32((await Camunda.Api.ProcessInstanceApi.QueryProcessInstancesCountAsync(queryCount)).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<ProcessInstanceDto>()
+        {
+            Items = _instances,
+            TotalItems = _totalInstances
+        };
+    }
+
+    void OnDetailsClick(string instanceId)
+    {
+        NavigationManager.NavigateTo($"process-instances/{instanceId}");
+    }
+}

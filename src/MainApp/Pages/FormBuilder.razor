@@ -1,193 +1,182 @@
 @page "/forms/builder"
 @using System.Text.Json
 @using Formio.Components
+@using Color = MudBlazor.Color
 @inject IJSRuntime _jsRuntime
 
-
-<Container>
-    <Row Margin="Margin.Is1">
-        <Heading Size="HeadingSize.Is3">Form Builder</Heading>
-    </Row>
-    <Row Margin="Margin.Is1">
-        <Column ColumnSize="ColumnSize.IsFull">
-            <Card>
-                <CardHeader>
-                    <CardTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Form Builder</MudText>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
                         Builder
-                    </CardTitle>
-                </CardHeader>
-                <CardBody>
-                    <FileEdit Changed="@OpenBuilderSchema">Open Schema JSON File</FileEdit>
-                </CardBody>
-                <CardBody>
-                    <RadioGroup TValue="@string"
-                                Name="displayMode"
-                                Orientation="Orientation.Horizontal"
-                                CheckedValue="@SelectedDisplayMode"
-                                CheckedValueChanged="@OnSelectedDisplayModeChanged">
-                        <Radio TValue="@string" Value="@("form")">Form</Radio>
-                        <Radio TValue="@string" Value="@("wizard")">Wizard</Radio>
-                    </RadioGroup>
-                </CardBody>
-                <CardBody>
-                    <FormioBuilder @ref="@Builder"
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <InputFile id="loadInput" OnChange="OpenBuilderSchema" hidden/>
+
+                    <MudFab HtmlTag="label"
+                            Color="Color.Secondary"
+                            Icon="@Icons.Filled.FileUpload"
+                            Label="Load Json Schema"
+                            for="loadInput"/>
+
+                </MudCardContent>
+                <MudCardContent>
+                    
+                    <MudRadioGroup T="string" SelectedOption="@_selectedDisplayMode" SelectedOptionChanged="@OnSelectedDisplayModeChanged">
+                        <MudRadio Option="@("form")">Form</MudRadio>
+                        <MudRadio Option="@("wizard")">Wizard</MudRadio>
+                    </MudRadioGroup>
+
+                </MudCardContent>
+                <MudCardContent>
+                    
+                    <FormioBuilder @ref="@_builder"
                                    OnBuilderChange="@HandleBuilderChangeEvent"
-                                   FormSchema="@BuilderSchema">
+                                   FormSchema="@_builderSchema">
                     </FormioBuilder>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1">
-        <Column ColumnSize="ColumnSize.IsFull">
-            <Card>
-                <CardHeader>
-                    <CardTitle>
+                    
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
                         Builder Schema
-                    </CardTitle>
-                </CardHeader>
-                <CardBody>
-                    <MemoEdit Rows="10" @bind-Text="@BuilderSchemaText"/>
-                </CardBody>
-                <CardBody>
-                    <Button Clicked="@(() => DownloadJson(FileName, BuilderSchemaText))"
-                            Color="Color.Link">
-                        Download Schema
-                    </Button>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1">
-        <Column>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField T="string" Lines="10" Text="@_builderSchemaText" Variant="Variant.Filled" Disabled="true"/>
+                </MudCardContent>
+                <MudCardContent>
+                    
+                    <MudButton OnClick="@(() => DownloadJson(_fileName, _builderSchemaText))" Variant="Variant.Filled" Color="Color.Secondary" Disabled="@(_builderSchemaText == null)">Download Schema</MudButton>
+                    
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
                         Form Viewer
-                    </CardTitle>
-                </CardHeader>
-                <CardBody>
-                    <Button Color="Color.Info" Clicked="@UpdateViewerSchema">Load Form from Builder</Button>
-                </CardBody>
-                <CardBody>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Form</CardTitle>
-                        </CardHeader>
-                        <CardBody>
-                            @if (ViewerSchema != null)
-                            {
-                                <FormioViewer @ref="@Viewer" @bind-FormSchema="@ViewerSchema" OnFormSubmit="@HandleFormSubmission"></FormioViewer>
-                            }
-                            else
-                            {
-                                <Text>Nothing to Render: No Form Schema Found.</Text>
-                            }
-                        </CardBody>
-                    </Card>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @* Update to manual so we are not constantly refreshing the form on every builder change *@
+                    <MudButton OnClick="@UpdateViewerSchema" Variant="Variant.Filled" Color="Color.Secondary" Disabled="@(_builderSchemaText == null)">Load Form from Builder</MudButton>
+                    
+                </MudCardContent>
+                <MudCardContent>
+                    
+                    @if (_viewerSchema != null) 
+                    {
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>Form</CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <FormioViewer @ref="@_viewer" @bind-FormSchema="@_viewerSchema" OnFormSubmit="@HandleFormSubmission"></FormioViewer>
+                            </MudCardContent>
+                        </MudCard>
+                    }
 
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1">
-        <Column ColumnSize="ColumnSize.IsFull">
-            <Card>
-                <CardHeader>
-                    <CardTitle>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
                         Form Submission
-                    </CardTitle>
-                </CardHeader>
-                <CardBody>
-                    <MemoEdit Rows="10" @bind-Text="@FormSubmissionText"/>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-</Container>
-
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField T="string" Lines="10" Text="@_formSubmissionText" Variant="Variant.Filled" Disabled="true"/>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
 
-    FormSchema BuilderSchema;
-    string BuilderSchemaText;
+    FormSchema _builderSchema;
+    string _builderSchemaText;
 
-    object FormSubmission;
-    string FormSubmissionText;
+    object _formSubmission;
+    string _formSubmissionText;
 
-    FormSchema ViewerSchema;
+    FormSchema _viewerSchema;
 
-    string SelectedDisplayMode = "form";
+    string _selectedDisplayMode = "form";
 
-    private FormioBuilder Builder;
-    private FormioViewer Viewer;
+    private FormioBuilder _builder;
+    private FormioViewer _viewer;
 
-    string FileName = "form_schema.json";
+    string _fileName = "form_schema.json";
 
-    IJSObjectReference InteropHelpers;
+    IJSObjectReference _interopHelpers;
+
+    IBrowserFile file;
 
     protected override async Task OnInitializedAsync()
     {
-        BuilderSchema = new FormSchema
+        _builderSchema = new FormSchema
         {
-            Display = SelectedDisplayMode
+            Display = _selectedDisplayMode
         };
 
-        InteropHelpers = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop-helpers.js");
+        _interopHelpers = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/interop-helpers.js");
     }
 
     async Task OnSelectedDisplayModeChanged(string value)
     {
-        SelectedDisplayMode = value;
-        BuilderSchema.Display = value;
-        BuilderSchemaText = JsonSerializer.Serialize(BuilderSchema, new JsonSerializerOptions {WriteIndented = true});
-        await Builder.RebuildForm();
+        _selectedDisplayMode = value;
+        _builderSchema.Display = value;
+        _builderSchemaText = JsonSerializer.Serialize(_builderSchema, new JsonSerializerOptions {WriteIndented = true});
+        await _builder.RebuildForm();
     }
 
 
     void HandleBuilderChangeEvent(FormSchema schema)
     {
-        BuilderSchema = schema;
-        BuilderSchemaText = JsonSerializer.Serialize(schema, new JsonSerializerOptions {WriteIndented = true});
+        _builderSchema = schema;
+        _builderSchemaText = JsonSerializer.Serialize(schema, new JsonSerializerOptions {WriteIndented = true});
     }
 
     void HandleFormSubmission(object submission)
     {
-        FormSubmission = submission;
-        FormSubmissionText = JsonSerializer.Serialize(submission, new JsonSerializerOptions {WriteIndented = true});
+        _formSubmission = submission;
+        _formSubmissionText = JsonSerializer.Serialize(submission, new JsonSerializerOptions {WriteIndented = true});
     }
 
     async Task UpdateViewerSchema()
     {
-        ViewerSchema = JsonSerializer.Deserialize<FormSchema>(BuilderSchemaText);
-        await Viewer.RebuildForm();
+        _viewerSchema = JsonSerializer.Deserialize<FormSchema>(_builderSchemaText);
+        if (_viewer != null)
+        {
+            await _viewer.RebuildForm();
+        }
     }
 
     private async void DownloadJson(string fileName, string content)
     {
-        await InteropHelpers.InvokeAsync<object>("saveFile", fileName, content);
+        await _interopHelpers.InvokeAsync<object>("saveFile", fileName, content);
     }
 
-    async Task OpenBuilderSchema(FileChangedEventArgs e)
+    async Task OpenBuilderSchema(InputFileChangeEventArgs e)
     {
-        Console.WriteLine("file Count: " + e.Files.Length);
-        foreach (var file in e.Files)
-        {
-            Console.WriteLine("running!");
-            try
-            {
-                BuilderSchema = await JsonSerializer.DeserializeAsync<FormSchema>(file.OpenReadStream());
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                StateHasChanged();
-                await Builder.RebuildForm();
-            }
-        }
+        file = e.File;
+        _builderSchema = await JsonSerializer.DeserializeAsync<FormSchema>(file.OpenReadStream());
+        HandleBuilderChangeEvent(_builderSchema);
+        StateHasChanged(); //@TODO review why this is needed before the rebuild...  Integrate changes into the builder code.
+        await _builder.RebuildForm();
     }
 
 }

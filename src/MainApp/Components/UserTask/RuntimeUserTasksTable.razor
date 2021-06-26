@@ -1,0 +1,105 @@
+﻿@using Camunda.Http.Api.Model
+@using Camunda.Http.Api
+
+<MudTable
+    T="TaskDto"
+    ServerData="@(new Func<TableState, Task<TableData<TaskDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Assignee</MudTh>
+        <MudTh>Start Time</MudTh>
+        <MudTh>Due</MudTh>
+        <MudTh>Priority</MudTh>
+        <MudTh>Task Definition Key</MudTh>
+        <MudTh>Task Instance Id</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Suspended == true)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else
+            {
+                <MudText>Active</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Assignee">@context.Assignee</MudTd>
+        <MudTd DataLabel="Start Time">@context.Created</MudTd>
+        <MudTd DataLabel="Due">@context.Due</MudTd>
+        <MudTd DataLabel="Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Task Definition Key">@context.TaskDefinitionKey</MudTd>
+        <MudTd DataLabel="Task Instance Id">@context.Id</MudTd>
+
+
+    </RowTemplate>
+    
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    private List<TaskDto> _userTasks;
+
+    private int _totalUserTasks;
+
+    bool _isLoading;
+
+    
+    async Task<TableData<TaskDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        
+        var query = new TaskQueryDto()
+        {
+            ProcessInstanceId = ProcessInstanceId,
+            Sorting = new List<TaskQueryDtoSorting>()
+            {
+                new()
+                {
+                    SortBy = TaskQueryDtoSorting.SortByEnum.Created,
+                    SortOrder = TaskQueryDtoSorting.SortOrderEnum.Desc
+                }
+            }
+        };
+
+        var totalQuery = new TaskQueryDto()
+        {
+            ProcessInstanceId = ProcessInstanceId
+        };
+
+        _userTasks = await Camunda.Api.TaskApi.QueryTasksAsync(state.PageSize * (state.Page), state.PageSize, query);
+
+        _totalUserTasks = Convert.ToInt32((await Camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
+        
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<TaskDto>
+        {
+            Items = _userTasks,
+            TotalItems = _totalUserTasks,
+        };
+    }
+}

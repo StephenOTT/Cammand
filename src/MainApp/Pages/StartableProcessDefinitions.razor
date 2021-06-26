@@ -5,26 +5,18 @@
 
 @page "/start"
 
-<Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Startable Process Definitions</Heading>
-        </Column>
-    </Row>
-    <Row>
-        <Column>
-            <StartProcessInstanceDataGrid Camunda="@camunda" />
-        </Column>
-    </Row>
-</Container>
 
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Startable Process Definitions</MudText>
+    <StartProcessInstanceDataGrid Camunda="@_camunda" />
+</MudContainer>
 
 @code {
-    CamundaClient camunda;
+    CamundaClient _camunda;
 
     protected override void OnInitialized()
     {
-        camunda = AppData.CamundaClient;
+        _camunda = AppData.CamundaClient;
     }
 
 }

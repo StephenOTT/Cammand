@@ -325,11 +325,8 @@ namespace Camunda.Http.Api.Client
 
             builder.AddPathParameters(options.PathParameters);
 
-            // In case of POST or PUT pass query parameters in request body
-            if (method != HttpMethod.Post && method != HttpMethod.Put)
-            {
-                builder.AddQueryParameters(options.QueryParameters);
-            }
+
+            builder.AddQueryParameters(options.QueryParameters);
 
             HttpRequestMessage request = new HttpRequestMessage(method, builder.GetFullUri());
 

@@ -1,39 +1,46 @@
 ﻿@using MainApp.Components.Tasklist
 @using Camunda.Http.Api
-@using Camunda.Http.Api.Model
 
 @inject AppData AppData
 
 @page "/tasklist"
 
-<Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Tasklist</Heading>
-        </Column>
-    </Row>
-    <Row Margin="Margin.Is1.OnY">
-        <Column>
-            <Card>
-                <CardHeader>Tasks</CardHeader>
-                <CardBody>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Tasklist</MudText>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardheader>
+                    <CardHeaderContent>
+                        Runtime Tasks
+                    </CardHeaderContent>
+                </MudCardheader>
+                <MudCardContent>
+                    <RuntimeTasklistDataGrid camunda="@_camunda"/>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>Historic Tasks</CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
                     <HistoricTasklistDataGrid camunda="@_camunda"/>
-                </CardBody>
-            </Card>
-        </Column>
-    </Row>
-</Container>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 
 @code {
 
     CamundaClient _camunda;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _camunda = AppData.CamundaClient;
-
-        StateHasChanged();
     }
 
 }

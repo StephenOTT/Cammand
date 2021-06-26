@@ -1,0 +1,68 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+
+<MudTable
+    T="VariableInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<VariableInstanceDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Value</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Type">@context.Type</MudTd>
+        <MudTd DataLabel="Value">@context.Value</MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    List<VariableInstanceDto> _instances;
+    
+    int _totalInstances;
+
+    bool _isLoading;
+    
+    
+    private async Task<TableData<VariableInstanceDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        
+        var query = new VariableInstanceQueryDto { ProcessInstanceIdIn = new List<string> {ProcessInstanceId} };
+
+        _instances = await Camunda.Api.VariableInstanceApi.QueryVariableInstancesAsync(state.PageSize * (state.Page), state.PageSize, false, query);
+
+        _totalInstances = Convert.ToInt32((await Camunda.Api.VariableInstanceApi.QueryVariableInstancesCountAsync(query)).Count);
+        
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<VariableInstanceDto>
+        {
+            TotalItems = _totalInstances,
+            Items = _instances
+        };
+    }
+}

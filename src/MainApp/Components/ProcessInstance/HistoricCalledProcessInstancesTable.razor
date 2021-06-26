@@ -1,0 +1,114 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
+@inject NavigationManager NavigationManager
+
+<MudTable
+    T="HistoricProcessInstanceDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricProcessInstanceDto>>>(GetDataFromServer))"
+    Hover="true"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Instance ID</MudTh>
+        <MudTh>Business Key</MudTh>
+        <MudTh>Start Time</MudTh>
+        <MudTh>End Time</MudTh>
+        <MudTh>Started By</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.State == HistoricProcessInstanceDto.StateEnum.ACTIVE)
+            {
+                <MudText>Active</MudText>
+            }
+            else if (context.State == HistoricProcessInstanceDto.StateEnum.SUSPENDED)
+            {
+                <MudText>Suspended</MudText>
+            }
+            else if (context.State == HistoricProcessInstanceDto.StateEnum.COMPLETED)
+            {
+                <MudText>Completed</MudText>
+            }
+            else
+            {
+                <MudText>@context.State.ToString()</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Instance ID">@context.Id</MudTd>
+        <MudTd DataLabel="Business Key">@context.BusinessKey</MudTd>
+        <MudTd DataLabel="Start Time">@context.StartTime</MudTd>
+        <MudTd DataLabel="End Time">@context.EndTime</MudTd>
+        <MudTd DataLabel="Started By">@context.StartUserId</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
+        </MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string SuperProcessInstanceId { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    private List<HistoricProcessInstanceDto> _instances;
+    
+    private int _totalInstances;
+
+    bool _isLoading;
+
+
+    private async Task<TableData<HistoricProcessInstanceDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var query = new HistoricProcessInstanceQueryDto
+        {
+            SuperProcessInstanceId = SuperProcessInstanceId,
+            Sorting = new List<HistoricProcessInstanceQueryDtoSorting> {
+                new () {
+                    SortBy = HistoricProcessInstanceQueryDtoSorting.SortByEnum.StartTime,
+                    SortOrder = HistoricProcessInstanceQueryDtoSorting.SortOrderEnum.Desc }
+            }
+        };
+
+        var queryCount = new HistoricProcessInstanceQueryDto
+        {
+            SuperProcessInstanceId = SuperProcessInstanceId
+        };
+
+        _instances = await Camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesAsync(state.PageSize * (state.Page), state.PageSize, query);
+
+        _totalInstances = Convert.ToInt32((await Camunda.Api.HistoricProcessInstanceApi.QueryHistoricProcessInstancesCountAsync(queryCount)).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<HistoricProcessInstanceDto>()
+        {
+            Items = _instances,
+            TotalItems = _totalInstances
+        };
+    }
+
+    void OnDetailsClick(string instanceId)
+    {
+        NavigationManager.NavigateTo($"process-instances/{instanceId}");
+    }
+}

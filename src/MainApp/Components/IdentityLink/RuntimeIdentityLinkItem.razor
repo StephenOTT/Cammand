@@ -1,0 +1,23 @@
+﻿@if (Items != null)
+{
+    @if (Items.Any())
+    {
+        <Blazorise.Text>@string.Join(",", Items)</Blazorise.Text>
+    }
+    else
+    {
+        <Blazorise.Text Italic="true">None</Blazorise.Text>
+    }
+}
+else
+{
+    <Blazorise.Text>Loading...</Blazorise.Text>
+}
+
+
+@code {
+    
+    [Parameter]
+    public IEnumerable<string> Items { get; set; }
+
+}

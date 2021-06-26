@@ -1,0 +1,198 @@
+﻿@using Camunda.Http.Api.Model
+@using Camunda.Http.Api
+@using Size = MudBlazor.Size
+@using Color = MudBlazor.Color
+@inject NavigationManager NavigationManager
+
+@inject AppData AppData
+
+<MudTable
+    T="ProcessDefinitionDto"
+    ServerData="@(new Func<TableState, Task<TableData<ProcessDefinitionDto>>>(GetLatestDefinitionsFromServer))"
+    Hover="true"
+    @ref="@_table"
+    OnRowClick="@OnRowClicked"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Key</MudTh>
+        <MudTh>Latest Version</MudTh>
+        <MudTh>Tenant Id</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Key">@context.Key</MudTd>
+        <MudTd DataLabel="Latest Version">@context.Version</MudTd>
+        <MudTd DataLabel="Tenant Id">@context.TenantId</MudTd>
+    </RowTemplate>
+
+    <ChildRowContent Context="parentContext">
+        @if (_selectedSubDefinition?.Id == parentContext.Id)
+        {
+            <MudTr>
+                <td colspan="4">
+                    <MudCard Elevation="0" Outlined="true">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1">Definitions for Key: @parentContext.Key</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudTable
+                                T="ProcessDefinitionDto"
+                                ServerData="@(new Func<TableState, Task<TableData<ProcessDefinitionDto>>>(GetDefinitionsByKeyFromServer))"
+                                RowsPerPage="SubDefinitionsPageSize"
+                                Elevation="0"
+                                Hover="false"
+                                @bind-Loading="@_isSubLoading">
+                                <HeaderContent>
+                                    <MudTh>State</MudTh>
+                                    <MudTh>Definition Id</MudTh>
+                                    <MudTh>Version</MudTh>
+                                    <MudTh>Name</MudTh>
+                                    <MudTh>Deployment Id</MudTh>
+                                    <MudTh>Tasklist Startable</MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate>
+                                    <MudTd DataLabel="State">
+                                        @if (context.Suspended == false)
+                                        {
+                                            <MudText>Active</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText>Suspended</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Definition Id">@context.Id</MudTd>
+                                    <MudTd DataLabel="Version">@context.Version</MudTd>
+                                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                                    <MudTd DataLabel="Deployment Id">@context.DeploymentId</MudTd>
+                                    <MudTd DataLabel="Tasklist Startable">@context.StartableInTasklist</MudTd>
+                                    <MudTd>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
+
+                                        @if (context.Suspended == false)
+                                        {
+                                            <MudButton Variant="Variant.Text" Color="Color.Warning">Suspend</MudButton>
+                                        }
+                                        else
+                                        {
+                                            <MudButton Variant="Variant.Text" Color="Color.Tertiary">Activate</MudButton>
+                                        }
+                                    </MudTd>
+                                </RowTemplate>
+
+                                <PagerContent>
+                                    <MudTablePager/>
+                                </PagerContent>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+
+            </MudTr>
+        }
+    </ChildRowContent>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 50;
+
+    [Parameter]
+    public int SubDefinitionsPageSize { get; set; } = 10;
+
+    private MudTable<ProcessDefinitionDto> _table;
+
+    private List<ProcessDefinitionDto> _definitions;
+    private int _totalDefinitions;
+
+    private List<ProcessDefinitionDto> _subDefinitions;
+    private int _totalSubDefinitions;
+
+    private ProcessDefinitionDto _selectedSubDefinition;
+
+    bool _isLoading;
+
+    bool _isSubLoading;
+
+
+    private async Task<TableData<ProcessDefinitionDto>> GetLatestDefinitionsFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
+            latestVersion: true,
+            firstResult: state.PageSize * (state.Page),
+            maxResults: state.PageSize);
+
+        _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(latestVersion: true)).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<ProcessDefinitionDto>()
+        {
+            Items = _definitions,
+            TotalItems = _totalDefinitions
+        };
+    }
+
+    private async Task<TableData<ProcessDefinitionDto>> GetDefinitionsByKeyFromServer(TableState state)
+    {
+        _isSubLoading = true;
+        StateHasChanged();
+
+        var defs = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
+            key: _selectedSubDefinition.Key,
+            sortBy: "version",
+            sortOrder: "desc",
+            firstResult: state.PageSize * (state.Page),
+            maxResults: state.PageSize);
+
+        var total = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(
+            key: _selectedSubDefinition.Key);
+
+        _isSubLoading = false;
+        StateHasChanged();
+
+        return new TableData<ProcessDefinitionDto>()
+        {
+            Items = defs,
+            TotalItems = Convert.ToInt32(total.Count)
+        };
+    }
+
+    void OnRowClicked(TableRowClickEventArgs<ProcessDefinitionDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedSubDefinition))
+        {
+            _selectedSubDefinition = clickedRow.Item;
+        }
+        else
+        {
+            _selectedSubDefinition = null;
+        }
+    }
+
+    void OnDetailsClick(string definitionId)
+    {
+        NavigationManager.NavigateTo($"process-definitions/{definitionId}");
+    }
+
+
+}

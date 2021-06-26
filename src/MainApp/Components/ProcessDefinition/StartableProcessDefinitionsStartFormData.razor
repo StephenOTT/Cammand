@@ -3,19 +3,56 @@
 @using Camunda.Http.Api.Model
 @using System.Text
 @using System.IO
+@using System.Text.Json
+@using Formio.Components
+@using MainApp.Components.Form
+@using Color = MudBlazor.Color
 
 @inject AppData AppData
 
-@if (_formSchema != null)
-{
-    <MemoEdit Text="@_formSchema"
-              Rows="10"
-              ReadOnly="true" />
-}
-else
-{
-    <Paragraph>Loading Start Form...</Paragraph>
-}
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_includeVariablesInResponse" Color="Color.Primary">Include Variables in Response</MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_submitVariablesAsJson" Color="Color.Primary">Submit Variables as Json (unchecked submits as individual variables)</MudCheckBox>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox TValue="bool" @bind-Checked="@_submitAsTransient" Color="Color.Primary">Submit Variables as Transient</MudCheckBox>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Form</CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <StartForm Camunda="@Camunda" ProcessDefinitionId="@ProcessDefinitionId" OnFormSubmit="@OnFormSubmit"></StartForm>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+
+        @if (_startedProcessInstanceResponse != null)
+        {
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>Started Process Instance Info</CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField T="string" Variant="Variant.Filled" Disabled="true" Text="@_startedProcessInstanceResponse" Lines="15"/>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudItem>
+</MudGrid>
 
 
 @code {
@@ -26,69 +63,55 @@ else
     [Parameter]
     public CamundaClient Camunda { get; set; }
 
-    private FormDto _formDto;
-
-    private string _formSchema;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Camunda = AppData.CamundaClient;
-
-        _formDto = await GetProcessDefinitionStartFormDetails(ProcessDefinitionId);
-
-        _formSchema = await GetFormSchema(_formDto.Key, ProcessDefinitionId);
     }
 
-    private async Task<string> GetFormSchema(string formKey, string definitionId)
-    {
-        var type = GetFormType(formKey);
+    private string _startedProcessInstanceResponse;
 
-        return type switch
-        {
-            FormType.Embedded => await GetRenderedStartForm(definitionId),
-            FormType.Deployed => await GetDeployedStartForm(definitionId),
-            _ => null
-        };
-    }
+    private bool _includeVariablesInResponse = false;
 
-    private FormType GetFormType(string formKey)
+    private bool _submitVariablesAsJson = true;
+
+    private bool _submitAsTransient = false;
+
+
+    private async Task OnFormSubmit(FormSubmission submission)
     {
-        if (_formDto.Key.StartsWith("embedded:"))
+        try
         {
-            return FormType.Embedded;
+            var variablesForSubmit = new Dictionary<string, VariableValueDto>();
+            if (_submitVariablesAsJson)
+            {
+                variablesForSubmit.Add(
+                    "startFormSubmission",
+                    new VariableValueDto(
+                        JsonSerializer.Serialize(submission),
+                        "json",
+                        new Dictionary<string, object> {{"transient", _submitAsTransient}}));
+            }
+            else
+            {
+                foreach (var jsonProperty in submission.Data.RootElement.EnumerateObject())
+                {
+                    variablesForSubmit.Add(jsonProperty.Name, FormUtils.CreateVariableValue(jsonProperty.Value, _submitAsTransient));
+                }
+            }
+
+            var response = await Camunda.Api.ProcessDefinitionApi.StartProcessInstanceAsync(ProcessDefinitionId, new StartProcessInstanceDto
+            {
+                Variables = variablesForSubmit,
+                WithVariablesInReturn = _includeVariablesInResponse
+            });
+
+            _startedProcessInstanceResponse = response.ToJson();
         }
-        else if (_formDto.Key.StartsWith("deployment:"))
+        catch (Exception e)
         {
-            return FormType.Deployed;
+            Console.WriteLine(e);
+            throw;
         }
-        else
-        {
-            return FormType.Custom;
-        }
-    }
-
-    private async Task<FormDto> GetProcessDefinitionStartFormDetails(string definitionId)
-    {
-        return await Camunda.Api.ProcessDefinitionApi.GetStartFormAsync(definitionId);
-    }
-
-    private async Task<string> GetRenderedStartForm(string definitionId)
-    {
-        using var reader = new StreamReader(await Camunda.Api.ProcessDefinitionApi.GetRenderedStartFormAsync(definitionId));
-        return await reader.ReadToEndAsync();
-    }
-
-    private async Task<string> GetDeployedStartForm(string definitionId)
-    {
-        using var reader = new StreamReader(await Camunda.Api.ProcessDefinitionApi.GetDeployedStartFormAsync(definitionId));
-        return await reader.ReadToEndAsync();
-    }
-
-    private enum FormType
-    {
-        Embedded,
-        Deployed,
-        Custom
     }
 
 }

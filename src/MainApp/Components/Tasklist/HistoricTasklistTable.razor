@@ -1,0 +1,381 @@
+﻿@using Camunda.Http.Api.Model
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Api
+@using MainApp.Components.UserTask
+@using MainApp.Components.IdentityLink
+@using System.IO
+@using Color = MudBlazor.Color
+@inject AppData AppData
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClicked" Disabled="true">Create Custom Task</MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTable
+            T="HistoricTaskInstanceDto"
+            @ref="_table"
+            ServerData="@(new Func<TableState, Task<TableData<HistoricTaskInstanceDto>>>(GetDataFromServer))"
+            Hover="true"
+            RowsPerPage="PageSize"
+            OnRowClick="@OnRowClicked"
+            @bind-Loading="@_isLoading"
+            Elevation="0">
+            <HeaderContent>
+                <MudTh>State</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Assignee</MudTh>
+                <MudTh>Start Time</MudTh>
+                <MudTh>End Time</MudTh>
+                <MudTh>Duration</MudTh>
+                <MudTh>Due</MudTh>
+                <MudTh>Priority</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>
+                    @if (context.EndTime == null)
+                    {
+                        <MudText>Active</MudText>
+                    } else if (context.DeleteReason != null)
+                    {
+                        <MudText>Deleted</MudText>
+                    }
+                    else if (context.EndTime != null && context.DeleteReason == null)
+                    {
+                        <MudText>Completed</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Assignee">@context.Assignee</MudTd>
+                <MudTd DataLabel="Start Time">@context.StartTime</MudTd>
+                <MudTd DataLabel="Start Time">@context.EndTime</MudTd>
+                <MudTd DataLabel="Priority">@context.Duration</MudTd>
+                <MudTd DataLabel="Due">@context.Due</MudTd>
+                <MudTd DataLabel="Priority">@context.Priority</MudTd>
+
+            </RowTemplate>
+
+            <ChildRowContent Context="parentContext">
+                @if (parentContext.Id == _selectedUserTask?.Id)
+                {
+                    <MudTr>
+                        <td colspan="4">
+                            <MudGrid>
+                                @if (parentContext.EndTime == null)
+                                {
+                                    <MudItem xs="12">
+                                        <MudCard>
+                                            <MudCardContent>
+
+                                                @if (parentContext.Assignee == null)
+                                                {
+                                                    <MudButton OnClick="@OnClaimClicked" Variant="Variant.Filled" Color="Color.Primary">Claim</MudButton>
+                                                }
+                                                else if (parentContext.Assignee == AppData.EngineUsername)
+                                                {
+                                                    <MudButton OnClick="@OnUnClaimClicked" Variant="Variant.Filled" Color="Color.Primary">Un-Claim</MudButton>
+                                                }
+                                                else
+                                                {
+                                                    <MudButton Color="Color.Tertiary" OnClick="@OnSetAssigneeClicked">Set Assignee</MudButton>
+                                                }
+
+                                                <MudButton Color="Color.Tertiary" OnClick="@OnDelegateClicked">Delegate</MudButton>
+                                                <MudButton Color="Color.Tertiary" OnClick="@OnResolveClicked">Resolve</MudButton>
+                                                <MudButton Color="Color.Tertiary" OnClick="@OnAddCommentClicked">Comment</MudButton>
+                                                <MudButton Color="Color.Tertiary" OnClick="@OnAddAttachmentClicked">Add Attachment</MudButton>
+                                                <MudButton Color="Color.Error" OnClick="@OnDelegateClicked">Delete</MudButton>
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                }
+                              
+                                <MudItem xs="12">
+                                    <MudCard>
+                                        <MudCardContent>
+                                            <MudGrid>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">Start Time: @parentContext.StartTime</MudText>
+                                                </MudItem>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">End Time: @parentContext.EndTime</MudText>
+                                                </MudItem>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">Due Date @parentContext.Due</MudText>
+                                                </MudItem>
+                                                <MudItem xs="6">
+                                                    <MudText Typo="Typo.body1">Tenant @parentContext.TenantId</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudText Typo="Typo.body1">Task Description @parentContext.Description</MudText>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                @if (parentContext.EndTime == null)
+                                {
+                                    <MudItem xs="12">
+                                        <MudCard>
+                                            <MudCardContent>
+
+                                                <UserTaskIdentityLinks Camunda="@Camunda" UserTaskId="@parentContext.Id"/>
+
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudCard>
+                                            <MudCardContent>
+
+                                                <UserTaskFormData Camunda="@Camunda" UserTaskId="@parentContext.Id"/>
+
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    private List<HistoricTaskInstanceDto> _userTasks;
+    private int _totalUserTasks;
+
+    private HistoricTaskInstanceDto _selectedUserTask;
+    
+    bool _isLoading;
+
+    MudTable<HistoricTaskInstanceDto> _table;
+    
+    
+    async Task<TableData<HistoricTaskInstanceDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var query = new HistoricTaskInstanceQueryDto()
+        {
+            Sorting = new List<HistoricTaskInstanceQueryDtoSorting>()
+            {
+                new()
+                {
+                    SortBy = HistoricTaskInstanceQueryDtoSorting.SortByEnum.StartTime,
+                    SortOrder = HistoricTaskInstanceQueryDtoSorting.SortOrderEnum.Desc
+                }
+            }
+        };
+
+        var totalQuery = new HistoricTaskInstanceQueryDto()
+        {
+        };
+
+        _userTasks = await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesAsync(state.PageSize * (state.Page), state.PageSize, query);
+        _totalUserTasks = Convert.ToInt32((await Camunda.Api.HistoricTaskInstanceApi.QueryHistoricTaskInstancesCountAsync(totalQuery)).Count);
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<HistoricTaskInstanceDto>
+        {
+            Items = _userTasks,
+            TotalItems = _totalUserTasks,
+        };
+    }
+
+
+    void OnRowClicked(TableRowClickEventArgs<HistoricTaskInstanceDto> clickedRow)
+    {
+        if (!clickedRow.Item.Equals(_selectedUserTask))
+        {
+            _selectedUserTask = clickedRow.Item;
+        }
+        else
+        {
+            _selectedUserTask = null;
+        }
+    }
+    
+    
+    
+    ///
+    /// does a check on server to see if task is currently assigned.
+    /// 
+    private async Task ClaimUserTask(string userTaskId, string assigneeUserId)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.ClaimAsync(userTaskId, new UserIdDto(assigneeUserId));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task UnClaimUserTask(string userTaskId)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.UnclaimAsync(userTaskId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    ///
+    /// does NOT check on server to see if task is currently assigned.
+    /// 
+    private async Task SetAssigneeUserTask(string userTaskId, string assigneeUserId)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.SetAssigneeAsync(userTaskId, new UserIdDto(assigneeUserId));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task DelegateUserTask(string userTaskId, string delegateUserId)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.DelegateTaskAsync(userTaskId, new UserIdDto(delegateUserId));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task AddCommentToUserTask(string userTaskId, string comment)
+    {
+        try
+        {
+            await Camunda.Api.TaskCommentApi.CreateCommentAsync(userTaskId, new CommentDto {Message = comment});
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task AddAttachmentToUserTask(string userTaskId, string attachmentName, string attachmentDescription, string attachmentType, string attachmentUrl, Stream attachmentContent)
+    {
+        try
+        {
+    //@TODO review if this actually works... The API says the content param is text/plain, but the openapi config set it as stream.    
+            await Camunda.Api.TaskAttachmentApi.AddAttachmentAsync(userTaskId, attachmentName, attachmentDescription, attachmentType, attachmentUrl, attachmentContent);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    ///
+    /// Deletion of a task cannot occur if part of a running task.
+    /// 
+    private async Task DeleteUserTask(string userTaskId)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.DeleteTaskAsync(userTaskId);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task CreateUserTask(TaskDto task)
+    {
+        try
+        {
+            await Camunda.Api.TaskApi.CreateTaskAsync(task);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+
+    private async void OnClaimClicked()
+    {
+        var currentUser = AppData.EngineUsername;
+        await ClaimUserTask(_selectedUserTask.Id, currentUser);
+        await _table.ReloadServerData();
+    }
+
+    private void OnSetAssigneeClicked()
+    {
+    }
+
+    private async void OnUnClaimClicked()
+    {
+        await UnClaimUserTask(_selectedUserTask.Id);
+        await _table.ReloadServerData();
+    }
+
+    private async void OnDelegateClicked()
+    {
+        await DeleteUserTask(_selectedUserTask.Id);
+    }
+
+    private void OnResolveClicked()
+    {
+    }
+
+    private void OnAddCommentClicked()
+    {
+    }
+
+    private void OnAddAttachmentClicked()
+    {
+    }
+
+    private async void OnDeleteClicked()
+    {
+        await DeleteUserTask(_selectedUserTask.Id);
+    }
+
+    private void OnCreateClicked()
+    {
+    }
+
+}

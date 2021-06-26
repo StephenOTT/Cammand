@@ -1,0 +1,123 @@
+﻿@using MainApp.Components.ProcessDefinition
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using System.Text
+@using System.IO
+@using System.Text.Encodings.Web
+@using System.Text.Json
+@using Formio.Components
+@using MainApp.Components.Form
+
+@inject AppData AppData
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_includeVariablesInResponse" Color="Color.Primary" Label="Include Variables in Response"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_submitVariablesAsJson" Color="Color.Primary" Label="Submit Variables as Json (unchecked submits as individual variables)"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox @bind-Checked="@_submitAsTransient" Color="Color.Primary" Label="Submit Variables as Transient"/>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Form</CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+
+                <UserTaskForm @ref="@_userTaskForm" Camunda="@Camunda" UserTaskId="@UserTaskId" OnFormSubmit="@OnFormSubmit"></UserTaskForm>
+
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    @if (_completedUserTaskInstanceResponse != null)
+    {
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardheader>
+                    <CardHeaderContent>Completed User Task Instance Info</CardHeaderContent>
+                </MudCardheader>
+                <MudCardContent>
+                    <MudTextField T="string" Disabled="true" Text="@_completedUserTaskInstanceResponse" Lines="10"></MudTextField>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+
+@code {
+
+    [Parameter]
+    public string UserTaskId { get; set; }
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Camunda = AppData.CamundaClient;
+    }
+
+    private UserTaskForm _userTaskForm;
+
+    private string _completedUserTaskInstanceResponse;
+
+    private bool _includeVariablesInResponse = false;
+
+    private bool _submitVariablesAsJson = true;
+
+    private bool _submitAsTransient = false;
+
+    private async Task OnFormSubmit(FormSubmission submission)
+    {
+        try
+        {
+            var variablesForSubmit = new Dictionary<string, VariableValueDto>();
+            if (_submitVariablesAsJson)
+            {
+                variablesForSubmit.Add(
+                    UserTaskId + "_FormSubmission",
+                    new VariableValueDto(
+                        JsonSerializer.Serialize(submission),
+                        "json",
+                        new Dictionary<string, object> {{"transient", _submitAsTransient}}));
+            }
+            else
+            {
+                foreach (var jsonProperty in submission.Data.RootElement.EnumerateObject())
+                {
+                    variablesForSubmit.Add(jsonProperty.Name, FormUtils.CreateVariableValue(jsonProperty.Value, _submitAsTransient));
+                }
+            }
+
+            var response = await Camunda.Api.TaskApi.SubmitAsync(UserTaskId, new CompleteTaskDto
+            {
+                Variables = variablesForSubmit,
+                WithVariablesInReturn = _includeVariablesInResponse
+            });
+
+            _completedUserTaskInstanceResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions {Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true});
+
+            await Task.Delay(500).ContinueWith(t => _userTaskForm.ResetFormAsync());
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+}
+

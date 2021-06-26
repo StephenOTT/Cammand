@@ -1,0 +1,95 @@
+﻿@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
+
+
+<MudTable
+    T="HistoricIncidentDto"
+    ServerData="@(new Func<TableState, Task<TableData<HistoricIncidentDto>>>(GetDataFromServer))"
+    Hover="false"
+    RowsPerPage="PageSize"
+    @bind-Loading="@_isLoading"
+    Elevation="0">
+    <HeaderContent>
+        <MudTh>State</MudTh>
+        <MudTh>Message</MudTh>
+        <MudTh>Create Time</MudTh>
+        <MudTh>End Time</MudTh>
+        <MudTh>Activity Id</MudTh>
+        <MudTh>Failed Activity Id</MudTh>
+        <MudTh>Type</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="State">
+            @if (context.Open == false)
+            {
+                if (context.Resolved == true)
+                {
+                    <MudBadge Color="Color.Success" Content="@("Resolved")"/>
+                }
+                else if (context.Deleted == true)
+                {
+                    <MudBadge Color="Color.Success" Content="@("Deleted")"/>
+                }
+            }
+            else
+            {
+                <MudBadge Color="Color.Error" Content="@("Open")"/>
+            }
+        </MudTd>
+        <MudTd DataLabel="Message">@context.IncidentMessage</MudTd>
+        <MudTd DataLabel="Create Time">@context.CreateTime</MudTd>
+        <MudTd DataLabel="End Time">@context.EndTime</MudTd>
+        <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
+        <MudTd DataLabel="Failed Activity Id">@context.FailedActivityId</MudTd>
+        <MudTd DataLabel="Type">@context.IncidentType</MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+
+@code {
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+
+    [Parameter]
+    public string ProcessInstanceId { get; set; }
+
+    private List<HistoricIncidentDto> _incidents;
+
+    private int _totalIncidents;
+
+    bool _isLoading;
+
+    async Task<TableData<HistoricIncidentDto>> GetDataFromServer(TableState state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        _incidents = await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsAsync(
+            processInstanceId: ProcessInstanceId,
+            sortBy: "createTime",
+            sortOrder: "desc"
+            );
+
+        _totalIncidents = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
+
+
+        _isLoading = false;
+        StateHasChanged();
+
+        return new TableData<HistoricIncidentDto>
+        {
+            TotalItems = _totalIncidents,
+            Items = _incidents
+        };
+    }
+}

@@ -5,18 +5,12 @@
 
 @page "/deployments/create"
 
-<Container>
-    <Row>
-        <Column>
-            <Heading Size="HeadingSize.Is1">Create a Deployment</Heading>
-        </Column>
-    </Row>
-    <Row>
-        <Column>
-            <CreateDeploymentForm Camunda="@camunda" />
-        </Column>
-    </Row>
-</Container>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Create a Deployment</MudText>
+    
+    <CreateDeploymentForm Camunda="@camunda"/>
+
+</MudContainer>
 
 
 @code {
