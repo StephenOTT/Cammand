@@ -2,10 +2,11 @@
 
 Alternative UI to Camunda BPM Webapps (Tasklist, Cockpit, and Admin) + More!
 
-WIP.
+Default app is a "Kitchen Sick" app that covers runtime and history apis.
 
 Contributions and collaboration is always welcomed.
 
+## Features:
 
 1. Extendable
 2. Customizable
@@ -16,24 +17,35 @@ Contributions and collaboration is always welcomed.
 7. Swap APIs for your custom endpoints
 8. What more do you need?
 
+## Screenshots
 
-![Process Instance](./docs/images/Process-Instance-Info1.png)
+### Process Definitions
 
-![Lower Process Instance](./docs/images/Process-Instance-Info2.png)
-
-![List of Process Definitions](./docs/images/Process-Definitions1.png)
-
-
-# Form Builder
-
-![builder1](./docs/images/FormBuilder1.png)
-
-![builder1](./docs/images/FormBuilder2.png)
-
-![builder1](./docs/images/FormBuilder3.png)
+![Process Instance](./docs/images/Mgmt-Definitions.png)
+![Process Instance](./docs/images/Mgmt-Definitions-Selected.png)
+![Process Instance](./docs/images/Mgmt-Definition-Details.png)
+![Process Instance](./docs/images/Mgmt-Definition-Details-Bpmn-Zoom.png)
 
 
-# Quick Start
+### Deployments and Forms
+
+![Process Instance](./docs/images/Mgmt-CreateDeployment.png)
+![Process Instance](./docs/images/Mgmt-Deployments.png)
+![Process Instance](./docs/images/Mgmt-FormBuilder.png)
+
+
+### Process Instances
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Variables.png)
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Incidents.png)
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-UserTasks.png)
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Jobs.png)
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-ExternalTasks.png)
+
+### Start a Process and Tasklist
+![Process Instance](./docs/images/Mgmt-Startable-Definitions.png)
+![Process Instance](./docs/images/Tasklist-MyTasks.png)
+
+## Quick Start
 
 1. open terminal at `./src/MainApp`
 1. run `dotnet run`
@@ -42,48 +54,8 @@ Contributions and collaboration is always welcomed.
 Currently requires HTTPS on the Camunda API endpoint.
 
 
-# Internals
 
-1. Built with Microsoft Blazor Web Assembly.
-1. Supports Form.io Form Rendering.
-1. Supports BPMN.io rendering.
-1. Supports Camunda API using Camunda's OpenAPI support.
-
-
-
-# BPMN.io / bpmnjs Support:
-
-Notice the ability to define custom Render Fragments (HTML) for overlays and other common modifications!
-
-```xml
-<Column>
-                <Card>
-                    <CardHeader>BPMN Diagram</CardHeader>
-                    <CardBody Style="height: 700px">
-                        <BpmnViewer bpmnXml="@bpmnXml"
-                                    activityIncidentCounts="@activityIncidentCounts"
-                                    activeActivityCounts="@activeActivityCounts"
-                                    completedActivityInstanceCounts="@completedActivityInstanceCounts"
-                                    applyCompletedActivityMarker="true"
-                                    completedActivityMarkerConfig="highlight">
-                            <activityIncidentCountDisplay>
-                                <Badge Color="Color.Danger">@context</Badge>
-                            </activityIncidentCountDisplay>
-                            <activeActivityCountDisplay>
-                                <Badge Color="Color.Primary">@context</Badge>
-                            </activeActivityCountDisplay>
-                            <completedActivityInstanceCountDisplay>
-                                <Badge Color="Color.Success">@context</Badge>
-                            </completedActivityInstanceCountDisplay>
-                        </BpmnViewer>
-                    </CardBody>
-                </Card>
-            </Column>
-```
-
-
-
-# Quick SpringBoot Configs for Camunda:
+## Quick SpringBoot Configs for Camunda:
 
 Development use only.
 

@@ -123,7 +123,7 @@
 
     IJSObjectReference _interopHelpers;
 
-    IBrowserFile file;
+    IBrowserFile _file;
 
     protected override async Task OnInitializedAsync()
     {
@@ -172,8 +172,8 @@
 
     async Task OpenBuilderSchema(InputFileChangeEventArgs e)
     {
-        file = e.File;
-        _builderSchema = await JsonSerializer.DeserializeAsync<FormSchema>(file.OpenReadStream());
+        _file = e.File;
+        _builderSchema = await JsonSerializer.DeserializeAsync<FormSchema>(_file.OpenReadStream());
         HandleBuilderChangeEvent(_builderSchema);
         StateHasChanged(); //@TODO review why this is needed before the rebuild...  Integrate changes into the builder code.
         await _builder.RebuildForm();

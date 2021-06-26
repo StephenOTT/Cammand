@@ -93,7 +93,7 @@
                                         <CardHeaderContent>Runtime</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <RuntimeVariableInstanceDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <RuntimeVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -103,7 +103,7 @@
                                         <CardHeaderContent>Historic</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <HistoricVariableInstanceDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <HistoricVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -128,7 +128,7 @@
                                         <CardHeaderContent>Historic</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <HistoricIncidentDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <HistoricIncidentsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -145,7 +145,7 @@
                                         <CardHeaderContent>Runtime</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <CalledRuntimeProcessInstancesDataGrid Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
+                                        <RuntimeCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -155,7 +155,7 @@
                                         <CardHeaderContent>Historic</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <CalledHistoricProcessInstancesDataGrid Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
+                                        <HistoricCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -172,7 +172,7 @@
                                         <CardHeaderContent>Runtime</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <RuntimeUserTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"></RuntimeUserTaskDataGrid>
+                                        <RuntimeUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"></RuntimeUserTasksTable>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -182,7 +182,7 @@
                                         <CardHeaderContent>Historic</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <HistoricUserTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <HistoricUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -197,7 +197,7 @@
                                         <CardHeaderContent>Runtime</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <RuntimeJobDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <RuntimeJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -207,7 +207,7 @@
                                         <CardHeaderContent>Historic Job Log</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <HistoricJobDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <HistoricJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -223,7 +223,7 @@
                                         <CardHeaderContent>Runtime</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <RuntimeExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <RuntimeExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
@@ -233,7 +233,7 @@
                                         <CardHeaderContent>Historic External Task Log</CardHeaderContent>
                                     </MudCardHeader>
                                     <MudCardContent>
-                                        <HistoricExternalTaskDataGrid Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
+                                        <HistoricExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
