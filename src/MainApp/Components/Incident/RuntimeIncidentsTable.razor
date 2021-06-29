@@ -10,6 +10,8 @@
     @bind-Loading="@_isLoading"
     Elevation="0">
     <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh>Incident Id</MudTh>
         <MudTh>Message</MudTh>
         <MudTh>Timestamp</MudTh>
         <MudTh>Activity Id</MudTh>
@@ -18,6 +20,10 @@
     </HeaderContent>
 
     <RowTemplate>
+        <MudTd DataLabel="State">
+            <MudIcon Icon="@Icons.Outlined.ErrorOutline" Color="Color.Error" Title="Open"/>
+        </MudTd>
+        <MudTd DataLabel="Incident Id">@context.Id</MudTd>
         <MudTd DataLabel="Message">@context.IncidentMessage</MudTd>
         <MudTd DataLabel="Timestamp">@context.IncidentTimestamp</MudTd>
         <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>

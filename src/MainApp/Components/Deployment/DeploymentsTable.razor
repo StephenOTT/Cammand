@@ -105,6 +105,7 @@
                 sortOrder: "desc",
                 firstResult: state.PageSize * (state.Page),
                 maxResults: state.PageSize);
+        
             
             _totalDeployments = Convert.ToInt32((await Camunda.Api.DeploymentApi.GetDeploymentsCountAsync()).Count);
 

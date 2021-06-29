@@ -22,7 +22,7 @@
 
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Log Type">@LogTypeText(context)</MudTd>
+        <MudTd DataLabel="Log Type">@LogTypeElement(context)</MudTd>
         <MudTd DataLabel="Hostname">@context.Hostname</MudTd>
         <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
         <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
@@ -88,7 +88,9 @@
         _jobLogs = await Camunda.Api.HistoricJobLogApi.GetHistoricJobLogsAsync(
             processInstanceId: ProcessInstanceId,
             sortBy: "timestamp",
-            sortOrder: "desc"
+            sortOrder: "desc",
+            firstResult: state.PageSize * (state.Page),
+            maxResults: state.PageSize
             );
 
         _totalJobLogs = Convert.ToInt32((await Camunda.Api.HistoricIncidentApi.GetHistoricIncidentsCountAsync(processInstanceId: ProcessInstanceId)).Count);
@@ -104,26 +106,27 @@
         };
     }
 
-    private string LogTypeText(HistoricJobLogDto log)
+    private RenderFragment LogTypeElement(HistoricJobLogDto log)
     {
         if (log.CreationLog == true)
         {
-            return "Creation";
+            return @<MudIcon Icon="@Icons.Outlined.AddCircleOutline" Title="Creation"/>;
         }
         if (log.DeletionLog == true)
         {
-            return "Deletion";
+            return @<MudIcon Icon="@Icons.Outlined.RemoveCircleOutline" Title="Deletion"/>;
         }
         if (log.FailureLog == true)
         {
-            return "Failure";
+            return @<MudIcon Icon="@Icons.Outlined.ErrorOutline" Color="Color.Error" Title="Failure"/>;
         }
         if (log.SuccessLog == true)
         {
-            return "Success";
+            return @<MudIcon Icon="@Icons.Outlined.CheckCircleOutline" Color="Color.Success" Title="Success"/>;
         }
         Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
-        return "?";
+        
+        return @<MudIcon Icon="@Icons.Outlined.HelpOutline"  Title="UNKNOWN - See Error Logs"/>;
     }
 
     void OnRowClicked(TableRowClickEventArgs<HistoricJobLogDto> clickedRow)

@@ -93,7 +93,9 @@
         _jobs = await Camunda.Api.JobApi.GetJobsAsync(
             processInstanceId: ProcessInstanceId,
             sortBy: "jobDueDate",
-            sortOrder: "desc"
+            sortOrder: "desc",
+            firstResult: state.PageSize * (state.Page),
+            maxResults: state.PageSize
             );
 
         _totalJobs = Convert.ToInt32((await Camunda.Api.JobApi.GetJobsCountAsync(processInstanceId: ProcessInstanceId)).Count);

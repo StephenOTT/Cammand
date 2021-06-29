@@ -3,62 +3,64 @@
 
 <div @ref="bpmnJsElement" style='height: 100%;'></div>
 
-@foreach (KeyValuePair<string, int> entry in activityIncidentCounts)
-{
-    <div @ref=activityIncidentRefs[entry.Key]>
-        @if (activityIncidentCountDisplay != null)
-        {
-            @activityIncidentCountDisplay(activityIncidentCounts[entry.Key])
-        }
-        else
-        {
-            <div>@activityIncidentCounts[entry.Key]</div>
-        }
-    </div>
-}
+<div style="display:none">
+    @foreach (KeyValuePair<string, int> entry in activityIncidentCounts)
+    {
+        <div @ref=activityIncidentRefs[entry.Key]>
+            @if (activityIncidentCountDisplay != null)
+            {
+                @activityIncidentCountDisplay(activityIncidentCounts[entry.Key])
+            }
+            else
+            {
+                <div>@activityIncidentCounts[entry.Key]</div>
+            }
+        </div>
+    }
 
-@foreach (KeyValuePair<string, int> entry in activeActivityCounts)
-{
-    <div @ref=activeActivityRefs[entry.Key]>
-        @if (activeActivityCountDisplay != null)
-        {
-            @activeActivityCountDisplay(activeActivityCounts[entry.Key])
-        }
-        else
-        {
-            <div>@activeActivityCounts[entry.Key]</div>
-        }
-    </div>
-}
+    @foreach (KeyValuePair<string, int> entry in activeActivityCounts)
+    {
+        <div @ref=activeActivityRefs[entry.Key]>
+            @if (activeActivityCountDisplay != null)
+            {
+                @activeActivityCountDisplay(activeActivityCounts[entry.Key])
+            }
+            else
+            {
+                <div>@activeActivityCounts[entry.Key]</div>
+            }
+        </div>
+    }
 
 
-@foreach (KeyValuePair<string, int> entry in completedActivityInstanceCounts)
-{
-    <div @ref=completedActivityInstanceRefs[entry.Key]>
-        @if (completedActivityInstanceCountDisplay != null)
-        {
-            @completedActivityInstanceCountDisplay(completedActivityInstanceCounts[entry.Key])
-        }
-        else
-        {
-            <div>@completedActivityInstanceCounts[entry.Key]</div>
-        }
-    </div>
-}
+    @foreach (KeyValuePair<string, int> entry in completedActivityInstanceCounts)
+    {
+        <div @ref=completedActivityInstanceRefs[entry.Key]>
+            @if (completedActivityInstanceCountDisplay != null)
+            {
+                @completedActivityInstanceCountDisplay(completedActivityInstanceCounts[entry.Key])
+            }
+            else
+            {
+                <div>@completedActivityInstanceCounts[entry.Key]</div>
+            }
+        </div>
+    }
 
-@foreach (KeyValuePair<string, int> entry in waitingExecutionCounts)
-{
-    <div @ref=waitingExecutionCountsRefs[entry.Key]>
-        @if (waitingExecutionCountDisplay != null)
-        {
-            @waitingExecutionCountDisplay(waitingExecutionCounts[entry.Key])
-        }
-        else
-        {
-            <div>@waitingExecutionCounts[entry.Key]</div>
-        }
-    </div>
-}
+    @foreach (KeyValuePair<string, int> entry in waitingExecutionCounts)
+    {
+        <div @ref=waitingExecutionCountsRefs[entry.Key]>
+            @if (waitingExecutionCountDisplay != null)
+            {
+                @waitingExecutionCountDisplay(waitingExecutionCounts[entry.Key])
+            }
+            else
+            {
+                <div>@waitingExecutionCounts[entry.Key]</div>
+            }
+        </div>
+    }
+</div>
 
 
 @code

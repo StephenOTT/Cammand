@@ -11,7 +11,7 @@
     T="ProcessDefinitionDto"
     ServerData="@(new Func<TableState, Task<TableData<ProcessDefinitionDto>>>(GetLatestDefinitionsFromServer))"
     Hover="true"
-    @ref="@_table"
+    @ref="@_parentTable"
     OnRowClick="@OnRowClicked"
     RowsPerPage="PageSize"
     @bind-Loading="@_isLoading">
@@ -43,18 +43,19 @@
                         <MudCardContent>
                             <MudTable
                                 T="ProcessDefinitionDto"
+                                @ref="_subTable"
                                 ServerData="@(new Func<TableState, Task<TableData<ProcessDefinitionDto>>>(GetDefinitionsByKeyFromServer))"
                                 RowsPerPage="SubDefinitionsPageSize"
                                 Elevation="0"
                                 Hover="false"
                                 @bind-Loading="@_isSubLoading">
+                                
                                 <HeaderContent>
-                                    <MudTh>State</MudTh>
+                                    <MudTh></MudTh>
                                     <MudTh>Definition Id</MudTh>
                                     <MudTh>Version</MudTh>
                                     <MudTh>Name</MudTh>
                                     <MudTh>Deployment Id</MudTh>
-                                    <MudTh>Tasklist Startable</MudTh>
                                     <MudTh></MudTh>
                                 </HeaderContent>
 
@@ -62,21 +63,31 @@
                                     <MudTd DataLabel="State">
                                         @if (context.Suspended == false)
                                         {
-                                            <MudText>Active</MudText>
+                                            <MudIcon Icon="@Icons.Outlined.PlayCircleOutline" Color="Color.Tertiary" Title="Active"/>
+                                            @if (context.StartableInTasklist == true)
+                                            {
+                                                <MudIcon Icon="@Icons.Outlined.FactCheck" Color="Color.Tertiary" Title="Tasklist Startable"/>
+                                            }
                                         }
                                         else
                                         {
-                                            <MudText>Suspended</MudText>
+                                            <MudIcon Icon="@Icons.Outlined.PauseCircleOutline" Color="Color.Default" Title="Suspended"/>
+                                            @if (context.StartableInTasklist == true)
+                                            {
+                                                <MudIcon Icon="@Icons.Outlined.FactCheck"  Color="Color.Default" Title="Tasklist Startable"/>
+                                            }
                                         }
+                                        
                                     </MudTd>
                                     <MudTd DataLabel="Definition Id">@context.Id</MudTd>
                                     <MudTd DataLabel="Version">@context.Version</MudTd>
                                     <MudTd DataLabel="Name">@context.Name</MudTd>
                                     <MudTd DataLabel="Deployment Id">@context.DeploymentId</MudTd>
-                                    <MudTd DataLabel="Tasklist Startable">@context.StartableInTasklist</MudTd>
                                     <MudTd>
-                                        <MudIconButton Icon="@Icons.Outlined.Info" aria-label="Definition Details" OnClick="@(() => OnDetailsClick(context.Id))" Title="Definition Details"/>
-                                        <MudIconButton Icon="@Icons.Outlined.NotStarted" aria-label="Definition Action" OnClick="@(()=>SuspendDefinitionId(context.Id))" Title="Definition Action"/>
+                                        <MudIconButton Icon="@Icons.Outlined.Info" OnClick="@(() => OnDetailsClick(context.Id))" Title="Definition Details"/>
+                                        <MudIconButton Icon="@Icons.Outlined.NotStarted" OnClick="@(() => OpenProcessDefinitionSuspensionAction(context.Id))" Title="Definition Action"/>
+                                        <MudIconButton Icon="@Icons.Outlined.AutoDelete" OnClick="@(() => OpenHistoryTimeToLiveDialog(context.Id))" Title="Change History Time To Live"/>
+                                        <MudIconButton Icon="@Icons.Outlined.DeleteSweep" OnClick="@(() => OpenProcessDefinitionDeleteDialog(context.Id))" Title="Delete Process Definition"/>
                                     </MudTd>
                                 </RowTemplate>
 
@@ -108,7 +119,8 @@
     [Parameter]
     public int SubDefinitionsPageSize { get; set; } = 10;
 
-    private MudTable<ProcessDefinitionDto> _table;
+    private MudTable<ProcessDefinitionDto> _parentTable;
+    private MudTable<ProcessDefinitionDto> _subTable;
 
     private List<ProcessDefinitionDto> _definitions;
     private int _totalDefinitions;
@@ -197,12 +209,34 @@
     }
 
     
-    private void SuspendDefinitionId(string definitionId)
+    private async Task OpenProcessDefinitionSuspensionAction(string definitionId)
     {
-        var parameters = new DialogParameters();
-        parameters.Add("ProcessDefinitionId", definitionId);
-        parameters.Add("Camunda", Camunda);
-        DialogService.Show<SuspendAction>("Definition Action", parameters);
-        
+        var parameters = new DialogParameters
+        {
+            {"ProcessDefinitionId", definitionId}, 
+            {"Camunda", Camunda}
+        };
+        await DialogService.Show<SuspendAction>("Definition Action", parameters).Result;
+        await _subTable.ReloadServerData();
+    }
+    
+    private async Task OpenHistoryTimeToLiveDialog(string definitionId)
+    {
+        var parameters = new DialogParameters
+        {
+            {"ProcessDefinitionId", definitionId}, 
+            {"Camunda", Camunda}
+        };
+        await DialogService.Show<UpdateProcessDefinitionHistoryTtlDialog>("History Time to Live Action", parameters).Result;
+    }
+    
+    private async Task OpenProcessDefinitionDeleteDialog(string definitionId)
+    {
+        var parameters = new DialogParameters
+        {
+            {"ProcessDefinitionId", definitionId}, 
+            {"Camunda", Camunda}
+        };
+        await DialogService.Show<DeleteProcessDefinitionDialog>("Process Definition Delete Action", parameters).Result;
     }
 }

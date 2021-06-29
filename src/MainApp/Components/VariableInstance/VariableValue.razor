@@ -1,0 +1,31 @@
+@inject IDialogService DialogService
+
+@if (Dialog == false)
+{
+    <MudText>@Variable</MudText>
+}
+else
+{
+    <MudIconButton Icon="@Icons.Outlined.Visibility" Title="View" OnClick="@(() => OpenVariableDialog(Variable))"/>
+}
+
+
+
+@code {
+
+    [Parameter]
+    public object Variable { get; set; }
+
+    [Parameter]
+    public bool Dialog { get; set; } = false;
+
+    void OpenVariableDialog(object variable)
+    {
+        var parameters = new DialogParameters
+        {
+            {"Variable", Variable}
+        };
+        DialogService.Show<VariableDialog>("Variable", parameters);
+    }
+
+}

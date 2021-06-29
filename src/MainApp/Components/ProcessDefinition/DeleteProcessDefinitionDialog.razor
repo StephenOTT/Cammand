@@ -1,0 +1,153 @@
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using MudBlazor.Extensions
+@using System.Net
+@using System.Numerics
+
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 600px; overflow-y: scroll">
+            @if (_isLoading)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudProgressCircular Indeterminate="true" Class="ma-16"/>
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText>Definition: @ProcessDefinitionId</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_runtimeProcessInstanceCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Runtime Process Instances" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="_historicProcessInstanceCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Historic Process Instances" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudText>Definition: @ProcessDefinitionId</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudCheckBox Label="Cascade?" @bind-Checked="_cascade" Color="Color.Primary"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        @if (_cascade)
+                        {
+                            <MudText Typo="Typo.body2">
+                                All process instances, historic process instances and jobs for this process definition will be deleted
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">
+                                Only the Definition will be deleted. All process instances, historic process instances and jobs for this process definition will <b>not</b> be deleted
+                            </MudText>
+                        }
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox Label="Skip Custom Listeners" @bind-Checked="_skipCustomListeners" Color="Color.Primary"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox Label="Skip IO Mappings" @bind-Checked="_skipIoMappings" Color="Color.Primary"/>
+                    </MudItem>
+
+                    @if (_updateResponse != null)
+                    {
+                        <MudItem xs="12">
+                            <MudText>Action Failed: @_updateResponse</MudText>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" Class="d-flex flex-row-reverse">
+
+                        <MudButton OnClick="DeleteProcessDefinition" Color="Color.Warning">Delete</MudButton>
+
+                    </MudItem>
+
+                </MudGrid>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string ProcessDefinitionId { get; set; }
+
+    bool _isLoading = true;
+
+    bool _cascade;
+    bool _skipCustomListeners;
+    bool _skipIoMappings;
+
+    long _runtimeProcessInstanceCount;
+    long _historicProcessInstanceCount;
+
+    string _updateResponse;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProcessDefinitionId == null)
+        {
+            throw new Exception("ProcessDefinitionId cannot be null");
+        }
+
+        _runtimeProcessInstanceCount = await GetRuntimeProcessInstancesCount(ProcessDefinitionId);
+        _historicProcessInstanceCount = await GetHistoricProcessInstancesCount(ProcessDefinitionId);
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    async Task<int?> GetProcessDefinitionCurrentHistoryTtl(string processDefinitionId)
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionAsync(processDefinitionId);
+        return result.HistoryTimeToLive;
+    }
+
+
+    async Task DeleteProcessDefinition()
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.DeleteProcessDefinitionWithHttpInfoAsync(ProcessDefinitionId, _cascade, _skipCustomListeners, _skipIoMappings);
+
+        if (result.StatusCode == HttpStatusCode.NoContent)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            _updateResponse = result.ErrorText;
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+
+    async Task<long> GetRuntimeProcessInstancesCount(string processDefinitionId)
+    {
+        var dto = await Camunda.Api.ProcessInstanceApi.GetProcessInstancesCountAsync(processDefinitionId: processDefinitionId);
+        return dto.Count;
+    }
+
+    async Task<long> GetHistoricProcessInstancesCount(string processDefinitionId)
+    {
+        var dto = await Camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstancesCountAsync(processDefinitionId: processDefinitionId);
+        return dto.Count;
+    }
+
+}

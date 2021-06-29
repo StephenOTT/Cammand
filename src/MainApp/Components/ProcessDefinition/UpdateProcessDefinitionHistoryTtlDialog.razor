@@ -1,0 +1,104 @@
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using MudBlazor.Extensions
+@using System.Net
+@using System.Numerics
+
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 600px; overflow-y: scroll">
+            @if (_isLoading)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudProgressCircular Indeterminate="true" Class="ma-16"/>
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText>Definition: @ProcessDefinitionId</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudNumericField @bind-Value="_processDefinitionHistoryTtl" Variant="Variant.Outlined" Label="History Time To Live (Days)" Min="0"/>
+                    </MudItem>
+   
+                    @if (_updateResponse != null)
+                    {
+                        <MudItem xs="12">
+                            <MudText>Action Failed: @_updateResponse</MudText>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" Class="d-flex flex-row-reverse">
+
+                        <MudButton OnClick="UpdateHistoryTtl" Color="Color.Warning">Update</MudButton>
+
+                    </MudItem>
+
+                </MudGrid>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string ProcessDefinitionId { get; set; }
+
+    bool _isLoading = true;
+
+    int? _processDefinitionHistoryTtl;
+    
+    string _updateResponse;
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProcessDefinitionId == null)
+        {
+            throw new Exception("ProcessDefinitionId cannot be null");
+        }
+
+        _processDefinitionHistoryTtl = await GetProcessDefinitionCurrentHistoryTtl(ProcessDefinitionId);
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    async Task<int?> GetProcessDefinitionCurrentHistoryTtl(string processDefinitionId)
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionAsync(processDefinitionId);
+        return result.HistoryTimeToLive;
+    }
+
+
+    async Task UpdateHistoryTtl()
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.UpdateHistoryTimeToLiveByProcessDefinitionIdWithHttpInfoAsync(ProcessDefinitionId, new HistoryTimeToLiveDto(_processDefinitionHistoryTtl));
+
+        if (result.StatusCode == HttpStatusCode.NoContent)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            _updateResponse = result.ErrorText;
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

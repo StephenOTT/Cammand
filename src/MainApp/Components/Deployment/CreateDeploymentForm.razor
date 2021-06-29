@@ -5,39 +5,55 @@
 
 <MudCard Outlined="true" Elevation="0">
     <MudCardContent>
-        <MudForm @ref="@_form" @bind-isValid="@_isValidForm" >
+        <MudForm @ref="@_form" @bind-isValid="@_isValidForm">
 
-            <MudTextField Label="Deployment Name" Variant="Variant.Text" @bind-Value="@_deploymentNameForDeployment" Required="true" Margin="Margin.Normal" />
-            <MudTextField Label="Deployment Source" Variant="Variant.Text" @bind-Value="@_deploymentSource" Margin="Margin.Normal"/>
-            <MudTextField Label="Tenant Id" Variant="Variant.Text" @bind-Value="@_tenantIdForDeployment" Margin="Margin.Normal"/>
-            
-            <InputFile id="fileInput" OnChange="UploadFiles" hidden multiple/>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Label="Deployment Name" Variant="Variant.Text" @bind-Value="@_deploymentNameForDeployment" Required="true" Margin="Margin.Normal"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Deployment Source" Variant="Variant.Text" @bind-Value="@_deploymentSource" Margin="Margin.Normal"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Tenant Id" Variant="Variant.Text" @bind-Value="@_tenantIdForDeployment" Margin="Margin.Normal"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox @bind-Checked="_duplicateFilteringForDeployment" Color="Color.Primary" Label="Duplicate Filtering"/>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudCheckBox @bind-Checked="_deployChangedOnlyForDeployment" Color="Color.Primary" Label="Deploy Changed Only"/>
+                </MudItem>
 
-            <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Class="my-3" StartIcon="@Icons.Filled.AttachFile" for="fileInput">
-                Add Files to Deployment
-            </MudButton>
+                <MudItem xs="12">
+                    <InputFile id="fileInput" OnChange="UploadFiles" hidden multiple/>
 
-            @if (_files.Any())
-            {
-                <MudText Typo="@Typo.h6" Class="" GutterBottom="true">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
-                
-                <MudList Class="my-3">
-                    @foreach (var file in _files)
-                    {
-                        <MudListItem Icon="@Icons.Filled.AttachFile" @key="@file">
-                            @file.Name <code>@file.Size bytes</code>
-                        </MudListItem>
-                    }
-                </MudList>
+                    <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Class="my-3" StartIcon="@Icons.Filled.AttachFile" for="fileInput">
+                        Add Files to Deployment
+                    </MudButton>
+                </MudItem>
+                @if (_files.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="@Typo.h6" Class="" GutterBottom="true">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
 
-                <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary"
-                           StartIcon="@Icons.Filled.Clear"
-                           OnClick="@_files.Clear"
-                           Disabled="@(_files.Any() == false)">
-                    Clear Files
-                </MudButton>
-            }
+                        <MudList Class="my-3">
+                            @foreach (var file in _files)
+                            {
+                                <MudListItem Icon="@Icons.Filled.AttachFile" @key="@file">
+                                    @file.Name <code>@file.Size bytes</code>
+                                </MudListItem>
+                            }
+                        </MudList>
 
+                        <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary"
+                                   StartIcon="@Icons.Filled.Clear"
+                                   OnClick="@_files.Clear"
+                                   Disabled="@(_files.Any() == false)">
+                            Clear Files
+                        </MudButton>
+                    </MudItem>
+                }
+            </MudGrid>
         </MudForm>
     </MudCardContent>
     <MudCardActions>
@@ -87,16 +103,16 @@
             {
                 throw new Exception($"File {file.Name} is too large.  Max file size: {_maxFileSize}.");
             }
-            
+
             if (_files.Count >= _maxAllowedFiles)
             {
                 throw new Exception($"Cannot upload more than {_maxAllowedFiles} files.");
             }
-            
+
             _files.Add(file);
         }
     }
-    
+
     async void DeployFiles()
     {
         if (_files.Any())
@@ -106,7 +122,7 @@
                 var deploymentApi = AppData.CamundaClient.Api.DeploymentApi;
 
                 var fileStreams = new List<Stream>();
-                
+
                 foreach (var browserFile in _files)
                 {
                     var buffer = await GetBytes(browserFile);
@@ -114,7 +130,7 @@
                         buffer: buffer,
                         fileName: browserFile.Name,
                         contentName: browserFile.Name
-                    ));
+                        ));
                 }
 
                 var deploymentResult = await deploymentApi.CreateDeploymentAsync(
@@ -126,12 +142,12 @@
                     data: fileStreams);
 
 
-                // AppData.PushToSnackBar("Deployment Successful: " + deploymentResult.Id, SnackbarColor.Success);
+    // AppData.PushToSnackBar("Deployment Successful: " + deploymentResult.Id, SnackbarColor.Success);
             }
             catch (Exception ex)
             {
     //@TODO add support for deployment error details so we can see the errors of what failed in the deployment
-                // AppData.PushToSnackBar(ex.Message, SnackbarColor.Danger);
+    // AppData.PushToSnackBar(ex.Message, SnackbarColor.Danger);
                 throw ex;
             }
         }
@@ -140,7 +156,7 @@
             await Console.Error.WriteLineAsync("No Files to Upload");
         }
     }
-    
+
     static async Task<byte[]> GetBytes(IBrowserFile file)
     {
         await using var memoryStream = new MemoryStream();

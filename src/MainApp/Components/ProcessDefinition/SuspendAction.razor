@@ -46,7 +46,7 @@
                         <MudNumericField @bind-Value="suspendedExternalTasksCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Suspended External Tasks" Disabled="true"/>
                     </MudItem>
                     <MudItem xs="12">
-                        <MudCheckBox Label="Suspended Active Process Instances" @bind-Checked="_includeProcessInstances" Color="Color.Primary"/>
+                        <MudCheckBox Label="Include Process Instances" @bind-Checked="_includeProcessInstances" Color="Color.Primary"/>
                     </MudItem>
                     <MudItem xs="12">
                         <MudSwitch @bind-Checked="_useCustomExecutionDate" Label="Use Custom Execution Date" Color="Color.Primary"/>
@@ -55,7 +55,7 @@
                         <MudDatePicker Label="Execution Date" @bind-Date="_selectedDate" Disabled="@(_useCustomExecutionDate == false)"/>
                     </MudItem>
                     <MudItem xs="12" md="6">
-                        <MudTimePicker @ref="picker" @bind-Time="_selectedTime" Disabled="@(_useCustomExecutionDate == false)"/>
+                        <MudTimePicker @bind-Time="_selectedTime" Disabled="@(_useCustomExecutionDate == false)"/>
                     </MudItem>
                     <MudItem>
                         <MudText>Actions such as suspending or re-activing large quantities of process instances may take a significant amount of time to complete.</MudText>
@@ -68,14 +68,10 @@
                         </MudItem>
                     }
                     <MudItem xs="12" Class="d-flex flex-row-reverse">
-                        @if (activeInstanceCount > 0)
-                        {
-                            <MudButton OnClick="SuspendAll" Color="Color.Warning">Suspend All</MudButton>
-                        }
-                        @if (suspendedInstanceCount > 0)
-                        {
-                            <MudButton OnClick="ReActivateAll" Color="Color.Tertiary">Re-Activate All</MudButton>
-                        }
+                        
+                        <MudButton OnClick="SuspendAll" Color="Color.Warning">Suspend</MudButton>
+                        <MudButton OnClick="ReActivateAll" Color="Color.Tertiary">Re-Activate</MudButton>
+                        
                     </MudItem>
                 </MudGrid>
             }
@@ -116,7 +112,6 @@
     string _suspensionResponse;
 
     DateTime _executionDate = DateTime.Now;
-    MudTimePicker picker;
 
     DateTime? _selectedDate
     {
@@ -207,25 +202,25 @@
 
     async Task<long> GetProcessInstancesCount(string processDefinitionId, bool suspensionState)
     {
-        var dto = await Camunda.Api.ProcessInstanceApi.GetProcessInstancesCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        var dto = await Camunda.Api.ProcessInstanceApi.GetProcessInstancesCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState, active: !suspensionState);
         return dto.Count;
     }
 
     async Task<long> GetExternalTaskCount(string processDefinitionId, bool suspensionState)
     {
-        var dto = await Camunda.Api.ExternalTaskApi.GetExternalTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        var dto = await Camunda.Api.ExternalTaskApi.GetExternalTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState, active: !suspensionState);
         return dto.Count;
     }
 
     async Task<long> GetJobsCount(string processDefinitionId, bool suspensionState)
     {
-        var dto = await Camunda.Api.JobApi.GetJobsCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        var dto = await Camunda.Api.JobApi.GetJobsCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState, active: !suspensionState);
         return dto.Count;
     }
 
     async Task<long> GetUserTasksCount(string processDefinitionId, bool suspensionState)
     {
-        var dto = await Camunda.Api.TaskApi.GetTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        var dto = await Camunda.Api.TaskApi.GetTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState, active: !suspensionState);
         return dto.Count;
     }
 

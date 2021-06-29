@@ -25,19 +25,20 @@
         <MudTd DataLabel="State">
             @if (context.State == HistoricProcessInstanceDto.StateEnum.ACTIVE)
             {
-                <MudText>Active</MudText>
+                <MudIcon Icon="@Icons.Outlined.PlayCircleOutline" Color="Color.Tertiary" Title="Active"/>
             }
             else if (context.State == HistoricProcessInstanceDto.StateEnum.SUSPENDED)
+            
             {
-                <MudText>Suspended</MudText>
+                <MudIcon Icon="@Icons.Outlined.PauseCircleOutline" Color="Color.Default" Title="Suspended"/>
             }
             else if (context.State == HistoricProcessInstanceDto.StateEnum.COMPLETED)
             {
-                <MudText>Completed</MudText>
+                <MudIcon Icon="@Icons.Outlined.CheckCircleOutline" Color="Color.Success" Title="Completed"/>
             }
             else
             {
-                <MudText>@context.State.ToString()</MudText>
+                <MudIcon Icon="@Icons.Outlined.HelpOutline" Color="Color.Error" Title=@($"UNKNOWN:{context.State.ToString()}")/>
             }
         </MudTd>
         <MudTd DataLabel="Instance ID">@context.Id</MudTd>
@@ -46,7 +47,7 @@
         <MudTd DataLabel="End Time">@context.EndTime</MudTd>
         <MudTd DataLabel="Started By">@context.StartUserId</MudTd>
         <MudTd DataLabel="Actions">
-            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
+            <MudIconButton Icon="@Icons.Outlined.Info" OnClick="@(() => OnDetailsClick(context.Id))" Title="Process Instance Details"/>
         </MudTd>
     </RowTemplate>
 

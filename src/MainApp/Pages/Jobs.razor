@@ -9,10 +9,34 @@
     <MudText Typo="Typo.h3" GutterBottom="true">Jobs</MudText>
     <MudGrid>
         <MudItem xs="12">
-            <RuntimeJobsTable Camunda="_camunda"/>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        Runtime
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <RuntimeJobsTable Camunda="_camunda"/>
+
+                </MudCardContent>
+            </MudCard>
+
         </MudItem>
         <MudItem xs="12">
-            <HistoricJobsTable Camunda="_camunda"></HistoricJobsTable>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        Historic Job Logs
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <HistoricJobsTable Camunda="_camunda"></HistoricJobsTable>
+
+                </MudCardContent>
+            </MudCard>
+
         </MudItem>
     </MudGrid>
 </MudContainer>
@@ -24,4 +48,5 @@
     {
         _camunda = AppData.CamundaClient;
     }
+
 }

@@ -21,13 +21,13 @@
 
     <RowTemplate>
         <MudTd DataLabel="State">
-            @if (context.Suspended == true)
+            @if (context.Suspended == false)
             {
-                <MudText>Suspended</MudText>
+                <MudIcon Icon="@Icons.Outlined.PlayCircleOutline" Color="Color.Tertiary" Title="Active"/>
             }
             else
             {
-                <MudText>Active</MudText>
+                <MudIcon Icon="@Icons.Outlined.PauseCircleOutline" Color="Color.Default" Title="Suspended"/>
             }
         </MudTd>
         <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -40,12 +40,11 @@
 
 
     </RowTemplate>
-    
+
     <PagerContent>
         <MudTablePager/>
     </PagerContent>
 </MudTable>
-
 
 
 @code {
@@ -65,12 +64,12 @@
 
     bool _isLoading;
 
-    
+
     async Task<TableData<TaskDto>> GetDataFromServer(TableState state)
     {
         _isLoading = true;
         StateHasChanged();
-        
+
         var query = new TaskQueryDto()
         {
             ProcessInstanceId = ProcessInstanceId,
@@ -92,7 +91,7 @@
         _userTasks = await Camunda.Api.TaskApi.QueryTasksAsync(state.PageSize * (state.Page), state.PageSize, query);
 
         _totalUserTasks = Convert.ToInt32((await Camunda.Api.TaskApi.QueryTasksCountAsync(totalQuery)).Count);
-        
+
         _isLoading = false;
         StateHasChanged();
 
@@ -102,4 +101,5 @@
             TotalItems = _totalUserTasks,
         };
     }
+
 }

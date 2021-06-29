@@ -20,7 +20,15 @@
     <RowTemplate>
         <MudTd DataLabel="Name">@context.Name</MudTd>
         <MudTd DataLabel="Type">@context.Type</MudTd>
-        <MudTd DataLabel="Value">@context.Value</MudTd>
+        <MudTd DataLabel="Value">
+                    @if(@context.Type == "Json" || (context.Value != null && context.Value.ToString().Length > 200)){
+                        <VariableValue Variable="@context.Value" Dialog="true"/>
+                        }
+                    else
+                    {
+                        <VariableValue Variable="@context.Value" Dialog="false"/>
+                    }
+        </MudTd>
         <MudTd DataLabel="Value">@context.CreateTime</MudTd>
         <MudTd DataLabel="Value">@context.State</MudTd>
     </RowTemplate>

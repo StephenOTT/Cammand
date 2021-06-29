@@ -1,0 +1,23 @@
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="height: 600px; overflow-y: scroll">
+             <MudTextField ReadOnly="true" Lines="25" Value="@Variable.ToString()" Margin="Margin.None" />
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+    
+    [Parameter]
+    public object Variable { get; set; }
+    
+    void Cancel() => MudDialog.Cancel();
+
+}

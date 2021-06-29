@@ -11,7 +11,8 @@
     @bind-Loading="@_isLoading"
     Elevation="0">
     <HeaderContent>
-        <MudTh>State</MudTh>
+        <MudTh></MudTh>
+        <MudTh>Incident Id</MudTh>
         <MudTh>Message</MudTh>
         <MudTh>Create Time</MudTh>
         <MudTh>End Time</MudTh>
@@ -26,18 +27,19 @@
             {
                 if (context.Resolved == true)
                 {
-                    <MudBadge Color="Color.Success" Content="@("Resolved")"/>
+                    <MudIcon Icon="@Icons.Outlined.CheckCircleOutline" Color="Color.Success" Title="Resolved"/>
                 }
                 else if (context.Deleted == true)
                 {
-                    <MudBadge Color="Color.Success" Content="@("Deleted")"/>
+                    <MudIcon Icon="@Icons.Outlined.CheckCircleOutline" Color="Color.Dark" Title="Deleted"/>
                 }
             }
             else
             {
-                <MudBadge Color="Color.Error" Content="@("Open")"/>
+                <MudIcon Icon="@Icons.Outlined.ErrorOutline" Color="Color.Error" Title="Open"/>
             }
         </MudTd>
+        <MudTd DataLabel="Message">@context.CauseIncidentId</MudTd>
         <MudTd DataLabel="Message">@context.IncidentMessage</MudTd>
         <MudTd DataLabel="Create Time">@context.CreateTime</MudTd>
         <MudTd DataLabel="End Time">@context.EndTime</MudTd>
