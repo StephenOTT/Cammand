@@ -1,0 +1,234 @@
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using MudBlazor.Extensions
+@using System.Net
+
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 600px; overflow-y: scroll">
+            @if (_isLoading)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudProgressCircular Indeterminate="true" Class="ma-16"/>
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText>Suspension for Definition: @ProcessDefinitionId</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="activeInstanceCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Active Process Instances" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="suspendedInstanceCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Suspended Process Instances" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="activeJobsCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Active Jobs" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="suspendedJobsCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Suspended Jobs" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="activeUserTaskCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Active User Tasks" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="suspendedUserTaskCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Suspended User Tasks" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="activeExternalTasksCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Active External Tasks" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField @bind-Value="suspendedExternalTasksCount" Variant="Variant.Outlined" HideSpinButtons="true" Label="Suspended External Tasks" Disabled="true"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudCheckBox Label="Suspended Active Process Instances" @bind-Checked="_includeProcessInstances" Color="Color.Primary"/>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudSwitch @bind-Checked="_useCustomExecutionDate" Label="Use Custom Execution Date" Color="Color.Primary"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudDatePicker Label="Execution Date" @bind-Date="_selectedDate" Disabled="@(_useCustomExecutionDate == false)"/>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTimePicker @ref="picker" @bind-Time="_selectedTime" Disabled="@(_useCustomExecutionDate == false)"/>
+                    </MudItem>
+                    <MudItem>
+                        <MudText>Actions such as suspending or re-activing large quantities of process instances may take a significant amount of time to complete.</MudText>
+                    </MudItem>
+
+                    @if (_suspensionResponse != null)
+                    {
+                        <MudItem xs="12">
+                            <MudText>Action Failed: @_suspensionResponse</MudText>
+                        </MudItem>
+                    }
+                    <MudItem xs="12" Class="d-flex flex-row-reverse">
+                        @if (activeInstanceCount > 0)
+                        {
+                            <MudButton OnClick="SuspendAll" Color="Color.Warning">Suspend All</MudButton>
+                        }
+                        @if (suspendedInstanceCount > 0)
+                        {
+                            <MudButton OnClick="ReActivateAll" Color="Color.Tertiary">Re-Activate All</MudButton>
+                        }
+                    </MudItem>
+                </MudGrid>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public CamundaClient Camunda { get; set; }
+
+    [Parameter]
+    public string ProcessDefinitionId { get; set; }
+
+    bool _isLoading = true;
+
+    long activeInstanceCount;
+    long suspendedInstanceCount;
+    long activeUserTaskCount;
+    long suspendedUserTaskCount;
+    long activeJobsCount;
+    long suspendedJobsCount;
+    long activeExternalTasksCount;
+    long suspendedExternalTasksCount;
+
+    bool _includeProcessInstances = false;
+
+    bool _useCustomExecutionDate = false;
+
+    string _suspensionResponse;
+
+    DateTime _executionDate = DateTime.Now;
+    MudTimePicker picker;
+
+    DateTime? _selectedDate
+    {
+        get => _executionDate.Date;
+        set { _executionDate = new DateTime(value.Value.Year, value.Value.Month, value.Value.Day, _selectedTime.Value.Hours, _selectedTime.Value.Minutes, 0, DateTimeKind.Unspecified); }
+    }
+
+    TimeSpan? _selectedTime
+    {
+        get => _executionDate.TimeOfDay;
+        set { _executionDate = new DateTime(_selectedDate.Value.Year, _selectedDate.Value.Month, _selectedDate.Value.Day, value.Value.Hours, value.Value.Minutes, 0, DateTimeKind.Unspecified); }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProcessDefinitionId == null)
+        {
+            throw new Exception("ProcessDefinitionId cannot be null");
+        }
+        activeInstanceCount = await GetProcessInstancesCount(ProcessDefinitionId, false);
+        suspendedInstanceCount = await GetProcessInstancesCount(ProcessDefinitionId, true);
+
+        activeUserTaskCount = await GetUserTasksCount(ProcessDefinitionId, false);
+        suspendedUserTaskCount = await GetUserTasksCount(ProcessDefinitionId, true);
+
+        activeJobsCount = await GetJobsCount(ProcessDefinitionId, false);
+        suspendedJobsCount = await GetJobsCount(ProcessDefinitionId, true);
+
+        activeExternalTasksCount = await GetExternalTaskCount(ProcessDefinitionId, false);
+        suspendedExternalTasksCount = await GetExternalTaskCount(ProcessDefinitionId, true);
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+
+    async Task SuspendAll()
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.UpdateProcessDefinitionSuspensionStateByIdWithHttpInfoAsync(ProcessDefinitionId, new ProcessDefinitionSuspensionStateDto
+        {
+            Suspended = true,
+            ProcessDefinitionId = ProcessDefinitionId,
+            IncludeProcessInstances = _includeProcessInstances,
+            ExecutionDate = _useCustomExecutionDate ? _executionDate : null
+        });
+
+        if (result.StatusCode == HttpStatusCode.NoContent)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            _suspensionResponse = result.ErrorText;
+        }
+    }
+
+    async Task ReActivateAll()
+    {
+        var result = await Camunda.Api.ProcessDefinitionApi.UpdateProcessDefinitionSuspensionStateByIdWithHttpInfoAsync(ProcessDefinitionId, new ProcessDefinitionSuspensionStateDto
+        {
+            Suspended = false,
+            ProcessDefinitionId = ProcessDefinitionId,
+            IncludeProcessInstances = _includeProcessInstances,
+            ExecutionDate = _useCustomExecutionDate ? _executionDate : null
+        });
+
+        if (result.StatusCode == HttpStatusCode.NoContent)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            _suspensionResponse = result.ErrorText;
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+
+    string BuildExecutionDateString()
+    {
+        return $"{_executionDate.ToIsoDateString()}T{_executionDate.Hour}:{_executionDate.Minute}:00";
+    }
+
+    async Task<ProcessDefinitionDto> GetProcessDefinition(string processDefinitionId)
+    {
+        return await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionAsync(processDefinitionId);
+    }
+
+    async Task<long> GetProcessInstancesCount(string processDefinitionId, bool suspensionState)
+    {
+        var dto = await Camunda.Api.ProcessInstanceApi.GetProcessInstancesCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        return dto.Count;
+    }
+
+    async Task<long> GetExternalTaskCount(string processDefinitionId, bool suspensionState)
+    {
+        var dto = await Camunda.Api.ExternalTaskApi.GetExternalTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        return dto.Count;
+    }
+
+    async Task<long> GetJobsCount(string processDefinitionId, bool suspensionState)
+    {
+        var dto = await Camunda.Api.JobApi.GetJobsCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        return dto.Count;
+    }
+
+    async Task<long> GetUserTasksCount(string processDefinitionId, bool suspensionState)
+    {
+        var dto = await Camunda.Api.TaskApi.GetTasksCountAsync(processDefinitionId: processDefinitionId, suspended: suspensionState);
+        return dto.Count;
+    }
+
+
+
+}

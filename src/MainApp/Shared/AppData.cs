@@ -1,5 +1,8 @@
 ﻿using Camunda.Http.Api;
 using Camunda.Http.Api.Client;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
+    
 
 
 namespace MainApp.Shared
@@ -22,6 +25,9 @@ namespace MainApp.Shared
         
 
         public HttpClient HttpClient { get; set; }
+
+        [Inject]
+        private ISnackbar Snackbar { get; set; }
 
 
         public AppData(IHttpClientFactory clientFactory)
@@ -56,6 +62,32 @@ namespace MainApp.Shared
             {
                 this.CamundaClient = new CamundaClient(config, client, handler);
             }
+        }
+
+        public void SnackError(string message, Exception e = null)
+        {
+            Snackbar.Add(message, Severity.Error);
+            Console.Error.WriteLine(message);
+            if (e != null)
+            {
+                throw e;
+            }
+        }
+
+        public void SnackNormal(string message)
+        {
+            
+            Snackbar.Add(message);
+        }
+        
+        public void SnackSuccess(string message)
+        {
+            Snackbar.Add(message, Severity.Success);
+        }
+        
+        public void SnackWarning(string message)
+        {
+            Snackbar.Add(message, Severity.Warning);
         }
         
     }

@@ -10,14 +10,13 @@
     OnRowClick="@OnRowClicked"
     Elevation="0">
     <HeaderContent>
+        <MudTh>State</MudTh>
         <MudTh>Id</MudTh>
-        <MudTh>Log Type</MudTh>
-        <MudTh>Hostname</MudTh>
-        <MudTh>Timestamp</MudTh>
-        <MudTh>Activity Id</MudTh>
-        <MudTh>Job Id</MudTh>
-        <MudTh>Job Priority</MudTh>
-        <MudTh>Job Due Date</MudTh>
+        <MudTh>Create Time</MudTh>
+        <MudTh>Due</MudTh>
+        <MudTh>Retries</MudTh>
+        <MudTh>Priority</MudTh>
+        <MudTh>Job Definition Id</MudTh>
     </HeaderContent>
 
     <RowTemplate>
@@ -36,6 +35,7 @@
         <MudTd DataLabel="Due">@context.DueDate</MudTd>
         <MudTd DataLabel="Retries">@context.Retries</MudTd>
         <MudTd DataLabel="Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Job Definition Id">@context.JobDefinitionId</MudTd>
     </RowTemplate>
 
     <ChildRowContent Context="parentContext">

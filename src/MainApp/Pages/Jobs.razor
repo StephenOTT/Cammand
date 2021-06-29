@@ -1,0 +1,27 @@
+﻿@using MainApp.Components.Job
+@using Camunda.Http.Api
+
+@inject AppData AppData
+
+@page "/Jobs"
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudText Typo="Typo.h3" GutterBottom="true">Jobs</MudText>
+    <MudGrid>
+        <MudItem xs="12">
+            <RuntimeJobsTable Camunda="_camunda"/>
+        </MudItem>
+        <MudItem xs="12">
+            <HistoricJobsTable Camunda="_camunda"></HistoricJobsTable>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    CamundaClient _camunda;
+
+    protected override void OnInitialized()
+    {
+        _camunda = AppData.CamundaClient;
+    }
+}

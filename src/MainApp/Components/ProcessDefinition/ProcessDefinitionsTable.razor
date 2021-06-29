@@ -3,6 +3,7 @@
 @using Size = MudBlazor.Size
 @using Color = MudBlazor.Color
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 
 @inject AppData AppData
 
@@ -74,16 +75,8 @@
                                     <MudTd DataLabel="Deployment Id">@context.DeploymentId</MudTd>
                                     <MudTd DataLabel="Tasklist Startable">@context.StartableInTasklist</MudTd>
                                     <MudTd>
-                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OnDetailsClick(context.Id))">Details</MudButton>
-
-                                        @if (context.Suspended == false)
-                                        {
-                                            <MudButton Variant="Variant.Text" Color="Color.Warning">Suspend</MudButton>
-                                        }
-                                        else
-                                        {
-                                            <MudButton Variant="Variant.Text" Color="Color.Tertiary">Activate</MudButton>
-                                        }
+                                        <MudIconButton Icon="@Icons.Outlined.Info" aria-label="Definition Details" OnClick="@(() => OnDetailsClick(context.Id))" Title="Definition Details"/>
+                                        <MudIconButton Icon="@Icons.Outlined.NotStarted" aria-label="Definition Action" OnClick="@(()=>SuspendDefinitionId(context.Id))" Title="Definition Action"/>
                                     </MudTd>
                                 </RowTemplate>
 
@@ -135,12 +128,21 @@
         _isLoading = true;
         StateHasChanged();
 
-        _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
-            latestVersion: true,
-            firstResult: state.PageSize * (state.Page),
-            maxResults: state.PageSize);
+        try
+        {
+            _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
+                latestVersion: true,
+                firstResult: state.PageSize * (state.Page),
+                maxResults: state.PageSize);
 
-        _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(latestVersion: true)).Count);
+            _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(latestVersion: true)).Count);
+
+        }
+        catch (Exception e)
+        {
+            AppData.SnackError("Unable to complete request: " + e.Message);
+        }
+        
 
         _isLoading = false;
         StateHasChanged();
@@ -194,5 +196,13 @@
         NavigationManager.NavigateTo($"process-definitions/{definitionId}");
     }
 
-
+    
+    private void SuspendDefinitionId(string definitionId)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ProcessDefinitionId", definitionId);
+        parameters.Add("Camunda", Camunda);
+        DialogService.Show<SuspendAction>("Definition Action", parameters);
+        
+    }
 }
