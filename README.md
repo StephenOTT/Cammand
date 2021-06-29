@@ -25,6 +25,10 @@ Contributions and collaboration is always welcomed.
 ![Process Instance](./docs/images/Mgmt-Definitions-Selected.png)
 ![Process Instance](./docs/images/Mgmt-Definition-Details.png)
 ![Process Instance](./docs/images/Mgmt-Definition-Details-Bpmn-Zoom.png)
+![Process Instance](./docs/images/Mgmt-ProcessDefinition-SuspensionAction-1.png)
+![Process Instance](./docs/images/Mgmt-ProcessDefinition-SuspensionAction-2.png)
+![Process Instance](./docs/images/Mgmt-Definition-HistoryTtl-Update.png)
+![Process Instance](./docs/images/Mgmt-Definitions-Delete.png)
 
 
 ### Deployments and Forms
@@ -36,6 +40,7 @@ Contributions and collaboration is always welcomed.
 
 ### Process Instances
 ![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Variables.png)
+![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Variables-json.png)
 ![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Incidents.png)
 ![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-UserTasks.png)
 ![Process Instance](./docs/images/Mgmt-ProcessInstance-Details-Jobs.png)
@@ -44,6 +49,9 @@ Contributions and collaboration is always welcomed.
 ### Start a Process and Tasklist
 ![Process Instance](./docs/images/Mgmt-Startable-Definitions.png)
 ![Process Instance](./docs/images/Tasklist-MyTasks.png)
+
+### Jobs
+![Jobs](./docs/images/Mgmt-Jobs.png)
 
 ## Quick Start
 
