@@ -33,7 +33,7 @@
         @if (_selectedSubDefinition?.Id == parentContext.Id)
         {
             <MudTr>
-                <td colspan="4">
+                <td colspan="100">
                     <MudCard Elevation="0" Outlined="true">
                         <MudCardHeader>
                             <CardHeaderContent>
@@ -86,8 +86,8 @@
                                     <MudTd>
                                         <MudIconButton Icon="@Icons.Outlined.Info" OnClick="@(() => OnDetailsClick(context.Id))" Title="Definition Details"/>
                                         <MudIconButton Icon="@Icons.Outlined.NotStarted" OnClick="@(() => OpenProcessDefinitionSuspensionAction(context.Id))" Title="Definition Action"/>
-                                        <MudIconButton Icon="@Icons.Outlined.AutoDelete" OnClick="@(() => OpenHistoryTimeToLiveDialog(context.Id))" Title="Change History Time To Live"/>
-                                        <MudIconButton Icon="@Icons.Outlined.DeleteSweep" OnClick="@(() => OpenProcessDefinitionDeleteDialog(context.Id))" Title="Delete Process Definition"/>
+                                        <MudIconButton Icon="@Icons.Outlined.HistoryToggleOff" OnClick="@(() => OpenHistoryTimeToLiveDialog(context.Id))" Title="Change History Time To Live"/>
+                                        <MudIconButton Icon="@Icons.Outlined.DeleteForever" OnClick="@(() => OpenProcessDefinitionDeleteDialog(context.Id))" Title="Delete Process Definition"/>
                                     </MudTd>
                                 </RowTemplate>
 

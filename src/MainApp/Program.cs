@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
+using Microsoft.Extensions.Logging;
+
 
 namespace MainApp
 {
@@ -16,19 +18,23 @@ namespace MainApp
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-      
-            builder.Services.AddHttpClient("CamundaAPI", client => {
-                client.BaseAddress = new Uri("https://localhost:8080/engine-rest");
-            });
+            builder.Services.AddScoped(
+                sp => new HttpClient {BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)});
+
+            builder.Services.AddHttpClient("CamundaAPI",
+                client => { client.BaseAddress = new Uri("https://localhost:8080/engine-rest"); });
 
             builder.Services.AddSingleton<MainApp.Shared.AppData>();
 
-            builder.Services.AddOidcAuthentication(options => {
+            builder.Services.AddOidcAuthentication(options =>
+            {
                 // Configure your authentication provider options here.
                 // For more information, see https://aka.ms/blazor-standalone-auth
                 builder.Configuration.Bind("Local", options.ProviderOptions);
             });
+
+            builder.Logging.AddConfiguration(
+                builder.Configuration.GetSection("Logging"));
 
             builder.Services
                 .AddMudServices(config =>

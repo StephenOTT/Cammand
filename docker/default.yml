@@ -1,0 +1,17 @@
+#spring:
+#  datasource:
+#    url: jdbc:h2:./build/DB/dbdevDb1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=TRUE # jdbc:h2:~/devDb1;MODE=PostgreSQL;AUTO_SERVER=TRUE
+#    username: sa
+#    password: ''
+
+server:
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: 1234567890
+    key-store-type: PKCS12
+    key-alias: tomcat
+
+camunda:
+  bpm:
+    webapp:
+      index-redirect-enabled: false

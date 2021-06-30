@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  camunda:
+    image: camunda/camunda-bpm-platform:run-latest
+    container_name: camunda-with-cammand
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    volumes:
+      - ./cammand:/camunda/configuration/userlib/META-INF/resources/
+      - ./default.yml:/camunda/configuration/default.yml
+      - ./keystore.p12:/camunda/configuration/keystore/keystore.p12
+    networks:
+      - camunda-net
+
+networks:
+  camunda-net:
+    driver: bridge

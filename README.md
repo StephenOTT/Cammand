@@ -6,6 +6,7 @@ Default app is a "Kitchen Sick" app that covers runtime and history apis.
 
 Contributions and collaboration is always welcomed.
 
+
 ## Features:
 
 1. Extendable
@@ -16,6 +17,10 @@ Contributions and collaboration is always welcomed.
 6. Runtime and History API access!
 7. Swap APIs for your custom endpoints
 8. What more do you need?
+
+# Quick Start for Demos and Development Testing
+
+See [Docker](./docker) folder
 
 ## Screenshots
 

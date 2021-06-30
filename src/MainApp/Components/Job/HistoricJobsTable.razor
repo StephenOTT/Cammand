@@ -10,23 +10,25 @@
     OnRowClick="@OnRowClicked"
     Elevation="0">
     <HeaderContent>
-        <MudTh>Id</MudTh>
+        <MudTh>Log Id</MudTh>
         <MudTh>Log Type</MudTh>
+        <MudTh>Job Id</MudTh>
+        <MudTh>Job Type</MudTh>
         <MudTh>Hostname</MudTh>
         <MudTh>Timestamp</MudTh>
         <MudTh>Activity Id</MudTh>
-        <MudTh>Job Id</MudTh>
         <MudTh>Job Priority</MudTh>
         <MudTh>Job Due Date</MudTh>
     </HeaderContent>
 
     <RowTemplate>
-        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Log Id">@context.Id</MudTd>
         <MudTd DataLabel="Log Type">@LogTypeElement(context)</MudTd>
+        <MudTd DataLabel="Job Id">@context.JobId</MudTd>
+        <MudTd DataLabel="Job Type">@context.JobDefinitionType</MudTd>
         <MudTd DataLabel="Hostname">@context.Hostname</MudTd>
         <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
         <MudTd DataLabel="Activity Id">@context.ActivityId</MudTd>
-        <MudTd DataLabel="Job Id">@context.JobId</MudTd>
         <MudTd DataLabel="Job Priority">@context.JobPriority</MudTd>
         <MudTd DataLabel="Job Due Date">@context.JobDueDate</MudTd>
     </RowTemplate>
@@ -35,7 +37,7 @@
         @if (_selectedJobLog?.Id == parentContext.Id)
         {
             <MudTr>
-                <td colspan="4">
+                <td colspan="100">
                     <MudCard Elevation="0" Outlined="true">
                         <MudCardHeader>
                             <CardHeaderContent>
@@ -125,8 +127,8 @@
             return @<MudIcon Icon="@Icons.Outlined.CheckCircleOutline" Color="Color.Success" Title="Success"/>;
         }
         Console.Error.WriteLine("Unknown Historic Job Log DTO Log type: " + log.ToJson());
-        
-        return @<MudIcon Icon="@Icons.Outlined.HelpOutline"  Title="UNKNOWN - See Error Logs"/>;
+
+        return @<MudIcon Icon="@Icons.Outlined.HelpOutline" Title="UNKNOWN - See Error Logs"/>;
     }
 
     void OnRowClicked(TableRowClickEventArgs<HistoricJobLogDto> clickedRow)
