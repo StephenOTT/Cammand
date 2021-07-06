@@ -8,6 +8,7 @@
 @using Camunda.Http.Api
 @using Camunda.Http.Api.Model
 @using Color = MudBlazor.Color
+@using System.Text.Json
 
 @inject AppData AppData
 
@@ -24,6 +25,10 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>Process Instance Attributes</CardHeaderContent>
+                <CardHeaderActions>
+                    <MudToolBar DisableGutters="true" Dense="true">
+                    </MudToolBar>
+                </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent>
                 <MudText Typo="Typo.body1" GutterBottom="true">Process Instance ID: <code>@_instance.Id</code></MudText>
@@ -47,31 +52,59 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>BPMN Diagram</CardHeaderContent>
+                <CardHeaderActions>
+                    <MudToolBar DisableGutters="true" Dense="true">
+                        <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/>
+                        <MudSpacer/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" @bind-Toggled="@_showCompletedActivityInstanceCounts" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" @bind-Toggled="@_showActiveActivityCounts" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" @bind-Toggled="@_showActivityIncidentCounts" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" @bind-Toggled="@_showWaitingExecutionCounts" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off"/>
+                    </MudToolBar>
+                </CardHeaderActions>
             </MudCardHeader>
             <MudCardContent Style="height: 500px">
                 @* Review why this is needed:*@
                 @if (_bpmnXml != null)
                 {
-                    <BpmnViewer bpmnXml="@_bpmnXml"
-                                activityIncidentCounts="@_activityIncidentCounts"
-                                activeActivityCounts="@_activeActivityCounts"
-                                completedActivityInstanceCounts="@_completedActivityInstanceCounts"
-                                waitingExecutionCounts="@_waitingExecutionCounts"
-                                applyCompletedActivityMarker="true"
-                                completedActivityMarkerConfig="highlight">
-                        <activityIncidentCountDisplay>
-                            <MudBadge Color="Color.Error" Content="@context"/>
-                        </activityIncidentCountDisplay>
-                        <activeActivityCountDisplay>
-                            <MudBadge Color="Color.Primary" Content="@context"/>
-                        </activeActivityCountDisplay>
-                        <completedActivityInstanceCountDisplay>
-                            <MudBadge Color="Color.Success" Content="@context"/>
-                        </completedActivityInstanceCountDisplay>
-                        <waitingExecutionCountDisplay>
-                            <MudBadge Color="Color.Secondary" Content="@context"/>
-                        </waitingExecutionCountDisplay>
-                    </BpmnViewer>
+                    <MudGrid Style="height: 100%;">
+                        <MudItem xs="8">
+                            <BpmnViewer bpmnXml="@_bpmnXml"
+                                                            @ref="@_bpmnViewer"
+                                                            activityIncidentCounts="@_activityIncidentCounts"
+                                                            activeActivityCounts="@_activeActivityCounts"
+                                                            completedActivityInstanceCounts="@_completedActivityInstanceCounts"
+                                                            HeatmapVisible="@_showBpmnActivityHeatmap"
+                                                            HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
+                                                            waitingExecutionCounts="@_waitingExecutionCounts"
+                                                            completedActivityMarkerConfig="highlight"
+                                                            applyCompletedActivityMarker="@_showCompletedActivityMarker"
+                                                            ApplyActiveActivityCounts="@_showActiveActivityCounts"
+                                                            ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
+                                                            applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
+                                                            applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
+                                                            OnElementSelection="@((json)=>_selectedBpmnElementConfig = JsonSerializer.Serialize(json, new JsonSerializerOptions(){WriteIndented = true}))">
+                                                    <activityIncidentCountDisplay>
+                                                        <MudBadge Color="Color.Error" Content="@context"/>
+                                                    </activityIncidentCountDisplay>
+                                                    <activeActivityCountDisplay>
+                                                        <MudBadge Color="Color.Primary" Content="@context"/>
+                                                    </activeActivityCountDisplay>
+                                                    <completedActivityInstanceCountDisplay>
+                                                        <MudBadge Color="Color.Success" Content="@context"/>
+                                                    </completedActivityInstanceCountDisplay>
+                                                    <waitingExecutionCountDisplay>
+                                                        <MudBadge Color="Color.Secondary" Content="@context"/>
+                                                    </waitingExecutionCountDisplay>
+                                                </BpmnViewer>
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudTextField T="string" Lines="20" @bind-Text="_selectedBpmnElementConfig" Style="height: 100%"/>
+                        </MudItem>
+                    </MudGrid>
+                    
                 }
             </MudCardContent>
         </MudCard>
@@ -256,6 +289,7 @@
 
 
 @code {
+    MudToggleIconButton dog;
 
     [Parameter]
     public string DefinitionId { get; set; }
@@ -277,6 +311,8 @@
 
     private string _bpmnXml;
 
+    BpmnViewer _bpmnViewer;
+
     private ActivityInstanceDto _activityInstanceData;
 
     MudTabPanel _variablesPanel;
@@ -287,41 +323,59 @@
     MudTabPanel _externalTasksPanel;
     MudTabPanel _actionsPanel;
 
+    bool _showBpmnActivityHeatmap = false;
+    bool _showCompletedActivityMarker = false;
+    bool _showActiveActivityCounts = false;
+    bool _showActivityIncidentCounts = false;
+    bool _showWaitingExecutionCounts = false;
+    bool _showCompletedActivityInstanceCounts = false;
 
-    protected override async Task OnInitializedAsync()
+    string _selectedBpmnElementConfig;
+
+    protected override void OnParametersSet()
     {
         _camunda = AppData.CamundaClient;
+    }
 
-        _instance = await _camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: InstanceId);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _instance = await _camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: InstanceId);
 
-        _activityInstanceData = await GetActivityInstanceData(); //runtime data
+            _activityInstanceData = await GetActivityInstanceData(); //runtime data
 
-        _activityIncidentCounts = _activityInstanceData.ChildActivityInstances
-            .SelectMany(i => i.Incidents)
-            .GroupBy(i => i.ActivityId)
-            .Select(i => new {activityId = i.Key, count = i.Count()})
-            .ToDictionary(x => x.activityId, x => x.count);
+            _activityIncidentCounts = _activityInstanceData.ChildActivityInstances
+                .SelectMany(i => i.Incidents)
+                .GroupBy(i => i.ActivityId)
+                .Select(i => new {activityId = i.Key, count = i.Count()})
+                .ToDictionary(x => x.activityId, x => x.count);
 
     //@TODO review how Transition Instance incidents are calculated
 
-        _activeActivityCounts = _activityInstanceData.ChildActivityInstances
-            .GroupBy(i => i.ActivityId)
-            .ToDictionary(k => k.Key, v => v.Select(i => i.ExecutionIds).Count());
+            _activeActivityCounts = _activityInstanceData.ChildActivityInstances
+                .GroupBy(i => i.ActivityId)
+                .ToDictionary(k => k.Key, v => v.Select(i => i.ExecutionIds).Count());
 
-        _waitingExecutionCounts = _activityInstanceData.ChildTransitionInstances
-            .GroupBy(i => i.ActivityId)
-            .ToDictionary(k => k.Key, v => v.Count());
+            _waitingExecutionCounts = _activityInstanceData.ChildTransitionInstances
+                .GroupBy(i => i.ActivityId)
+                .ToDictionary(k => k.Key, v => v.Count());
 
-        @*completedActivityInstanceCounts = (await camunda.History.ActivityInstances
-            .Query(new HistoricActivityInstanceQuery() { ProcessInstanceId = instanceId, Finished = true }).List())
-            .GroupBy(i => i.ActivityId)
-            .Select(i => new { activityId = i.Key, count = i.Count() })
-            .ToDictionary(x => x.activityId, x => x.count);*@
+            _completedActivityInstanceCounts = (await _camunda.Api.HistoricActivityInstanceApi.QueryHistoricActivityInstancesAsync(historicActivityInstanceQueryDto:
+                new HistoricActivityInstanceQueryDto
+                {
+                    ProcessInstanceId = InstanceId,
+                    Finished = true
+                }))
+                .GroupBy(i => i.ActivityId)
+                .Select(i => new {activityId = i.Key, count = i.Count()})
+                .ToDictionary(x => x.activityId, x => x.count);
 
-        _bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId);
-
-        StateHasChanged();
+            _bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId);
+            StateHasChanged();
+        }
     }
+
 
     private Task<ActivityInstanceDto> GetActivityInstanceData()
     {

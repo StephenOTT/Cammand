@@ -23,9 +23,7 @@ namespace MainApp
 
             builder.Services.AddHttpClient("CamundaAPI",
                 client => { client.BaseAddress = new Uri("https://localhost:8080/engine-rest"); });
-
-            builder.Services.AddSingleton<MainApp.Shared.AppData>();
-
+            
             builder.Services.AddOidcAuthentication(options =>
             {
                 // Configure your authentication provider options here.
@@ -47,10 +45,12 @@ namespace MainApp
                     config.SnackbarConfiguration.VisibleStateDuration = 10000;
                     config.SnackbarConfiguration.HideTransitionDuration = 500;
                     config.SnackbarConfiguration.ShowTransitionDuration = 500;
-                    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+                    config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
                     config.SnackbarConfiguration.BackgroundBlurred = true;
                 });
 
+            builder.Services.AddSingleton<Shared.AppData>();
+            
             await builder.Build().RunAsync();
         }
     }

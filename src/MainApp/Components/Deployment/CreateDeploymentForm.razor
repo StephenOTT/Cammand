@@ -1,7 +1,9 @@
 ﻿@using Camunda.Http.Api
 @using Camunda.Http.Api.Client
 @using System.IO
+
 @inject AppData AppData
+@inject ISnackbar Snackbar
 
 <MudCard Outlined="true" Elevation="0">
     <MudCardContent>
@@ -101,12 +103,12 @@
         {
             if (file.Size >= _maxFileSize)
             {
-                throw new Exception($"File {file.Name} is too large.  Max file size: {_maxFileSize}.");
+                AppData.SnackWarning(Snackbar, $"File {file.Name} is too large.  Max file size: {_maxFileSize}.");
             }
 
             if (_files.Count >= _maxAllowedFiles)
             {
-                throw new Exception($"Cannot upload more than {_maxAllowedFiles} files.");
+                AppData.SnackWarning(Snackbar,$"Cannot upload more than {_maxAllowedFiles} files.");
             }
 
             _files.Add(file);
@@ -141,19 +143,16 @@
                     deploymentName: _deploymentNameForDeployment,
                     data: fileStreams);
 
-
-    // AppData.PushToSnackBar("Deployment Successful: " + deploymentResult.Id, SnackbarColor.Success);
+                AppData.SnackSuccess(Snackbar,$"Deployment Successful: {deploymentResult.Id}");
             }
             catch (Exception ex)
             {
-    //@TODO add support for deployment error details so we can see the errors of what failed in the deployment
-    // AppData.PushToSnackBar(ex.Message, SnackbarColor.Danger);
-                throw ex;
+                AppData.SnackError(Snackbar,$"Deployment Failed: {ex.Message}", ex);
             }
         }
         else
         {
-            await Console.Error.WriteLineAsync("No Files to Upload");
+            AppData.SnackWarning(Snackbar,"No files to upload!");
         }
     }
 

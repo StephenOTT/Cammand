@@ -38,6 +38,36 @@
             </MudCard>
 
         </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        Message Jobs (Runtime)
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <RuntimeJobsTable Camunda="_camunda" MessagesOnly="true"/>
+
+                </MudCardContent>
+            </MudCard>
+
+        </MudItem>
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        Timer Jobs (Runtime)
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    <RuntimeJobsTable Camunda="_camunda" TimersOnly="true"/>
+
+                </MudCardContent>
+            </MudCard>
+
+        </MudItem>
     </MudGrid>
 </MudContainer>
 

@@ -25,7 +25,9 @@
                     {
                         <BpmnViewer bpmnXml="@_bpmnXml"
                                     activityIncidentCounts="@_activityIncidentCounts"
-                                    activeActivityCounts="@_activeActivityCounts">
+                                    activeActivityCounts="@_activeActivityCounts"
+                                    ApplyActiveActivityCounts="true"
+                                    ApplyActivityIncidentCounts="true">
                             <activityIncidentCountDisplay>
                                 <MudBadge Color="Color.Error" Content="@context"/>
                             </activityIncidentCountDisplay>
@@ -66,32 +68,36 @@
 
     private List<ActivityStatisticsResultDto> _definitionStats;
 
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _camunda = AppData.CamundaClient;
+    }
 
-        _definitionStats = await GetDefinitionStats(DefinitionId);
-        _activityIncidentCounts = _definitionStats
-            .FindAll(i => i.Incidents.Count != 0)
-            .GroupBy(i => i.Id)
-            .Select(i => new
-            {
-                ActivityId = i.Key,
-                Count = i.Sum(s => s.Incidents.Count)
-            }).ToDictionary(k => k.ActivityId, v => v.Count);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _definitionStats = await GetDefinitionStats(DefinitionId);
+            _activityIncidentCounts = _definitionStats
+                .FindAll(i => i.Incidents.Count != 0)
+                .GroupBy(i => i.Id)
+                .Select(i => new
+                {
+                    ActivityId = i.Key,
+                    Count = i.Sum(s => s.Incidents.Count)
+                }).ToDictionary(k => k.ActivityId, v => v.Count);
 
-        _activeActivityCounts = _definitionStats
-            .FindAll(i => i.Instances > 0)
-            .Select(i => new
-            {
-                ActivityId = i.Id,
-                Count = i.Instances
-            }).ToDictionary(k => k.ActivityId, v => v.Count);
+            _activeActivityCounts = _definitionStats
+                .FindAll(i => i.Instances > 0)
+                .Select(i => new
+                {
+                    ActivityId = i.Id,
+                    Count = i.Instances
+                }).ToDictionary(k => k.ActivityId, v => v.Count);
 
-        _bpmnXml = await GetBpmnXml(DefinitionId);
-
-        StateHasChanged();
+            _bpmnXml = await GetBpmnXml(DefinitionId);
+            StateHasChanged();
+        }
     }
 
     private async Task<string> GetBpmnXml(string processDefinitionId)

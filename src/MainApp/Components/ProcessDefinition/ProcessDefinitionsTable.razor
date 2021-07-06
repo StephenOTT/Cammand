@@ -2,10 +2,11 @@
 @using Camunda.Http.Api
 @using Size = MudBlazor.Size
 @using Color = MudBlazor.Color
+
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
-
 @inject AppData AppData
+@inject ISnackbar Snackbar
 
 <MudTable
     T="ProcessDefinitionDto"
@@ -152,7 +153,7 @@
         }
         catch (Exception e)
         {
-            AppData.SnackError("Unable to complete request: " + e.Message);
+            AppData.SnackError(Snackbar, "Unable to complete request: " + e.Message);
         }
         
 

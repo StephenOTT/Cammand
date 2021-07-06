@@ -2,16 +2,16 @@
 {
     @if (Items.Any())
     {
-        <Blazorise.Text>@string.Join(",", Items)</Blazorise.Text>
+        <MudText>@string.Join(",", Items)</MudText>
     }
     else
     {
-        <Blazorise.Text Italic="true">None</Blazorise.Text>
+        <MudText><i>None</i></MudText>
     }
 }
 else
 {
-    <Blazorise.Text>Loading...</Blazorise.Text>
+    <MudText>Loading...</MudText>
 }
 
 

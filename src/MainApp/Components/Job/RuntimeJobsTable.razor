@@ -76,6 +76,12 @@
 
     [Parameter]
     public string ProcessInstanceId { get; set; }
+    
+    [Parameter]
+    public bool TimersOnly { get; set; }
+    
+    [Parameter]
+    public bool MessagesOnly { get; set; }
 
     private List<JobDto> _jobs;
     
@@ -92,6 +98,8 @@
 
         _jobs = await Camunda.Api.JobApi.GetJobsAsync(
             processInstanceId: ProcessInstanceId,
+            timers: TimersOnly,
+            messages: MessagesOnly,
             sortBy: "jobDueDate",
             sortOrder: "desc",
             firstResult: state.PageSize * (state.Page),

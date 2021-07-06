@@ -4,14 +4,14 @@
 
 @if (_identityLinks != null)
 {
-    <Paragraph>Assignee: <UserTaskIdentityLinkItem Items="@ProcessAssignees(_identityLinks)"/></Paragraph>
-    <Paragraph>Candidate Users: <UserTaskIdentityLinkItem Items="@ProcessCandidateUsers(_identityLinks)"/></Paragraph>
-    <Paragraph>Candidate Groups: <UserTaskIdentityLinkItem Items="@ProcessCandidateGroups(_identityLinks)"/></Paragraph>
-    <Paragraph>Owner: <UserTaskIdentityLinkItem Items="@ProcessOwners(_identityLinks)"/></Paragraph>
+    <MudText>Assignee: <RuntimeIdentityLinkItem Items="@ProcessAssignees(_identityLinks)"/></MudText>
+    <MudText>Candidate Users: <RuntimeIdentityLinkItem Items="@ProcessCandidateUsers(_identityLinks)"/></MudText>
+    <MudText>Candidate Groups: <RuntimeIdentityLinkItem Items="@ProcessCandidateGroups(_identityLinks)"/></MudText>
+    <MudText>Owner: <RuntimeIdentityLinkItem Items="@ProcessOwners(_identityLinks)"/></MudText>
 }
 else
 {
-    <Text>Loading Identity Links...</Text>
+    <MudText>Loading Identity Links...</MudText>
 }
 
 

@@ -29,6 +29,7 @@
     <ProjectReference Include="..\BpmnJs\BpmnJs.csproj" />
     <ProjectReference Include="..\Camunda.Http.Api\Camunda.Http.Api.csproj" />
     <ProjectReference Include="..\Formio\Formio.csproj" />
+    <ProjectReference Include="..\HeatmapJs\HeatmapJs.csproj" />
   </ItemGroup>
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Components\Tasklist\UserTask\RuntimeTaskCard.razor" />

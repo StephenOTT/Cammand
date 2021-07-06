@@ -36,6 +36,18 @@ See [Docker](./docker) folder
 ![Process Instance](./docs/images/Mgmt-Definitions-Delete.png)
 
 
+### BPMN Data Overlays
+
+![Bpmn Data Overlay 1](./docs/images/Bpmn-DataOverlay-1.png)
+![Bpmn Data Overlay 2](./docs/images/Bpmn-DataOverlay-2.png)
+
+### BPMN Element Selection
+
+Analyze your BPMN Element configurations (WIP):
+
+![element data](./docs/images/Bpmn-Element-Selection-1.png)
+![element data](./docs/images/Bpmn-Element-Selection-2.png)
+
 ### Deployments and Forms
 
 ![Process Instance](./docs/images/Mgmt-CreateDeployment.png)
@@ -64,8 +76,7 @@ See [Docker](./docker) folder
 1. run `dotnet run`
 1. got to `localhost:5001`
 
-Currently requires HTTPS on the Camunda API endpoint.
-
+Requires HTTPS on the Camunda API endpoint.
 
 
 ## Quick SpringBoot Configs for Camunda:

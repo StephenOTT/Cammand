@@ -1,15 +1,11 @@
 ﻿using Camunda.Http.Api;
 using Camunda.Http.Api.Client;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
-    
-
+using System.Net.Http;
+using System;
 
 namespace MainApp.Shared
 {
-    using System.Net.Http;
-    using System;
-
     public class AppData
         {
 
@@ -21,18 +17,13 @@ namespace MainApp.Shared
 
         public string EnginePassword { get; set; } = "admin";
 
-        private readonly IHttpClientFactory ClientFactory;
+        private readonly IHttpClientFactory _clientFactory;
         
-
         public HttpClient HttpClient { get; set; }
-
-        [Inject]
-        private ISnackbar Snackbar { get; set; }
-
-
+        
         public AppData(IHttpClientFactory clientFactory)
         {
-            this.ClientFactory = clientFactory;
+            this._clientFactory = clientFactory;
             CreateClient();
         }
 
@@ -44,7 +35,7 @@ namespace MainApp.Shared
 
         public void CreateClient()
         {
-            var client = this.ClientFactory.CreateClient("CamundaAPI");
+            var client = this._clientFactory.CreateClient("CamundaAPI");
             var config = new Configuration
             {
                 BasePath = EngineUrl
@@ -64,9 +55,9 @@ namespace MainApp.Shared
             }
         }
 
-        public void SnackError(string message, Exception e = null)
+        public void SnackError(ISnackbar snackbar, string message, Exception e = null)
         {
-            Snackbar.Add(message, Severity.Error);
+            snackbar.Add(message, Severity.Error);
             Console.Error.WriteLine(message);
             if (e != null)
             {
@@ -74,20 +65,19 @@ namespace MainApp.Shared
             }
         }
 
-        public void SnackNormal(string message)
+        public void SnackNormal(ISnackbar snackbar, string message)
         {
-            
-            Snackbar.Add(message);
+            snackbar.Add(message);
         }
         
-        public void SnackSuccess(string message)
+        public void SnackSuccess(ISnackbar snackbar, string message)
         {
-            Snackbar.Add(message, Severity.Success);
+            snackbar.Add(message, Severity.Success);
         }
         
-        public void SnackWarning(string message)
+        public void SnackWarning(ISnackbar snackbar, string message)
         {
-            Snackbar.Add(message, Severity.Warning);
+            snackbar.Add(message, Severity.Warning);
         }
         
     }
