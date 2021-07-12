@@ -65,47 +65,73 @@
                     </MudToolBar>
                 </CardHeaderActions>
             </MudCardHeader>
-            <MudCardContent Style="height: 500px">
-                @* Review why this is needed:*@
-                @if (_bpmnXml != null)
-                {
-                    <MudGrid Style="height: 100%;">
-                        <MudItem xs="8">
+            <MudCardContent Style="height: 500px; overflow:hidden; position:relative;">
+
+                <MudPaper Height="100%" Style="overflow:hidden; position:relative;" Elevation="0" Class="ma-0">
+                    <MudDrawerContainer Class="mud-height-full">
+
+                        <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="2" Variant="@DrawerVariant.Persistent">
+                            <MudDrawerHeader>
+                                <MudText Typo="Typo.h6">Element Details</MudText>
+                            </MudDrawerHeader>
+                            @if (_selectedBpmnElement != null)
+                            {
+                                <MudGrid Class="ma-0">
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Name" Text="@_selectedBpmnElement.BusinessObject.Name" ReadOnly="true"/>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Type" Text="@_selectedBpmnElement.BusinessObject.Type" ReadOnly="true"/>
+
+                                    </MudItem>
+                                    @if (_selectedBpmnElement.BusinessObject.Documentation != null)
+                                    {
+                                        @foreach (var doc in _selectedBpmnElement.BusinessObject.Documentation)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudTextField T="string" Lines="5" ReadOnly="true" Label="Documentation" Text="@doc.Text" />
+                                            </MudItem>
+                                        }
+                                    }
+                                </MudGrid>
+                            }
+
+                        </MudDrawer>
+                        @if (_bpmnXml != null)
+                        {
                             <BpmnViewer bpmnXml="@_bpmnXml"
-                                                            @ref="@_bpmnViewer"
-                                                            activityIncidentCounts="@_activityIncidentCounts"
-                                                            activeActivityCounts="@_activeActivityCounts"
-                                                            completedActivityInstanceCounts="@_completedActivityInstanceCounts"
-                                                            HeatmapVisible="@_showBpmnActivityHeatmap"
-                                                            HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
-                                                            waitingExecutionCounts="@_waitingExecutionCounts"
-                                                            completedActivityMarkerConfig="highlight"
-                                                            applyCompletedActivityMarker="@_showCompletedActivityMarker"
-                                                            ApplyActiveActivityCounts="@_showActiveActivityCounts"
-                                                            ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
-                                                            applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
-                                                            applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
-                                                            OnElementSelection="@((json)=>_selectedBpmnElementConfig = JsonSerializer.Serialize(json, new JsonSerializerOptions(){WriteIndented = true}))">
-                                                    <activityIncidentCountDisplay>
-                                                        <MudBadge Color="Color.Error" Content="@context"/>
-                                                    </activityIncidentCountDisplay>
-                                                    <activeActivityCountDisplay>
-                                                        <MudBadge Color="Color.Primary" Content="@context"/>
-                                                    </activeActivityCountDisplay>
-                                                    <completedActivityInstanceCountDisplay>
-                                                        <MudBadge Color="Color.Success" Content="@context"/>
-                                                    </completedActivityInstanceCountDisplay>
-                                                    <waitingExecutionCountDisplay>
-                                                        <MudBadge Color="Color.Secondary" Content="@context"/>
-                                                    </waitingExecutionCountDisplay>
-                                                </BpmnViewer>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField T="string" Lines="20" @bind-Text="_selectedBpmnElementConfig" Style="height: 100%"/>
-                        </MudItem>
-                    </MudGrid>
-                    
-                }
+                                        @ref="@_bpmnViewer"
+                                        activityIncidentCounts="@_activityIncidentCounts"
+                                        activeActivityCounts="@_activeActivityCounts"
+                                        completedActivityInstanceCounts="@_completedActivityInstanceCounts"
+                                        HeatmapVisible="@_showBpmnActivityHeatmap"
+                                        HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
+                                        waitingExecutionCounts="@_waitingExecutionCounts"
+                                        completedActivityMarkerConfig="highlight"
+                                        applyCompletedActivityMarker="@_showCompletedActivityMarker"
+                                        ApplyActiveActivityCounts="@_showActiveActivityCounts"
+                                        ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
+                                        applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
+                                        applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
+                                        OnElementSelection="@ElementSelected">
+                                <activityIncidentCountDisplay>
+                                    <MudBadge Color="Color.Error" Content="@context"/>
+                                </activityIncidentCountDisplay>
+                                <activeActivityCountDisplay>
+                                    <MudBadge Color="Color.Primary" Content="@context"/>
+                                </activeActivityCountDisplay>
+                                <completedActivityInstanceCountDisplay>
+                                    <MudBadge Color="Color.Success" Content="@context"/>
+                                </completedActivityInstanceCountDisplay>
+                                <waitingExecutionCountDisplay>
+                                    <MudBadge Color="Color.Secondary" Content="@context"/>
+                                </waitingExecutionCountDisplay>
+                            </BpmnViewer>
+                        }
+
+                    </MudDrawerContainer>
+                </MudPaper>
+
             </MudCardContent>
         </MudCard>
     </MudItem>
@@ -330,7 +356,17 @@
     bool _showWaitingExecutionCounts = false;
     bool _showCompletedActivityInstanceCounts = false;
 
-    string _selectedBpmnElementConfig;
+    BpmnElement _selectedBpmnElement;
+
+    bool _showSelectedElementDrawer;
+
+    void ElementSelected(BpmnElement selectedElement)
+    {
+        Console.WriteLine("Element Selected: " + selectedElement);
+        _selectedBpmnElement = selectedElement;
+        _showSelectedElementDrawer = selectedElement != null;
+    }
+
 
     protected override void OnParametersSet()
     {

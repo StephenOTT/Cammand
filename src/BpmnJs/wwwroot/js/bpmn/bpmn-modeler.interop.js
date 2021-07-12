@@ -1,12 +1,19 @@
 ﻿/// <reference path="./bpmn-navigated-viewer.production.min.js" />
 
 import "./bpmn-navigated-viewer.production.min.js"
+import "./lodash.min.js"
 
 export function createBpmnJSInstance(element) {
     return new BpmnJS({
         container: element
     })
 }
+
+export function getElementProperty(bpmnJsInstance, elementId, propertyPath){
+    let element = bpmnJsInstance.get("elementRegistry").get(elementId)
+    return _.get(element, propertyPath)
+}
+
 
 export function generateHeatmap(data, bpmnJsInstance, bpmnRef, heatmapInstance, maxValue){
     let heatmapData = []
@@ -86,19 +93,15 @@ export function recenterDiagram(bpmnJsInstance){
     bpmnJsInstance.get("canvas").zoom("fit-viewport", "auto")
 }
 
-
-
-
 export function setupElementSelectionListener(bpmnJsInstance, dotNetRef){
     console.log("creating listener for element selection")
     bpmnJsInstance.get("eventBus").on('selection.changed', function(context) {
         if (context.newSelection.length === 1){
             //@TODO Refactor
-            dotNetRef.invokeMethodAsync('ElementSelectedEvent', {
-                "main": context.newSelection[0],
-                "businessObject": context.newSelection[0].businessObject,
-                "businessObjectAttrs": context.newSelection[0].businessObject["$attrs"]
-            });
+            let elementId = context.newSelection[0].id
+            dotNetRef.invokeMethodAsync('ElementSelectedEvent', elementId);
+        } else if (context.newSelection.length === 0){
+            dotNetRef.invokeMethodAsync('ElementSelectedEvent', null);
         }
     });
 }

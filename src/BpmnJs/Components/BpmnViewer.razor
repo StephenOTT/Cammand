@@ -96,9 +96,9 @@
 
     [Parameter]
     public bool ApplyActivityIncidentCounts { get; set; }
-    
+
     Dictionary<string, ElementReference> activityIncidentRefs = new();
-    
+
 
 
     [Parameter]
@@ -109,9 +109,9 @@
 
     [Parameter]
     public bool ApplyActiveActivityCounts { get; set; }
-    
+
     Dictionary<string, ElementReference> activeActivityRefs = new();
-    
+
 
 
     [Parameter]
@@ -130,7 +130,7 @@
     public string completedActivityMarkerConfig { get; set; }
 
     Dictionary<string, ElementReference> completedActivityInstanceRefs = new();
-    
+
 
 
     [Parameter]
@@ -149,19 +149,20 @@
 
     [Parameter]
     public bool HeatmapVisible { get; set; }
-    
+
     [Parameter]
     public EventCallback<bool> HeatmapVisibleChanged { get; set; }
 
     [Parameter]
     public string HeatmapProcessDefinitionKey { get; set; }
-    
+
 
     [Parameter]
     public string bpmnXml { get; set; }
-    
+
+
     [Parameter]
-    public EventCallback<JsonDocument> OnElementSelection { get; set; }
+    public EventCallback<BpmnElement> OnElementSelection { get; set; }
 
     DotNetObjectReference<BpmnViewer> _dotNetJsRef;
 
@@ -175,7 +176,7 @@
     {
         await bpmnJsModule.InvokeVoidAsync("recenterDiagram", bpmnJsInstance);
     }
-    
+
 
     protected override async Task OnParametersSetAsync()
     {
@@ -188,22 +189,25 @@
         {
             bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
             bpmnJsInstance = await bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", bpmnJsElement);
-            
+
             await bpmnJsInstance.InvokeVoidAsync("importXML", bpmnXml);
 
             if (OnElementSelection.HasDelegate)
             {
                 await bpmnJsModule.InvokeVoidAsync("setupElementSelectionListener", bpmnJsInstance, _dotNetJsRef);
             }
-            
+
             var canvas = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "canvas");
-            
+
             await canvas.InvokeVoidAsync("zoom", "fit-viewport", "auto");
             //@TODO add support for recenter on page change
         }
+        if (bpmnJsInstance != null)
+        {
+            await SetupHeatmap();
+            await SetupOverlays();
+        }
 
-        await SetupOverlays();
-        await SetupHeatmap();
     }
 
 
@@ -244,11 +248,11 @@
                         },
                         html = entry.Value
                     });
-                
+
             }
         }
-        
-        
+
+
         if (ApplyActiveActivityCounts)
         {
             foreach (var entry in activeActivityRefs)
@@ -313,19 +317,25 @@
         }
     }
 
-    
+
     [JSInvokable]
-    public async Task ElementSelectedEvent (JsonDocument element)
+    public async Task ElementSelectedEvent(string elementId)
     {
-        Console.WriteLine("Received Event!! " + JsonSerializer.Serialize(element));
+        var element = elementId != null ? new BpmnElement(bpmnJsInstance, JS, elementId) : null;
         await OnElementSelection.InvokeAsync(element);
     }
-    
-    
+
+
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
         await bpmnJsInstance.DisposeAsync();
         await bpmnJsModule.DisposeAsync();
+
+        if (heatmapJsInstance != null)
+        {
+            await heatmapJsInstance.DisposeAsync();
+        }
+
     }
-    
+
 }
