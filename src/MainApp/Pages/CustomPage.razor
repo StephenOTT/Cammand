@@ -1,0 +1,233 @@
+﻿@using MainApp.Components.VariableInstance
+@using MainApp.Components.Incident
+@using MainApp.Components.UserTask
+@using MainApp.Components.ProcessInstance
+@using MainApp.Components.Job
+@using MainApp.Components.ExternalTask
+@using BpmnJs.Components
+@using Camunda.Http.Api
+@using Camunda.Http.Api.Model
+@using Color = MudBlazor.Color
+@using System.Text.Json
+
+@inject AppData AppData
+@inject IHttpClientFactory ClientFactory
+
+@page "/custom"
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+<MudGrid>
+<MudItem xs="12">
+    <MudText Typo="Typo.h3" GutterBottom="true">CUSTOM page</MudText>
+</MudItem>
+<MudItem xs="12" lg="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Process Instance Attributes</CardHeaderContent>
+                <CardHeaderActions>
+                    <MudToolBar DisableGutters="true" Dense="true">
+                    </MudToolBar>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+...
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" lg="8">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>BPMN Diagram</CardHeaderContent>
+                <CardHeaderActions>
+                    <MudToolBar DisableGutters="true" Dense="true">
+                        <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/>
+                        <MudSpacer/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" @bind-Toggled="@_showCompletedActivityInstanceCounts" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" @bind-Toggled="@_showActiveActivityCounts" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" @bind-Toggled="@_showActivityIncidentCounts" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" @bind-Toggled="@_showWaitingExecutionCounts" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off"/>
+                    </MudToolBar>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent Style="height: 500px; overflow:hidden; position:relative;">
+
+                <MudPaper Height="100%" Style="overflow:hidden; position:relative;" Elevation="0" Class="ma-0 pa-4">
+                    <MudDrawerContainer Class="mud-height-full">
+
+                        <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="2" Variant="@DrawerVariant.Persistent">
+                            <MudDrawerHeader>
+                                <MudText Typo="Typo.h6">Element Details</MudText>
+                            </MudDrawerHeader>
+                            @if (_selectedBpmnElement != null)
+                            {
+                                <MudGrid Class="ma-0">
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Name" Text="@_selectedBpmnElement.BusinessObject.Name" ReadOnly="true"/>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Type" Text="@_selectedBpmnElement.BusinessObject.Type" ReadOnly="true"/>
+
+                                    </MudItem>
+                                    @if (_selectedBpmnElement.BusinessObject.Documentation != null)
+                                    {
+                                        @foreach (var doc in _selectedBpmnElement.BusinessObject.Documentation)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudTextField T="string" Lines="5" ReadOnly="true" Label="Documentation" Text="@doc.Text" />
+                                            </MudItem>
+                                        }
+                                    }
+                                </MudGrid>
+                            }
+
+                        </MudDrawer>
+                        @if (_bpmnXml != null)
+                        {
+                            <BpmnViewer bpmnXml="@_bpmnXml"
+                                        @ref="@_bpmnViewer"
+                                        OnElementSelection="@ElementSelected">
+                                <activityIncidentCountDisplay>
+                                    <MudBadge Color="Color.Error" Content="@context"/>
+                                </activityIncidentCountDisplay>
+                                <activeActivityCountDisplay>
+                                    <MudBadge Color="Color.Primary" Content="@context"/>
+                                </activeActivityCountDisplay>
+                                <completedActivityInstanceCountDisplay>
+                                    <MudBadge Color="Color.Success" Content="@context"/>
+                                </completedActivityInstanceCountDisplay>
+                                <waitingExecutionCountDisplay>
+                                    <MudBadge Color="Color.Secondary" Content="@context"/>
+                                </waitingExecutionCountDisplay>
+                            </BpmnViewer>
+                        }
+
+                    </MudDrawerContainer>
+                </MudPaper>
+
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>Process Instance Details</CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTabs>
+
+                    <MudTabPanel Text="Actions" @ref="_actionsPanel">
+                        Suspend, Add Variables, Increment Retries, Delete Instance, Migrate
+                    </MudTabPanel>
+
+                </MudTabs>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+
+</MudGrid>
+</MudContainer>
+
+
+@code {
+
+    [Parameter]
+    public string DefinitionId { get; set; }
+
+    [Parameter]
+    public string InstanceId { get; set; }
+
+    CamundaClient _camunda;
+
+    HistoricProcessInstanceDto _instance;
+
+    private Dictionary<string, int> _activityIncidentCounts = new();
+
+    private Dictionary<string, int> _activeActivityCounts = new();
+
+    private Dictionary<string, int> _completedActivityInstanceCounts = new();
+
+    private Dictionary<string, int> _waitingExecutionCounts = new();
+
+    private string _bpmnXml;
+
+    BpmnViewer _bpmnViewer;
+
+    private ActivityInstanceDto _activityInstanceData;
+
+    MudTabPanel _variablesPanel;
+    MudTabPanel _incidentsPanel;
+    MudTabPanel _calledProcessInstancesPanel;
+    MudTabPanel _userTasksPanel;
+    MudTabPanel _jobsPanel;
+    MudTabPanel _externalTasksPanel;
+    MudTabPanel _actionsPanel;
+
+    bool _showBpmnActivityHeatmap = false;
+    bool _showCompletedActivityMarker = false;
+    bool _showActiveActivityCounts = false;
+    bool _showActivityIncidentCounts = false;
+    bool _showWaitingExecutionCounts = false;
+    bool _showCompletedActivityInstanceCounts = false;
+
+    BpmnElement _selectedBpmnElement;
+
+    bool _showSelectedElementDrawer;
+
+    void ElementSelected(BpmnElement selectedElement)
+    {
+        Console.WriteLine("Element Selected: " + selectedElement);
+        _selectedBpmnElement = selectedElement;
+        _showSelectedElementDrawer = selectedElement != null;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        _camunda = AppData.CamundaClient;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var client = ClientFactory.CreateClient();
+            Console.WriteLine("running...");
+            _bpmnXml = await client.GetStringAsync("https://localhost:5001/GenUTs.bpmn");
+            StateHasChanged();
+        }
+    }
+
+
+    private Task<ActivityInstanceDto> GetActivityInstanceData()
+    {
+        return _camunda.Api.ProcessInstanceApi.GetActivityInstanceTreeAsync(InstanceId);
+    }
+
+        @*private Task<Dictionary<string, int>> CalcIncidents(ActivityInstanceInfo data)
+        {
+            return Task.FromResult(new Dictionary<string, int>());
+        }*@
+
+        @*private Task<Dictionary<string, int>> CalcActiveActivities(ActivityInstanceInfo data)
+        {
+            return Task.FromResult(new Dictionary<string, int>());
+        }*@
+
+        @*private Task<Dictionary<string, int>> CalcWaitingJobs(ActivityInstanceInfo data)
+        {
+            return Task.FromResult(new Dictionary<string, int>());
+        }*@
+
+
+    private async Task<string> GetBpmnXml(string processDefinitionId)
+    {
+        var result = await _camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
+        return result.Bpmn20Xml;
+    }
+
+}
