@@ -46,7 +46,6 @@ See [Docker](./docker) folder
 Analyze your BPMN Element configurations (WIP):
 
 ![element data](./docs/images/Bpmn-Element-Selection-1.png)
-![element data](./docs/images/Bpmn-Element-Selection-2.png)
 
 ### Deployments and Forms
 

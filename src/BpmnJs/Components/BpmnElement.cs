@@ -123,7 +123,33 @@ namespace BpmnJs.Components
         [JsonPropertyName("$body")]
         public string? Body { get; set; } // Example: used for Input/Output mappings
     }
-    
 
+
+
+    
+    // Found in Extension Elements
+    public class ExecutionListener {
+    
+        [JsonPropertyName("$type")]
+        public string Type { get; set; } //camunda:script
+        
+        public string Event { get; set; }
+        
+        [JsonPropertyName("$children")]
+        public List<object> Children { get; set; } //@TODO
+        
+    }
+    
+    // Found in children of Execution Listeners
+    public class CamundaScript
+    {
+        [JsonPropertyName("$type")]
+        public string Type { get; set; } //camunda:script
+        
+        public string ScriptFormat { get; set; }
+        
+        [JsonPropertyName("$body")]
+        public string Body { get; set; }
+    }
 
 }

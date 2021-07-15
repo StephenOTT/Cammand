@@ -91,6 +91,7 @@ export function clearOverlays(bpmnJsInstance, overlayIds){
     
 export function recenterDiagram(bpmnJsInstance){
     bpmnJsInstance.get("canvas").zoom("fit-viewport", "auto")
+    bpmnJsInstance.get("canvas").zoom("fit-viewport", "auto") //@TODO review why this is needed. Likely because the instance was not aware the viewport changed sizes.. Low priority
 }
 
 export function setupElementSelectionListener(bpmnJsInstance, dotNetRef){

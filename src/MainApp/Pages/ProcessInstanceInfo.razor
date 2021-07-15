@@ -51,81 +51,83 @@
     <MudItem xs="12" lg="8">
         <MudCard>
             <MudCardHeader Class="py-2 pr-2">
-                <MudToolBar DisableGutters="true" Dense="true">
-                    BPMN Diagram
-                    <MudSpacer />
-                    <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" @bind-Toggled="@_showCompletedActivityInstanceCounts" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" @bind-Toggled="@_showActiveActivityCounts" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" @bind-Toggled="@_showActivityIncidentCounts" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" @bind-Toggled="@_showWaitingExecutionCounts" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on" />
-                    <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off" />
-                </MudToolBar>
+                <CardHeaderContent>
+                    <MudToolBar DisableGutters="true" Dense="true">
+                        BPMN Diagram
+                        <MudSpacer/>
+                        <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" @bind-Toggled="@_showCompletedActivityInstanceCounts" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" @bind-Toggled="@_showActiveActivityCounts" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" @bind-Toggled="@_showActivityIncidentCounts" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" @bind-Toggled="@_showWaitingExecutionCounts" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/>
+                        <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off"/>
+                    </MudToolBar>
+                </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent Class="relative pa-0" Style="height: 500px; overflow:hidden;">
-                    <MudDrawerContainer Class="mud-height-full">
-                        <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);">
-                            <MudDrawerHeader>
-                                <MudText Typo="Typo.h6">Element Details</MudText>
-                            </MudDrawerHeader>
-                            <div class="px-4">
-                                @if (_selectedBpmnElement != null)
-                                {
-                                    <MudGrid>
-                                        <MudItem xs="12">
-                                            <MudTextField T="string" Label="Name" Text="@_selectedBpmnElement.BusinessObject.Name" ReadOnly="true"/>
-                                        </MudItem>
-                                        <MudItem xs="12">
-                                            <MudTextField T="string" Label="Type" Text="@_selectedBpmnElement.BusinessObject.Type" ReadOnly="true"/>
+                <MudDrawerContainer Class="mud-height-full">
+                    <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);">
+                        <MudDrawerHeader>
+                            <MudText Typo="Typo.h6">Element Details</MudText>
+                        </MudDrawerHeader>
+                        <div class="px-4">
+                            @if (_selectedBpmnElement != null)
+                            {
+                                <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Name" Text="@_selectedBpmnElement.BusinessObject.Name" ReadOnly="true"/>
+                                    </MudItem>
+                                    <MudItem xs="12">
+                                        <MudTextField T="string" Label="Type" Text="@_selectedBpmnElement.BusinessObject.Type" ReadOnly="true"/>
 
-                                        </MudItem>
-                                        @if (_selectedBpmnElement.BusinessObject.Documentation != null)
+                                    </MudItem>
+                                    @if (_selectedBpmnElement.BusinessObject.Documentation != null)
+                                    {
+                                        @foreach (var doc in _selectedBpmnElement.BusinessObject.Documentation)
                                         {
-                                            @foreach (var doc in _selectedBpmnElement.BusinessObject.Documentation)
-                                            {
-                                                <MudItem xs="12">
-                                                    <MudTextField T="string" Lines="5" ReadOnly="true" Label="Documentation" Text="@doc.Text" />
-                                                </MudItem>
-                                            }
+                                            <MudItem xs="12">
+                                                <MudTextField T="string" Lines="5" ReadOnly="true" Label="Documentation" Text="@doc.Text"/>
+                                            </MudItem>
                                         }
-                                    </MudGrid>
-                                }
-                            </div>
-                        </MudDrawer>
-                        @if (_bpmnXml != null)
-                        {
-                            <BpmnViewer bpmnXml="@_bpmnXml"
-                                        @ref="@_bpmnViewer"
-                                        activityIncidentCounts="@_activityIncidentCounts"
-                                        activeActivityCounts="@_activeActivityCounts"
-                                        completedActivityInstanceCounts="@_completedActivityInstanceCounts"
-                                        HeatmapVisible="@_showBpmnActivityHeatmap"
-                                        HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
-                                        waitingExecutionCounts="@_waitingExecutionCounts"
-                                        completedActivityMarkerConfig="highlight"
-                                        applyCompletedActivityMarker="@_showCompletedActivityMarker"
-                                        ApplyActiveActivityCounts="@_showActiveActivityCounts"
-                                        ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
-                                        applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
-                                        applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
-                                        OnElementSelection="@ElementSelected">
-                                <activityIncidentCountDisplay>
-                                    <MudBadge Color="Color.Error" Content="@context"/>
-                                </activityIncidentCountDisplay>
-                                <activeActivityCountDisplay>
-                                    <MudBadge Color="Color.Primary" Content="@context"/>
-                                </activeActivityCountDisplay>
-                                <completedActivityInstanceCountDisplay>
-                                    <MudBadge Color="Color.Success" Content="@context"/>
-                                </completedActivityInstanceCountDisplay>
-                                <waitingExecutionCountDisplay>
-                                    <MudBadge Color="Color.Secondary" Content="@context"/>
-                                </waitingExecutionCountDisplay>
-                            </BpmnViewer>
-                        }
+                                    }
+                                </MudGrid>
+                            }
+                        </div>
+                    </MudDrawer>
+                    @if (_bpmnXml != null)
+                    {
+                        <BpmnViewer bpmnXml="@_bpmnXml"
+                                    @ref="@_bpmnViewer"
+                                    activityIncidentCounts="@_activityIncidentCounts"
+                                    activeActivityCounts="@_activeActivityCounts"
+                                    completedActivityInstanceCounts="@_completedActivityInstanceCounts"
+                                    HeatmapVisible="@_showBpmnActivityHeatmap"
+                                    HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
+                                    waitingExecutionCounts="@_waitingExecutionCounts"
+                                    completedActivityMarkerConfig="highlight"
+                                    applyCompletedActivityMarker="@_showCompletedActivityMarker"
+                                    ApplyActiveActivityCounts="@_showActiveActivityCounts"
+                                    ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
+                                    applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
+                                    applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
+                                    OnElementSelection="@ElementSelected">
+                            <activityIncidentCountDisplay>
+                                <MudBadge Color="Color.Error" Content="@context"/>
+                            </activityIncidentCountDisplay>
+                            <activeActivityCountDisplay>
+                                <MudBadge Color="Color.Primary" Content="@context"/>
+                            </activeActivityCountDisplay>
+                            <completedActivityInstanceCountDisplay>
+                                <MudBadge Color="Color.Success" Content="@context"/>
+                            </completedActivityInstanceCountDisplay>
+                            <waitingExecutionCountDisplay>
+                                <MudBadge Color="Color.Secondary" Content="@context"/>
+                            </waitingExecutionCountDisplay>
+                        </BpmnViewer>
+                    }
 
-                    </MudDrawerContainer>
+                </MudDrawerContainer>
             </MudCardContent>
         </MudCard>
     </MudItem>
