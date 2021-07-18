@@ -22,7 +22,7 @@
     List<BpmnElement> _bpmnElements = new();
 
     bool _diagramLoaded;
-
+    
 
     [Parameter]
     public EventCallback<BpmnElement> OnElementSelection { get; set; }
@@ -40,18 +40,6 @@
                     <div @ref="@config.HtmlElementRef" @key="@config" style="display:none">
                         @config.OverlayRenderFragment(_bpmnElements.Single(element => element.InternalId == config.ElementId))
                     </div>
-                }
-                else
-                {
-                    await RemoveOverlays(new List<string> {config.OverlayId});
-                    config.OverlayId = null;
-                    Console.WriteLine("dog");
-                    // if (config.HtmlElementRef != null)
-                    // {
-                    //     config.OverlayId = null;
-                    //     config.HtmlElementRef = null;
-                    //     
-                    // }
                 }
             }
         }
@@ -102,6 +90,7 @@
         if (!firstRender && _diagramLoaded)
         {
             await SetupOverlays();
+            //Maybe we should remove overlays as well at this step?  Can use a list of actions to remove?
         }
     }
 
@@ -129,27 +118,28 @@
     public async Task HideIncidents()
     {
         var incidentOverlays = OverlayConfigs.FindAll(i => i.Tags.Contains("incident"));
-
-        // await RemoveOverlays(ids);
-
-        incidentOverlays.ForEach(i =>
-        {
-            i.State = "HIDE"; // This will trigger change detection and cause OnParams Set to trigger
-        });
-
+        var ids = OverlayConfigs.FindAll(i => i.Tags.Contains("incident")).Select(i=>i.OverlayId).ToList();
+        await Task.Run(() => incidentOverlays.ForEach(i =>
+            {
+                i.State = "HIDE";
+                i.OverlayId = null;
+                i.HtmlElementRef = null;
+            })
+        );
+        
+        await RemoveOverlays(ids);
     }
     
     public async Task ShowIncidents()
     {
-        var incidentOverlays = OverlayConfigs.FindAll(i => i.Tags.Contains("incident"));
+        var incidentOverlays = OverlayConfigs.FindAll(i => i.Tags.Contains("incident") && i.State == "HIDE");
 
-    // await RemoveOverlays(ids);
-
+        Console.WriteLine("cats1");
         incidentOverlays.ForEach(i =>
         {
             i.State = "INIT"; // This will trigger change detection and cause OnParams Set to trigger
         });
-
+        Console.WriteLine("cats2");
     }
 
 
