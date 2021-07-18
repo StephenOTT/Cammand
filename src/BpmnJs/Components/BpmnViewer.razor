@@ -24,8 +24,8 @@
         }
     }
 
-    
-    
+
+
     @if (ApplyActiveActivityCounts)
     {
         @foreach (KeyValuePair<string, int> entry in activeActivityCounts)
@@ -42,8 +42,8 @@
             </div>
         }
     }
-    
-    
+
+
     @if (applyCompletedActivityInstanceCounts)
     {
         @foreach (KeyValuePair<string, int> entry in completedActivityInstanceCounts)
@@ -60,8 +60,8 @@
             </div>
         }
     }
-    
-    
+
+
     @if (applyWaitingExecutionCounts)
     {
         @foreach (KeyValuePair<string, int> entry in waitingExecutionCounts)
@@ -78,6 +78,40 @@
             </div>
         }
     }
+
+    @* @if (applyElementAsyncBeforeDisplay) *@
+    @* { *@
+    @*     @foreach (var id in asyncBeforeElementIds) *@
+    @*     { *@
+    @*         <div @ref=elementAsyncBeforeRefs[id]> *@
+    @*             @if (elementAsyncBeforeDisplay != null) *@
+    @*             { *@
+    @*                 @elementAsyncBeforeDisplay(new BpmnElement(bpmnJsInstance, JS, id)) *@
+    @*             } *@
+    @*             else *@
+    @*             { *@
+    @*                 <div>AsyncBefore</div> *@
+    @*             } *@
+    @*         </div> *@
+    @*     } *@
+    @* } *@
+    @* *@
+    @* @if (applyElementAsyncAfterDisplay) *@
+    @* { *@
+    @*     @foreach (var id in asyncAfterElementIds) *@
+    @*     { *@
+    @*         <div @ref=elementAsyncAfterRefs[id]> *@
+    @*             @if (elementAsyncAfterDisplay != null) *@
+    @*             { *@
+    @*                 @elementAsyncAfterDisplay(new BpmnElement(bpmnJsInstance, JS, id)) *@
+    @*             } *@
+    @*             else *@
+    @*             { *@
+    @*                 <div>AsyncAfter</div> *@
+    @*             } *@
+    @*         </div> *@
+    @*     } *@
+    @* } *@
 
 </div>
 
@@ -100,7 +134,6 @@
     Dictionary<string, ElementReference> activityIncidentRefs = new();
 
 
-
     [Parameter]
     public RenderFragment<int> activeActivityCountDisplay { get; set; }
 
@@ -111,7 +144,6 @@
     public bool ApplyActiveActivityCounts { get; set; }
 
     Dictionary<string, ElementReference> activeActivityRefs = new();
-
 
 
     [Parameter]
@@ -130,7 +162,6 @@
     public string completedActivityMarkerConfig { get; set; }
 
     Dictionary<string, ElementReference> completedActivityInstanceRefs = new();
-
 
 
     [Parameter]
@@ -155,6 +186,30 @@
 
     [Parameter]
     public string HeatmapProcessDefinitionKey { get; set; }
+
+
+    [Parameter]
+    public RenderFragment<BpmnElement> elementAsyncBeforeDisplay { get; set; }
+
+    [Parameter]
+    public List<string> asyncBeforeElementIds { get; set; } = new();
+
+    [Parameter]
+    public bool applyElementAsyncBeforeDisplay { get; set; }
+
+    Dictionary<string, ElementReference> elementAsyncBeforeRefs = new();
+
+
+    [Parameter]
+    public RenderFragment<BpmnElement> elementAsyncAfterDisplay { get; set; }
+
+    [Parameter]
+    public List<string> asyncAfterElementIds { get; set; } = new();
+
+    [Parameter]
+    public bool applyElementAsyncAfterDisplay { get; set; }
+
+    Dictionary<string, ElementReference> elementAsyncAfterRefs = new();
 
 
     [Parameter]
@@ -200,16 +255,14 @@
             var canvas = await bpmnJsInstance.InvokeAsync<IJSObjectReference>("get", "canvas");
 
             await canvas.InvokeVoidAsync("zoom", "fit-viewport", "auto");
-            //@TODO add support for recenter on page change
+    //@TODO add support for recenter on page change
         }
         if (bpmnJsInstance != null)
         {
             await SetupHeatmap();
             await SetupOverlays();
         }
-
     }
-
 
 
     public async Task SetupHeatmap()
@@ -248,7 +301,6 @@
                         },
                         html = entry.Value
                     });
-
             }
         }
 
@@ -315,6 +367,43 @@
                     });
             }
         }
+        //
+        // if (applyElementAsyncBeforeDisplay)
+        // {
+        //     var ids = await bpmnJsModule.InvokeAsync<List<string>>("getAllElementPropertyIds", bpmnJsInstance);
+        //     asyncBeforeElementIds = ids;
+        //     StateHasChanged();
+        //     foreach (var entry in elementAsyncBeforeRefs)
+        //     {
+        //         var id = await overlays.InvokeAsync<string>("add", entry.Key,
+        //             new
+        //             {
+        //                 position = new
+        //                 {
+        //                     bottom = 38,
+        //                     left = 15
+        //                 },
+        //                 html = entry.Value
+        //             });
+        //     }
+        // }
+        //
+        // if (applyElementAsyncAfterDisplay)
+        // {
+        //     foreach (var entry in elementAsyncAfterRefs)
+        //     {
+        //         var id = await overlays.InvokeAsync<string>("add", entry.Key,
+        //             new
+        //             {
+        //                 position = new
+        //                 {
+        //                     bottom = 38,
+        //                     right = 15
+        //                 },
+        //                 html = entry.Value
+        //             });
+        //     }
+        // }
     }
 
 
@@ -335,7 +424,8 @@
         {
             await heatmapJsInstance.DisposeAsync();
         }
-
     }
+
+}
 
 }

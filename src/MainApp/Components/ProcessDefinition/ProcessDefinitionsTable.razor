@@ -6,7 +6,6 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject AppData AppData
-@inject ISnackbar Snackbar
 
 <MudTable
     T="ProcessDefinitionDto"
@@ -50,7 +49,7 @@
                                 Elevation="0"
                                 Hover="false"
                                 @bind-Loading="@_isSubLoading">
-                                
+
                                 <HeaderContent>
                                     <MudTh></MudTh>
                                     <MudTh>Definition Id</MudTh>
@@ -75,10 +74,10 @@
                                             <MudIcon Icon="@Icons.Outlined.PauseCircleOutline" Color="Color.Default" Title="Suspended"/>
                                             @if (context.StartableInTasklist == true)
                                             {
-                                                <MudIcon Icon="@Icons.Outlined.FactCheck"  Color="Color.Default" Title="Tasklist Startable"/>
+                                                <MudIcon Icon="@Icons.Outlined.FactCheck" Color="Color.Default" Title="Tasklist Startable"/>
                                             }
                                         }
-                                        
+
                                     </MudTd>
                                     <MudTd DataLabel="Definition Id">@context.Id</MudTd>
                                     <MudTd DataLabel="Version">@context.Version</MudTd>
@@ -141,21 +140,12 @@
         _isLoading = true;
         StateHasChanged();
 
-        try
-        {
-            _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
-                latestVersion: true,
-                firstResult: state.PageSize * (state.Page),
-                maxResults: state.PageSize);
+        _definitions = await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsAsync(
+            latestVersion: true,
+            firstResult: state.PageSize * (state.Page),
+            maxResults: state.PageSize);
 
-            _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(latestVersion: true)).Count);
-
-        }
-        catch (Exception e)
-        {
-            AppData.SnackError(Snackbar, "Unable to complete request: " + e.Message);
-        }
-        
+        _totalDefinitions = Convert.ToInt32((await Camunda.Api.ProcessDefinitionApi.GetProcessDefinitionsCountAsync(latestVersion: true)).Count);
 
         _isLoading = false;
         StateHasChanged();
@@ -209,35 +199,36 @@
         NavigationManager.NavigateTo($"process-definitions/{definitionId}");
     }
 
-    
+
     private async Task OpenProcessDefinitionSuspensionAction(string definitionId)
     {
         var parameters = new DialogParameters
         {
-            {"ProcessDefinitionId", definitionId}, 
+            {"ProcessDefinitionId", definitionId},
             {"Camunda", Camunda}
         };
         await DialogService.Show<SuspendAction>("Definition Action", parameters).Result;
         await _subTable.ReloadServerData();
     }
-    
+
     private async Task OpenHistoryTimeToLiveDialog(string definitionId)
     {
         var parameters = new DialogParameters
         {
-            {"ProcessDefinitionId", definitionId}, 
+            {"ProcessDefinitionId", definitionId},
             {"Camunda", Camunda}
         };
         await DialogService.Show<UpdateProcessDefinitionHistoryTtlDialog>("History Time to Live Action", parameters).Result;
     }
-    
+
     private async Task OpenProcessDefinitionDeleteDialog(string definitionId)
     {
         var parameters = new DialogParameters
         {
-            {"ProcessDefinitionId", definitionId}, 
+            {"ProcessDefinitionId", definitionId},
             {"Camunda", Camunda}
         };
         await DialogService.Show<DeleteProcessDefinitionDialog>("Process Definition Delete Action", parameters).Result;
     }
+
 }

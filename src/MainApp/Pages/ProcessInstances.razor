@@ -3,6 +3,7 @@
 @using Camunda.Http.Api.Model
 @using BpmnJs.Components
 @using Color = MudBlazor.Color
+@using _Imports = MudBlazor._Imports
 
 @inject AppData AppData
 
@@ -18,24 +19,39 @@
             <MudCard>
                 <MudCardHeader>
                     <CardHeaderContent>BPMN Diagram</CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton OnClick="@(() => _viewer.HideIncidents())" Icon="@Icons.Material.Outlined.Warning" Title="Incidents"/>
+                        <MudIconButton OnClick="@(() => _viewer.ShowIncidents())" Icon="@Icons.Material.Outlined.Check" Title="Incidents"/>
+                    </CardHeaderActions>
                 </MudCardHeader>
                 <MudCardContent Style="height: 500px">
                     @* Review why this is needed:*@
-                    @if (_bpmnXml != null)
-                    {
-                        <BpmnViewer bpmnXml="@_bpmnXml"
-                                    activityIncidentCounts="@_activityIncidentCounts"
-                                    activeActivityCounts="@_activeActivityCounts"
-                                    ApplyActiveActivityCounts="true"
-                                    ApplyActivityIncidentCounts="true">
-                            <activityIncidentCountDisplay>
-                                <MudBadge Color="Color.Error" Content="@context"/>
-                            </activityIncidentCountDisplay>
-                            <activeActivityCountDisplay>
-                                <MudBadge Color="Color.Primary" Content="@context" />
-                            </activeActivityCountDisplay>
-                        </BpmnViewer>
-                    }
+                    @* @if (_bpmnXml != null) *@
+                    @* { *@
+                    @*     <BpmnViewer bpmnXml="@_bpmnXml" *@
+                    @*                 activityIncidentCounts="@_activityIncidentCounts" *@
+                    @*                 activeActivityCounts="@_activeActivityCounts" *@
+                    @*                 ApplyActiveActivityCounts="true" *@
+                    @*                 ApplyActivityIncidentCounts="true"> *@
+                    @*         <activityIncidentCountDisplay> *@
+                    @*             <MudBadge Color="Color.Error" Content="@context"/> *@
+                    @*         </activityIncidentCountDisplay> *@
+                    @*         <activeActivityCountDisplay> *@
+                    @*             <MudBadge Color="Color.Primary" Content="@context" /> *@
+                    @*         </activeActivityCountDisplay> *@
+                    @*     </BpmnViewer> *@
+                    @* } *@
+                    
+                     @if (_bpmnXml != null)
+                                        {
+                                            <BpmnViewer2 
+                                                @ref="@_viewer"
+                                                bpmnXml="@_bpmnXml"
+                                                OverlayConfigs="@_overlayConfigs">
+                                            </BpmnViewer2>
+                                        }
+                    
+                    
                 </MudCardContent>
             </MudCard>
         </MudItem>
@@ -55,6 +71,8 @@
 
 @code {
 
+    private BpmnViewer2 _viewer;
+    
     [Parameter]
     public string DefinitionId { get; set; }
 
@@ -68,6 +86,8 @@
 
     private List<ActivityStatisticsResultDto> _definitionStats;
 
+    List<OverlayConfig> _overlayConfigs = new();
+
     protected override void OnInitialized()
     {
         _camunda = AppData.CamundaClient;
@@ -78,22 +98,57 @@
         if (firstRender)
         {
             _definitionStats = await GetDefinitionStats(DefinitionId);
-            _activityIncidentCounts = _definitionStats
+            // _activityIncidentCounts = _definitionStats
+            //     .FindAll(i => i.Incidents.Count != 0)
+            //     .GroupBy(i => i.Id)
+            //     .Select(i => new
+            //     {
+            //         ActivityId = i.Key,
+            //         Count = i.Sum(s => s.Incidents.Count)
+            //     }).ToDictionary(k => k.ActivityId, v => v.Count);
+
+            var incidentOverlays = _definitionStats
                 .FindAll(i => i.Incidents.Count != 0)
                 .GroupBy(i => i.Id)
-                .Select(i => new
-                {
-                    ActivityId = i.Key,
-                    Count = i.Sum(s => s.Incidents.Count)
-                }).ToDictionary(k => k.ActivityId, v => v.Count);
+                .Select(i => new OverlayConfig
+                        {
+                            ElementId = i.Key,
+                            OverlayRenderFragment = element =>
+                            {
+                                return @<MudBadge Color="Color.Error" Content="@i.Sum(s => s.Incidents.Count)"/>;
+                            },
+                            PositionBottom = 15,
+                            PositionLeft = 2,
+                            Tags = new []{"incident"},
+                            State = "INIT"
+                        }
+                    );
+            
+            _overlayConfigs.AddRange(incidentOverlays);
 
-            _activeActivityCounts = _definitionStats
+            
+            var activeActivityOverlays = _definitionStats
                 .FindAll(i => i.Instances > 0)
                 .Select(i => new
                 {
                     ActivityId = i.Id,
                     Count = i.Instances
-                }).ToDictionary(k => k.ActivityId, v => v.Count);
+                })
+                .Select(i => new OverlayConfig
+                {
+                    ElementId = i.ActivityId,
+                    OverlayRenderFragment = element =>
+                    {
+                        return @<MudBadge Color="Color.Info" Content="i.Count"/>;
+                    },
+                    PositionBottom = 15,
+                    PositionRight = 15,
+                    Tags = new []{"activeActivity"},
+                    State = "INIT"
+                }
+                );
+            
+            _overlayConfigs.AddRange(activeActivityOverlays);
 
             _bpmnXml = await GetBpmnXml(DefinitionId);
             StateHasChanged();

@@ -111,6 +111,8 @@
                                     ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
                                     applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
                                     applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
+                                    applyElementAsyncAfterDisplay="true"
+                                    applyElementAsyncBeforeDisplay="true"
                                     OnElementSelection="@ElementSelected">
                             <activityIncidentCountDisplay>
                                 <MudBadge Color="Color.Error" Content="@context"/>
@@ -124,6 +126,16 @@
                             <waitingExecutionCountDisplay>
                                 <MudBadge Color="Color.Secondary" Content="@context"/>
                             </waitingExecutionCountDisplay>
+                            <elementAsyncBeforeDisplay>
+                                <MudAvatar Variant="Variant.Filled">
+                                     <MudIcon Icon="@Icons.Filled.HourglassTop"></MudIcon>
+                                </MudAvatar>
+                            </elementAsyncBeforeDisplay>
+                            <elementAsyncAfterDisplay>
+                                <MudAvatar Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Filled.HourglassBottom"></MudIcon>
+                                </MudAvatar>
+                            </elementAsyncAfterDisplay>
                         </BpmnViewer>
                     }
 
@@ -404,6 +416,7 @@
                 .ToDictionary(x => x.activityId, x => x.count);
 
             _bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId);
+            
             StateHasChanged();
         }
     }
