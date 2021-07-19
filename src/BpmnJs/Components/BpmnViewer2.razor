@@ -1,35 +1,34 @@
 ﻿@inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<div @ref="bpmnJsElement" style="height:100%;"></div>
+<div @ref="_bpmnJsElement" style="height:100%;"></div>
 
-@RenderBpmnOverlays
+@BpmnOverlays
 
 
 
 @code
 {
-    public ElementReference bpmnJsElement;
-    public IJSObjectReference bpmnJsModule;
-    public IJSObjectReference bpmnJsInstance;
-    
+    ElementReference _bpmnJsElement;
+    IJSObjectReference _bpmnJsModule;
+    IJSObjectReference _bpmnJsInstance;
+
     [Parameter]
     public List<OverlayConfig> OverlayConfigs { get; set; } = new();
 
     [Parameter]
-    public string bpmnXml { get; set; }
-
-    List<BpmnElement> _bpmnElements = new();
+    public string BpmnXml { get; set; }
 
     bool _diagramLoaded;
-    
+
+
+    List<BpmnElement> _bpmnElements = new();
 
     [Parameter]
     public EventCallback<BpmnElement> OnElementSelection { get; set; }
 
-    DotNetObjectReference<BpmnViewer2> _dotNetJsRef;
 
-    RenderFragment RenderBpmnOverlays => async __builder =>
+    RenderFragment BpmnOverlays => __builder =>
     {
         if (_diagramLoaded)
         {
@@ -43,118 +42,117 @@
                 }
             }
         }
-
     };
+
+
+    DotNetObjectReference<BpmnViewer2> _dotNetJsRef;
 
 
     async Task RecenterDiagram()
     {
-        await bpmnJsModule.InvokeVoidAsync("recenterDiagram", bpmnJsInstance);
+        await _bpmnJsModule.InvokeVoidAsync("recenterDiagram", _bpmnJsInstance);
     }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        Console.WriteLine("Params set");
-    }
-
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("After Render");
         if (firstRender)
         {
-            Console.WriteLine("First Render");
             _dotNetJsRef = DotNetObjectReference.Create(this);
 
-            bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
-            bpmnJsInstance = await bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", bpmnJsElement);
+            _bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/BpmnJs/js/bpmn/bpmn-modeler.interop.js");
+            _bpmnJsInstance = await _bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", _bpmnJsElement);
 
-            await bpmnJsInstance.InvokeVoidAsync("importXML", bpmnXml);
+            await _bpmnJsInstance.InvokeVoidAsync("importXML", BpmnXml);
 
-            var elementIds = await bpmnJsModule.InvokeAsync<List<string>>("getAllElementPropertyIds", bpmnJsInstance);
+            var elementIds = await _bpmnJsModule.InvokeAsync<List<string>>("getAllElementPropertyIds", _bpmnJsInstance);
 
-            foreach (var id in elementIds)
-            {
-                _bpmnElements.Add(new BpmnElement(bpmnJsInstance, JS, id));
-            }
+            elementIds.ForEach(id => { _bpmnElements.Add(new BpmnElement(_bpmnJsInstance, JS, id)); });
 
             if (OnElementSelection.HasDelegate)
             {
-                await bpmnJsModule.InvokeVoidAsync("setupElementSelectionListener", bpmnJsInstance, _dotNetJsRef);
+                //Setup callback for element selection
+                await _bpmnJsModule.InvokeVoidAsync("setupElementSelectionListener", _bpmnJsInstance, _dotNetJsRef);
             }
 
             await RecenterDiagram(); //@TODO add support for recenter on page change
 
             _diagramLoaded = true;
-            StateHasChanged();
+            
+            StateHasChanged(); // Required to ensure that second render occurs to load overlays (because overlays pass the BPMN elements as params to the render fragments)
         }
         if (!firstRender && _diagramLoaded)
         {
             await SetupOverlays();
-            //Maybe we should remove overlays as well at this step?  Can use a list of actions to remove?
         }
     }
 
 
-
     async Task SetupOverlays()
     {
-        Console.WriteLine("setup overlays");
         foreach (var overlayConfig in OverlayConfigs)
         {
-            Console.WriteLine("setup overlays2");
+    // Only setup overlays that do not have a overlayID (because they have not been created yet)
             if (overlayConfig.State == "INIT" && overlayConfig.OverlayId == null)
             {
-                Console.WriteLine("setup overlays3");
-                overlayConfig.OverlayId = await bpmnJsModule.InvokeAsync<string>("addOverlay", overlayConfig,  bpmnJsInstance);
+                overlayConfig.OverlayId = await _bpmnJsModule.InvokeAsync<string>("addOverlay", overlayConfig, _bpmnJsInstance);
             }
         }
     }
 
     async Task RemoveOverlays(List<string> overlayIds)
     {
-        await bpmnJsModule.InvokeVoidAsync("removeOverlays", overlayIds, bpmnJsInstance);
+        await _bpmnJsModule.InvokeVoidAsync("removeOverlays", overlayIds, _bpmnJsInstance);
     }
 
-    public async Task HideIncidents()
+    public async Task HideOverlays(IEnumerable<string> tags, string currentState = "INIT")
     {
-        var incidentOverlays = OverlayConfigs.FindAll(i => i.Tags.Contains("incident"));
-        var ids = OverlayConfigs.FindAll(i => i.Tags.Contains("incident")).Select(i=>i.OverlayId).ToList();
-        await Task.Run(() => incidentOverlays.ForEach(i =>
+        var overlays = OverlayConfigs .FindAll(i => i.Tags.Intersect(tags).Any() && i.State == currentState);
+
+        if (overlays.Any())
+        {
+            // IDs are collected so we have a copy of the values to send to bpmnjs
+            var ids = overlays.Select(i => i.OverlayId).ToList();
+
+            // Needs to be a Task.run to ensure all changes occur before triggering the params change...
+            await Task.Run(() => overlays.ForEach(i =>
             {
                 i.State = "HIDE";
                 i.OverlayId = null;
                 i.HtmlElementRef = null;
-            })
-        );
-        
-        await RemoveOverlays(ids);
+            }));
+            StateHasChanged(); // StateHasChanged is required for the UI to update and remove the un-needed elements
+            await RemoveOverlays(ids); // Once the UI was updated to remove elements, we can trigger BpmnJS to remove the overlay which will remove the BPMNjs wrapping div.
+        }
     }
-    
-    public async Task ShowIncidents()
-    {
-        var incidentOverlays = OverlayConfigs.FindAll(i => i.Tags.Contains("incident") && i.State == "HIDE");
 
-        Console.WriteLine("cats1");
-        incidentOverlays.ForEach(i =>
+    public async Task ShowOverlays(IEnumerable<string> tags, string currentState = "HIDE", string newState = "INIT")
+    {
+        var overlays = OverlayConfigs.FindAll(i => i.Tags.Intersect(tags).Any() && i.State == currentState);
+
+        if (overlays.Any())
         {
-            i.State = "INIT"; // This will trigger change detection and cause OnParams Set to trigger
-        });
-        Console.WriteLine("cats2");
+            // This will trigger change detection and cause OnParams Set to trigger
+            await Task.Run(() => overlays.ForEach(i => i.State = newState));
+    
+            //StateHasChanged is NOT required here because Blazor will trigger the update based on params change.
+            // If you run StateHasChanged it will double create the overlay on the blazor side but only one will be sent to bpmnjs (race event?)
+        }
     }
 
 
     [JSInvokable]
     public async Task ElementSelectedEvent(string elementId)
     {
-        var element = elementId != null ? new BpmnElement(bpmnJsInstance, JS, elementId) : null;
+        var element = elementId != null ? new BpmnElement(_bpmnJsInstance, JS, elementId) : null;
         await OnElementSelection.InvokeAsync(element);
     }
 
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        await bpmnJsInstance.DisposeAsync();
-        await bpmnJsModule.DisposeAsync();
+        await _bpmnJsInstance.InvokeVoidAsync("destroy"); // @TODO REVIEW
+        await _bpmnJsInstance.DisposeAsync();
+        await _bpmnJsModule.DisposeAsync();
     }
 
 }

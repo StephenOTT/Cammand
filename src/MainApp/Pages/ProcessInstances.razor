@@ -20,8 +20,8 @@
                 <MudCardHeader>
                     <CardHeaderContent>BPMN Diagram</CardHeaderContent>
                     <CardHeaderActions>
-                        <MudIconButton OnClick="@(() => _viewer.HideIncidents())" Icon="@Icons.Material.Outlined.Warning" Title="Incidents"/>
-                        <MudIconButton OnClick="@(() => _viewer.ShowIncidents())" Icon="@Icons.Material.Outlined.Check" Title="Incidents"/>
+                        <MudIconButton OnClick="@(() => _viewer.HideOverlays(new []{"incident"}))" Icon="@Icons.Material.Outlined.Warning" Title="Incidents"/>
+                        <MudIconButton OnClick="@(() => _viewer.ShowOverlays(new []{"incident"}))" Icon="@Icons.Material.Outlined.Check" Title="Incidents"/>
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudCardContent Style="height: 500px">
@@ -46,7 +46,7 @@
                                         {
                                             <BpmnViewer2 
                                                 @ref="@_viewer"
-                                                bpmnXml="@_bpmnXml"
+                                                BpmnXml="@_bpmnXml"
                                                 OverlayConfigs="@_overlayConfigs">
                                             </BpmnViewer2>
                                         }

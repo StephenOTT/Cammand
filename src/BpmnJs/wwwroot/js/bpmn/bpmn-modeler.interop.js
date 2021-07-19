@@ -37,12 +37,16 @@ export function addOverlay(overlayConfig, bpmnJsInstance) {
     }
     overlayConfig.htmlElementRef.style.display = ''
 
-    return overlays.add(overlayConfig.elementId,
+    let id = overlays.add(overlayConfig.elementId,
         {
             position: position,
             html: overlayConfig.htmlElementRef
         }
     )
+    
+    console.log("created overlay: " + id)
+    
+    return id
 }
 
 export function removeOverlays(overlayIds, bpmnJsInstance) {
