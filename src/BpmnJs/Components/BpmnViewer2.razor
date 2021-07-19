@@ -99,10 +99,6 @@
         }
     }
 
-    async Task RemoveOverlays(List<string> overlayIds)
-    {
-        await _bpmnJsModule.InvokeVoidAsync("removeOverlays", overlayIds, _bpmnJsInstance);
-    }
 
     public async Task HideOverlays(IEnumerable<string> tags, string currentState = "INIT")
     {
@@ -114,14 +110,23 @@
             var ids = overlays.Select(i => i.OverlayId).ToList();
 
             // Needs to be a Task.run to ensure all changes occur before triggering the params change...
+            // Ref on part of the issue: https://github.com/dotnet/aspnetcore/issues/13610
+            // Got idea from: https://github.com/dotnet/aspnetcore/issues/19647#issuecomment-601321626
+            // Unclear why it works / what problem it is actually solving... @TODO review further.
+            
             await Task.Run(() => overlays.ForEach(i =>
             {
                 i.State = "HIDE";
                 i.OverlayId = null;
                 i.HtmlElementRef = null;
             }));
-            StateHasChanged(); // StateHasChanged is required for the UI to update and remove the un-needed elements
-            await RemoveOverlays(ids); // Once the UI was updated to remove elements, we can trigger BpmnJS to remove the overlay which will remove the BPMNjs wrapping div.
+            
+            // StateHasChanged is required for the UI to update and remove the un-needed elements
+            StateHasChanged();
+            
+            // Once the UI was updated to remove Blazor controlled elements, 
+            //we can trigger BpmnJS to remove the overlay which will remove the BPMNjs wrapping div.
+            await RemoveOverlays(ids); 
         }
     }
 
@@ -132,11 +137,18 @@
         if (overlays.Any())
         {
             // This will trigger change detection and cause OnParams Set to trigger
-            await Task.Run(() => overlays.ForEach(i => i.State = newState));
-    
+            // For whatever reason.. The Task.Run is not required here...
+            overlays.ForEach(i => i.State = newState);
+
             //StateHasChanged is NOT required here because Blazor will trigger the update based on params change.
             // If you run StateHasChanged it will double create the overlay on the blazor side but only one will be sent to bpmnjs (race event?)
         }
+    }
+
+    
+    async Task RemoveOverlays(List<string> overlayIds)
+    {
+        await _bpmnJsModule.InvokeVoidAsync("removeOverlays", overlayIds, _bpmnJsInstance);
     }
 
 
@@ -147,6 +159,7 @@
         await OnElementSelection.InvokeAsync(element);
     }
 
+    
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {

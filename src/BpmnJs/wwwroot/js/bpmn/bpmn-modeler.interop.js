@@ -44,7 +44,7 @@ export function addOverlay(overlayConfig, bpmnJsInstance) {
         }
     )
     
-    console.log("created overlay: " + id)
+    // console.log("created overlay: " + id)
     
     return id
 }
