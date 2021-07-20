@@ -113,13 +113,20 @@
             // Ref on part of the issue: https://github.com/dotnet/aspnetcore/issues/13610
             // Got idea from: https://github.com/dotnet/aspnetcore/issues/19647#issuecomment-601321626
             // Unclear why it works / what problem it is actually solving... @TODO review further.
-            
+            // @TODO Review: using Task.Delay(10) also works... So thinking a race issue??
+            // overlays.ForEach(i =>
+            // {
+            //     i.State = "HIDE";
+            //     i.OverlayId = null;
+            //     i.HtmlElementRef = null;
+            // });
             await Task.Run(() => overlays.ForEach(i =>
             {
                 i.State = "HIDE";
                 i.OverlayId = null;
                 i.HtmlElementRef = null;
             }));
+            // await Task.Delay(10);
             
             // StateHasChanged is required for the UI to update and remove the un-needed elements
             StateHasChanged();
