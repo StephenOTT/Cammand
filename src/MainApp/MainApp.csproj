@@ -26,7 +26,7 @@
     <Folder Include="Components\Deployment\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BpmnJs\BpmnJs.csproj" />
+    <ProjectReference Include="..\Blazor.Bpmn\Blazor.Bpmn.csproj" />
     <ProjectReference Include="..\Camunda.Http.Api\Camunda.Http.Api.csproj" />
     <ProjectReference Include="..\Formio\Formio.csproj" />
   </ItemGroup>

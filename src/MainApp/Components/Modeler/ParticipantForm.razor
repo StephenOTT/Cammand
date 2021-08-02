@@ -1,0 +1,19 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Participant Id" Text="@Element.Id"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Participant Name" HelperText="Pool's title label" Text="@Element.Name"/>
+    </MudItem>
+}
+
+
+@code {
+
+    [Parameter]
+    public Participant Element { get; set; }
+
+}

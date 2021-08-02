@@ -1,0 +1,16 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Is Default?" Text="@Element.IsDefault().ToString()"/>
+        </MudItem>
+}
+
+
+@code {
+
+    [Parameter]
+    public SequenceFlow Element { get; set; }
+
+}

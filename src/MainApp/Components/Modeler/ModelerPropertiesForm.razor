@@ -1,0 +1,72 @@
+@using Blazor.Bpmn.Components
+
+<MudGrid>
+    
+    @if (Element != null)
+    {
+        <CoreForm Element="@Element"/>
+
+
+        @if (Element.Type == IBusinessObject.BpmnParticipant)
+        {
+            var participant = Element.BusinessObject.AsParticipant();
+            <ParticipantForm Element="@participant"/>
+            <ProcessForm Element="@participant.ProcessRef"/>
+        }
+
+        @if (Element.Type == IBusinessObject.BpmnProcess)
+        {
+            <ProcessForm Element="@Element.BusinessObject.AsProcess()"/>
+        }
+
+        <ElementDocumentationForm Element="@Element"/>
+
+        @if (Element.Type == IBusinessObject.BpmnUserTask)
+        {
+            <UserTaskForm Element="@Element.BusinessObject.AsUserTask()"/>
+        }
+
+        @if (Element.Type == IBusinessObject.BpmnSequenceFlow)
+        {
+            <SequenceFlowForm Element="@Element.BusinessObject.AsSequenceFlow()"/>
+        }
+
+        @if (Element.Type == IBusinessObject.BpmnScriptTask)
+        {
+            <ScriptTaskForm Element="@Element.BusinessObject.AsScriptTask()"/>
+        }
+    }
+
+
+
+    @* @if (_selectedBpmnElement.BusinessObject.HasExtensionElements()) *@
+    @* { *@
+    @*     <MudItem xs="12"> *@
+    @*         <MudText Typo="Typo.h5">Extension Elements</MudText> *@
+    @*     </MudItem> *@
+    @*     <MudItem xs="12"> *@
+    @*         <MudText Typo="Typo.body2">Names can be repeated.</MudText> *@
+    @*     </MudItem> *@
+    @* *@
+    @*     @foreach (var element in _selectedBpmnElement.BusinessObject.GetCamundaExtensionProperties()) *@
+    @*     { *@
+    @*         var prop = element.AsCamundaExtensionProperty; *@
+    @*         <MudItem xs="6"> *@
+    @*             <MudTextField T="string" ReadOnly="true" Label="Name" Text="@prop.Name"/> *@
+    @*         </MudItem> *@
+    @*         <MudItem xs="6"> *@
+    @*             <MudTextField T="string" ReadOnly="true" Label="Value" Text="@prop.Value"/> *@
+    @*         </MudItem> *@
+    @*     } *@
+    @* } *@
+
+
+</MudGrid>
+
+
+@code {
+
+    [Parameter]
+    public GenericElement Element { get; set; }
+    
+}

@@ -1,0 +1,38 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Script Format" Text="@Element.ScriptFormat"/>
+    </MudItem>
+    @if (Element.IsExternalScript())
+    {
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Script Type" Text="External"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Resource" Text="@Element.Resource"/>
+        </MudItem>
+    }
+    else
+    {
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Script Type" Text="Inline Script"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" Lines="5" ReadOnly="true" Label="Script" Text="@Element.Script"/>
+        </MudItem>
+    }
+
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Result Variable" HelperText="Name of variable to create with the returned result of the script." Text="@Element.ResultVariable"/>
+    </MudItem>
+}
+
+
+@code {
+
+    [Parameter]
+    public ScriptTask Element { get; set; }
+
+}

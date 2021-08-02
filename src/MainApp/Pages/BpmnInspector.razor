@@ -1,0 +1,268 @@
+﻿@using Blazor.Bpmn.Components
+@using Camunda.Http.Api
+@using System.IO
+@using MainApp.Components.Modeler
+
+@inject AppData AppData
+@inject ISnackbar Snackbar
+
+@page "/inspector"
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h3" GutterBottom="true">BPMN Inspector</MudText>
+        </MudItem>
+        <MudItem xs="12">
+            <InputFile id="fileInput" OnChange="LoadBpmnFile" hidden/>
+
+            <MudButton HtmlTag="label" Variant="Variant.Filled" Color="Color.Primary" Class="my-3" StartIcon="@Icons.Filled.FolderOpen" for="fileInput">
+                Load BPMN
+            </MudButton>
+        </MudItem>
+        @if (_bpmnXml != null)
+        {
+            <MudItem xs="12">
+                <MudCard>
+                    <MudCardHeader Class="py-2 pr-2">
+                        <CardHeaderContent>
+                            <MudToolBar DisableGutters="true" Dense="true">
+                                BPMN Diagram
+                                <MudSpacer/>
+                                <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/>
+                                @* <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/> *@
+                                @* <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" Toggled="@_showCompletedActivityInstanceCounts" ToggledChanged="ToggleCompletedActivityOverlay" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/> *@
+                                @* <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" Toggled="@_showActiveActivityCounts" ToggledChanged="ToggleActiveActivityOverlay" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/> *@
+                                @* <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" Toggled="@_showActivityIncidentCounts" ToggledChanged="ToggleIncidentsOverlay" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/> *@
+                                @* <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" Toggled="@_showWaitingExecutionCounts" ToggledChanged="ToggleWaitingExecutionsOverlay" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/> *@
+
+                                <MudToggleIconButton Icon="@Icons.Outlined.HistoryEdu" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HistoryEdu" Toggled="@_showDocumentationIndicators" ToggledChanged="ToggleDocumentationIndicators" Title="Docs Indicators Off" ToggledTitle="Docs Indicators On"/>
+
+                                <MudToggleIconButton Icon="@Icons.Outlined.HourglassFull" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassFull" Toggled="@_showAsyncIndicators" ToggledChanged="ToggleAsyncIndicators" Title="Async Indicators Off" ToggledTitle="Async Indicators On"/>
+
+                                <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Element Info On" ToggledTitle="Element Info off" @bind-Toggled="_showSelectedElementDrawer"/>
+                            </MudToolBar>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="relative pa-0" Style="height: 500px; overflow:hidden;">
+                        <ModelerPropertiesPanel ShowSelectedElementDrawer="@(_showSelectedElementDrawer && _selectedBpmnElement != null)">
+                            <PanelHeader>
+                                <MudText Typo="Typo.h4">Element Details</MudText>
+                            </PanelHeader>
+                            <PanelForm>
+                                <ModelerPropertiesForm Element="_selectedBpmnElement"/>
+                            </PanelForm>
+                            <Viewer>
+                                <BpmnViewer Xml="@_bpmnXml"
+                                            @ref="@_bpmnViewer"
+                                            @bind-OverlayConfigs="@_overlayConfigs"
+                                            OnElementSelection="@ElementSelected"
+                                            OnLoaded="@OnDiagramLoaded">
+                                </BpmnViewer>
+                            </Viewer>
+                        </ModelerPropertiesPanel>
+
+                        @* <MudDrawerContainer Class="mud-height-full"> *@
+                        @*     <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);"> *@
+                        @*         <MudDrawerHeader> *@
+                        @*             <MudText Typo="Typo.h4">Element Details</MudText> *@
+                        @*         </MudDrawerHeader> *@
+                        @*         <div class="px-4"> *@
+                        @*             @if (_showSelectedElementDrawer && _selectedBpmnElement != null) *@
+                        @*             { *@
+                        @*                 <ModelerPropertiesForm Element="_selectedBpmnElement"/> *@
+                        @*             } *@
+                        @*         </div> *@
+                        @*     </MudDrawer> *@
+                        @* *@
+                        @*     <BpmnViewer Xml="@_bpmnXml" *@
+                        @*                 @ref="@_bpmnViewer" *@
+                        @*                 @bind-OverlayConfigs="@_overlayConfigs" *@
+                        @*                 OnElementSelection="@ElementSelected"> *@
+                        @*     </BpmnViewer> *@
+                        @* *@
+                        @* </MudDrawerContainer> *@
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+
+    CamundaClient _camunda;
+
+    private string _bpmnXml;
+
+    BpmnViewer _bpmnViewer;
+
+    bool _isDiagramLoaded;
+    bool _initOverlays = true;
+
+    List<OverlayConfig> _overlayConfigs = new();
+
+    GenericElement _selectedBpmnElement;
+
+    bool _showSelectedElementDrawer;
+
+    bool _showAsyncIndicators;
+    bool _showDocumentationIndicators;
+
+    IList<IBrowserFile> _files = new List<IBrowserFile>();
+    private int _maxFileSize = 1024 * 1024 * 15;
+    private int _maxAllowedFiles = 1;
+
+
+    void ElementSelected(GenericElement selectedElement)
+    {
+        _selectedBpmnElement = selectedElement;
+    }
+
+    protected override void OnParametersSet()
+    {
+        _camunda = AppData.CamundaClient;
+    }
+
+    async void LoadBpmnFile(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (file.Size >= _maxFileSize)
+            {
+                AppData.SnackWarning(Snackbar, $"File {file.Name} is too large.  Max file size: {_maxFileSize}.");
+            }
+
+            if (_files.Count >= _maxAllowedFiles)
+            {
+                AppData.SnackWarning(Snackbar, $"Cannot upload more than {_maxAllowedFiles} files.");
+            }
+
+            using var reader = new StreamReader(file.OpenReadStream());
+            if (_bpmnXml != null)
+            {
+                _bpmnXml = null;
+                _selectedBpmnElement = null;
+                _showAsyncIndicators = false;
+                _showDocumentationIndicators = false;
+                _showSelectedElementDrawer = false;
+                StateHasChanged();
+            }
+            _bpmnXml = await reader.ReadToEndAsync();
+            _isDiagramLoaded = true;
+            StateHasChanged();
+
+        }
+    }
+
+    async Task OnDiagramLoaded() {
+        // await SetupAsyncAfterOverlays();
+        // await SetupAsyncBeforeOverlays();
+        // await SetupDocumentationOverlays();
+    }
+
+    async Task SetupAsyncBeforeOverlays()
+    {
+        var overlays = _bpmnViewer.BpmnElements.FindAll(el => el.BusinessObject.IsAsyncBefore)
+            .Select(i => new OverlayConfig(i.InternalId, element =>
+            {
+                return new OverlayConfig(
+                    elementId: i.InternalId,
+                    overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HourglassTop" Color="Color.Primary" Size="Size.Small"/>,
+                    positionBottom: 0,
+                    positionLeft: 0,
+                    tags: new[] {"asyncBefore"}
+                    );
+            }));
+
+        _overlayConfigs.AddRange(overlays);
+    }
+
+    async Task SetupAsyncAfterOverlays()
+    {
+        var overlays = _bpmnViewer.BpmnElements.FindAll(el => el.BusinessObject.IsAsyncAfter)
+            .Select(i => new OverlayConfig(i.InternalId, element =>
+            {
+                return new OverlayConfig(
+                    elementId: i.InternalId,
+                    overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HourglassBottom" Color="Color.Primary" Size="Size.Small"/>,
+                    positionBottom: 0,
+                    positionRight: 18,
+                    tags: new[] {"asyncAfter"}
+                    );
+            }));
+
+
+        _overlayConfigs.AddRange(overlays);
+    }
+
+    async Task ToggleAsyncIndicators(bool toggle)
+    {
+        _showAsyncIndicators = toggle;
+        
+        if (_overlayConfigs.Any(i => i.Tags.Contains("asyncBefore")) == false)
+        {
+            await SetupAsyncBeforeOverlays();
+            await Task.Delay(50); // Needed or else Js does not need to update fast enough...
+        }
+        
+        if (_overlayConfigs.Any(i => i.Tags.Contains("asyncAfter")) == false)
+        {
+            await SetupAsyncAfterOverlays();
+            await Task.Delay(50); // Needed or else Js does not need to update fast enough...
+        }
+        
+        var tags = new[] {"asyncBefore", "asyncAfter"};
+        if (_showAsyncIndicators)
+        {
+            _bpmnViewer.ShowOverlays(tags);
+        }
+        else
+        {
+            _bpmnViewer.HideOverlays(tags);
+        }
+    }
+
+
+    async Task SetupDocumentationOverlays()
+    {
+        var overlays = _bpmnViewer.BpmnElements.FindAll(el => el.BusinessObject.HasDocumentation())
+            .Select(i => new OverlayConfig(i.InternalId, element =>
+            {
+                return new OverlayConfig(
+                    elementId: i.InternalId,
+                    overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HistoryEdu" Size="Size.Small"/>,
+                    positionTop: -25,
+                    positionLeft: (element.Width / 2) - 5,
+                    tags: new[] {"documentation"}
+                    );
+            }));
+
+        _overlayConfigs.AddRange(overlays);
+    }
+
+    async Task ToggleDocumentationIndicators(bool toggle)
+    {
+        _showDocumentationIndicators = toggle;
+
+        if (_overlayConfigs.Any(i => i.Tags.Contains("documentation")) == false)
+        {
+            await SetupDocumentationOverlays();
+            await Task.Delay(10); // Needed or else Js does not need to update fast enough...
+        }
+
+        var tags = new[] {"documentation"};
+        if (_showDocumentationIndicators)
+        {
+            _bpmnViewer.ShowOverlays(tags);
+        }
+        else
+        {
+            _bpmnViewer.HideOverlays(tags);
+        }
+    }
+
+
+
+}
