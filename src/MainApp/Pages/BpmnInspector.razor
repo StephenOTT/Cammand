@@ -147,6 +147,7 @@
                 _showAsyncIndicators = false;
                 _showDocumentationIndicators = false;
                 _showSelectedElementDrawer = false;
+                _overlayConfigs.Clear();
                 StateHasChanged();
             }
             _bpmnXml = await reader.ReadToEndAsync();
@@ -172,12 +173,30 @@
                     overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HourglassTop" Color="Color.Primary" Size="Size.Small"/>,
                     positionBottom: 0,
                     positionLeft: 0,
-                    tags: new[] {"asyncBefore"}
+                    tags: new List<string> {"asyncBefore"}
                     );
             }));
 
         _overlayConfigs.AddRange(overlays);
     }
+    
+    async Task SetupAsyncUserTaskOverlays()
+    {
+        var overlays = _bpmnViewer.BpmnElements.FindAll(el => el.BusinessObject.Type == IBusinessObject.BpmnUserTask)
+            .Select(i => new OverlayConfig(i.InternalId, element =>
+            {
+                return new OverlayConfig(
+                    elementId: i.InternalId,
+                    overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HourglassTop" Color="Color.Tertiary" Size="Size.Small"/>,
+                    positionBottom: 0,
+                    positionLeft: i.BusinessObject.IsAsyncBefore ? -8 : 0,
+                    tags: new List<string>{"asyncBeforeUT"}
+                    );
+            }));
+
+        _overlayConfigs.AddRange(overlays);
+    }
+    
 
     async Task SetupAsyncAfterOverlays()
     {
@@ -189,7 +208,7 @@
                     overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HourglassBottom" Color="Color.Primary" Size="Size.Small"/>,
                     positionBottom: 0,
                     positionRight: 18,
-                    tags: new[] {"asyncAfter"}
+                    tags: new List<string> {"asyncAfter"}
                     );
             }));
 
@@ -201,26 +220,30 @@
     {
         _showAsyncIndicators = toggle;
         
+        if (_overlayConfigs.Any(i => i.Tags.Contains("asyncBeforeUT")) == false)
+        {
+            await SetupAsyncUserTaskOverlays();
+        }
+        
         if (_overlayConfigs.Any(i => i.Tags.Contains("asyncBefore")) == false)
         {
             await SetupAsyncBeforeOverlays();
-            await Task.Delay(50); // Needed or else Js does not need to update fast enough...
         }
         
         if (_overlayConfigs.Any(i => i.Tags.Contains("asyncAfter")) == false)
         {
             await SetupAsyncAfterOverlays();
-            await Task.Delay(50); // Needed or else Js does not need to update fast enough...
         }
         
-        var tags = new[] {"asyncBefore", "asyncAfter"};
+        await Task.Delay(50); // Needed or else Js does not need to update fast enough...
+        var tags = new[] {"asyncBefore", "asyncAfter", "asyncBeforeUT"};
         if (_showAsyncIndicators)
         {
-            _bpmnViewer.ShowOverlays(tags);
+            await _bpmnViewer.ShowOverlays(tags);
         }
         else
         {
-            _bpmnViewer.HideOverlays(tags);
+            await _bpmnViewer.HideOverlays(tags);
         }
     }
 
@@ -235,7 +258,7 @@
                     overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HistoryEdu" Size="Size.Small"/>,
                     positionTop: -25,
                     positionLeft: (element.Width / 2) - 5,
-                    tags: new[] {"documentation"}
+                    tags: new List<string> {"documentation"}
                     );
             }));
 
@@ -249,17 +272,17 @@
         if (_overlayConfigs.Any(i => i.Tags.Contains("documentation")) == false)
         {
             await SetupDocumentationOverlays();
-            await Task.Delay(10); // Needed or else Js does not need to update fast enough...
         }
+        await Task.Delay(10); // Needed or else Js does not need to update fast enough...
 
         var tags = new[] {"documentation"};
         if (_showDocumentationIndicators)
         {
-            _bpmnViewer.ShowOverlays(tags);
+            await _bpmnViewer.ShowOverlays(tags);
         }
         else
         {
-            _bpmnViewer.HideOverlays(tags);
+            await _bpmnViewer.HideOverlays(tags);
         }
     }
 

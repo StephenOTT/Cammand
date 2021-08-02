@@ -210,7 +210,6 @@
             // This will trigger change detection and cause OnParams Set to trigger
             // For whatever reason.. The Task.Run is not required here...
             overlays.ForEach(i => i.State = newState);
-            Console.WriteLine("Showing Overlays");
             //StateHasChanged is NOT required here because Blazor will trigger the update based on params change.
             // If you run StateHasChanged it will double create the overlay on the blazor side but only one will be sent to bpmnjs (race event?)
             // StateHasChanged();

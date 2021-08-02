@@ -11,7 +11,7 @@ namespace Blazor.Bpmn.Components
         public OverlayConfig(
             string? elementId, 
             RenderFragment<GenericElement>? overlayRenderFragment, 
-            IEnumerable<string>? tags, 
+            List<string> tags, 
             int? positionTop = null, 
             int? positionBottom = null, 
             int? positionLeft = null, 
@@ -45,8 +45,8 @@ namespace Blazor.Bpmn.Components
         public int? PositionRight { get; set; }
 
         [JsonIgnore] public RenderFragment<GenericElement>? OverlayRenderFragment { get; set; }
-        
-        public IEnumerable<string>? Tags { get; set; }
+
+        public List<string> Tags { get; set; } = new();
         
         public ElementReference? HtmlElementRef { get; set; }
 

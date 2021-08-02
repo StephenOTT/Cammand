@@ -94,7 +94,7 @@
                         overlayRenderFragment: _ => @<MudBadge Color="Color.Error" Content="@i.Sum(s => s.Incidents.Count)"/>,
                         positionBottom: 15,
                         positionLeft: 2,
-                        tags: new[] {"incident"}
+                        tags: new List<string> {"incident"}
                         );
                 }));
             
@@ -115,7 +115,7 @@
                         overlayRenderFragment: _ => @<MudBadge Color="Color.Info" Content="i.Count"/>,
                         positionBottom: 15,
                         positionRight: 15,
-                        tags: new[] {"activeActivity"}
+                        tags: new List<string> {"activeActivity"}
                         );
                 }));
             
