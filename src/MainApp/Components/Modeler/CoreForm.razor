@@ -21,16 +21,24 @@
     
     @if (Element.BusinessObject.IsAsyncCapable())
     {
+        var asyncBefore = Element.BusinessObject.IsAsyncBefore;
+        var asyncAfter = Element.BusinessObject.IsAsyncBefore;
         <MudItem xs="12">
-            <MudSwitch T="bool" Label="Async Before" ReadOnly="true" Checked="@Element.BusinessObject.IsAsyncBefore" Color="Color.Primary">
+            <MudSwitch Label="Async Before" ReadOnly="true" Checked="asyncBefore" Color="Color.Primary">
                 <MudIcon Icon="@Icons.Outlined.HourglassTop" Size="Size.Small"/>
             </MudSwitch>
         </MudItem>
         <MudItem xs="12">
-            <MudSwitch T="bool" Label="Async After" ReadOnly="true" Checked="@Element.BusinessObject.IsAsyncAfter" Color="Color.Primary">
+            <MudSwitch Label="Async After" ReadOnly="true" Checked="asyncAfter" Color="Color.Primary">
                 <MudIcon Icon="@Icons.Outlined.HourglassBottom" Size="Size.Small"/>
             </MudSwitch>
         </MudItem>
+        @if (asyncBefore || asyncAfter)
+        {
+            <MudItem xs="12">
+                <MudSwitch Label="Exclusive" ReadOnly="true" Checked="@Element.BusinessObject.IsExclusive" Color="Color.Primary"/>
+            </MudItem> 
+        }
     }
 }
 

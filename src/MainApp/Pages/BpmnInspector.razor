@@ -62,26 +62,6 @@
                             </Viewer>
                         </ModelerPropertiesPanel>
 
-                        @* <MudDrawerContainer Class="mud-height-full"> *@
-                        @*     <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);"> *@
-                        @*         <MudDrawerHeader> *@
-                        @*             <MudText Typo="Typo.h4">Element Details</MudText> *@
-                        @*         </MudDrawerHeader> *@
-                        @*         <div class="px-4"> *@
-                        @*             @if (_showSelectedElementDrawer && _selectedBpmnElement != null) *@
-                        @*             { *@
-                        @*                 <ModelerPropertiesForm Element="_selectedBpmnElement"/> *@
-                        @*             } *@
-                        @*         </div> *@
-                        @*     </MudDrawer> *@
-                        @* *@
-                        @*     <BpmnViewer Xml="@_bpmnXml" *@
-                        @*                 @ref="@_bpmnViewer" *@
-                        @*                 @bind-OverlayConfigs="@_overlayConfigs" *@
-                        @*                 OnElementSelection="@ElementSelected"> *@
-                        @*     </BpmnViewer> *@
-                        @* *@
-                        @* </MudDrawerContainer> *@
                     </MudCardContent>
                 </MudCard>
             </MudItem>

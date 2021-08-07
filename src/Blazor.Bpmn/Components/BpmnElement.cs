@@ -213,6 +213,12 @@ namespace Blazor.Bpmn.Components
                 BpmnBoundaryEvent, BpmnParallelGateway, BpmnExclusiveGateway, BpmnInclusiveGateway, 
                 BpmnEventBasedGateway, BpmnSubProcess
             };
+            
+            public static readonly string[] DefaultCapable = {
+                BpmnTask, BpmnManualTask, BpmnUserTask, BpmnScriptTask, 
+                BpmnServiceTask, BpmnSendTask, BpmnReceiveTask, BpmnBusinessRuleTask,
+                BpmnCallActivity, BpmnExclusiveGateway, BpmnInclusiveGateway, BpmnSubProcess
+            };
 
             public string Name { get; }
 
@@ -237,6 +243,8 @@ namespace Blazor.Bpmn.Components
             public bool IsAsyncBefore { get; }
             
             public bool IsAsyncAfter { get; }
+            
+            public bool IsExclusive { get; }
         }
 
     
@@ -303,6 +311,15 @@ namespace Blazor.Bpmn.Components
             {
                 var prop = GetProp<string?>("$attrs.camunda:asyncAfter");
                 return prop == "true";
+            }
+        }
+        
+        public bool IsExclusive
+        {
+            get
+            {
+                var value = GetProp<bool?>("cancelActivity");
+                return value ?? true;
             }
         }
         
@@ -446,6 +463,13 @@ namespace Blazor.Bpmn.Components
             public string SourceId => GetProp<string>("sourceRef.id");
             public string TargetId => GetProp<string>("targetRef.id");
 
+            public bool DefaultCapable()
+            {
+                //@TODO review better ways to check these common props and what the rules are...
+                var sourceType = GetProp<string?>("sourceRef.type");
+                return IBusinessObject.DefaultCapable.Contains(sourceType);
+            }
+            
             public bool IsDefault()
             {
                 var sourceDefaultId = GetProp<string?>("sourceRef.default.id");
@@ -455,8 +479,33 @@ namespace Blazor.Bpmn.Components
             public bool HasCondition() => HasProp("conditionExpression");
             public string? ConditionType => GetProp<string?>("conditionExpression.$type");
             public string? ConditionBody => GetProp<string?>("conditionExpression.body");
-            public string? ConditionLanguage => GetProp<string?>("conditionExpression.language");
+            public string? ConditionScriptLanguage => GetProp<string?>("conditionExpression.language");
             public string? ConditionXsiType => GetProp<string?>("conditionExpression.$attrs.xsi:type");
+
+            // Helper shortcut for ConditionBody
+            public string? ConditionScript => ConditionBody;
+            
+            public string? ConditionExternalScriptResource => GetProp<string?>("conditionExpression.$attrs.camunda:resource");
+            
+            public bool ConditionIsExpression() {
+                return !HasProp("conditionExpression.language");
+            }
+            
+            public bool ConditionIsScript() {
+                return HasProp("conditionExpression.language");
+            }
+            
+            public bool ConditionIsInlineScript()
+            {
+                return !ConditionIsExternalScript();
+            }
+            
+            public bool ConditionIsExternalScript()
+            {
+                return HasProp("conditionExpression.$attrs.camunda:resource");
+            }
+            
+            
         }
         
     public class CommonGateway : GenericBusinessObject
