@@ -1,0 +1,37 @@
+@using Blazor.Bpmn.Components
+
+<MudDrawerContainer Class="mud-height-full">
+    <MudDrawer @ref="@_drawer" @bind-Open="@ShowSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);">
+        <MudDrawerHeader>
+            @PanelHeader
+        </MudDrawerHeader>
+        <div class="px-4">
+            @if (ShowSelectedElementDrawer)
+            {
+                @PanelForm
+            }
+        </div>
+    </MudDrawer>
+
+    @Viewer
+
+</MudDrawerContainer>
+
+
+@code {
+
+    MudDrawer _drawer;
+    
+    [Parameter]
+    public RenderFragment Viewer { get; set; }
+    
+    [Parameter]
+    public RenderFragment PanelHeader { get; set; }
+    
+    [Parameter]
+    public RenderFragment PanelForm { get; set; }
+
+    [Parameter]
+    public bool ShowSelectedElementDrawer { get; set; }
+
+}

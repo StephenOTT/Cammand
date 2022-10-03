@@ -1,0 +1,66 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    @if (Element.DefaultCapable())
+    {
+        <MudItem xs="12">
+            <MudSwitch Label="Is Default?" Checked="@Element.IsDefault()" ReadOnly="true" Color="Color.Primary"></MudSwitch>
+        </MudItem>
+    }
+    
+    @if (Element.HasCondition())
+    {
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Condition Type" Text="@Element.ConditionType"/>
+        </MudItem>
+
+        @if (Element.ConditionIsExpression())
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1" GutterBottom="false">
+                    <b>Expression:</b>
+                </MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" ReadOnly="true" Label="Expression" Text="@Element.ConditionBody"/>
+            </MudItem>
+        }
+        else if (Element.ConditionIsInlineScript())
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1" GutterBottom="false">
+                    <b>Inline Script:</b>
+                </MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" ReadOnly="true" Label="Script Language" Text="@Element.ConditionScriptLanguage"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" ReadOnly="true" Lines="5" Label="Script" Text="@Element.ConditionScript"/>
+            </MudItem>
+        }
+        else if (Element.ConditionIsExternalScript())
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body1" GutterBottom="false">
+                    <b>External Script:</b>
+                </MudText>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" ReadOnly="true" Label="Script Language" Text="@Element.ConditionScriptLanguage"/>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" ReadOnly="true" Label="Resource" Text="@Element.ConditionExternalScriptResource"/>
+            </MudItem>
+        }
+    }
+}
+
+
+@code {
+
+    [Parameter]
+    public SequenceFlow Element { get; set; }
+
+}

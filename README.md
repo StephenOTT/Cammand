@@ -45,8 +45,13 @@ See [Docker](./docker) folder
 
 Analyze your BPMN Element configurations (WIP):
 
+![element data](./docs/images/Bpmn-Element-Properties.gif)
+
+![element data](./docs/images/Bpmn-Element-Properties-1.png)
+![element data](./docs/images/Bpmn-Element-Properties-2.png)
+![element data](./docs/images/Bpmn-Element-Properties-3.png)
+![element data](./docs/images/Bpmn-Element-Properties-4.png)
 ![element data](./docs/images/Bpmn-Element-Selection-1.png)
-![element data](./docs/images/Bpmn-Element-Selection-2.png)
 
 ### Deployments and Forms
 
@@ -132,4 +137,29 @@ server.ssl.key-store: classpath:keystore.p12
 server.ssl.key-store-password: MYPASSWORD
 server.ssl.key-store-type: PKCS12
 server.ssl.key-alias: tomcat
+```
+
+
+
+# Code Examples
+
+## Generate Overlays for BPMN Model:
+
+```c#
+async Task SetupDocumentationOverlays()
+    {
+        var overlays = _bpmnViewer.BpmnElements.FindAll(el => el.BusinessObject.HasDocumentation())
+            .Select(i => new OverlayConfig(i.InternalId, element =>
+            {
+                return new OverlayConfig(
+                    elementId: i.InternalId,
+                    overlayRenderFragment: _ => @<MudIcon Icon="@Icons.Filled.HistoryEdu" Size="Size.Small"/>,
+                    positionTop: -25,
+                    positionLeft: (element.Width / 2) - 5,
+                    tags: new[] {"documentation"}
+                    );
+            }));
+
+        _overlayConfigs.AddRange(overlays);
+    }
 ```

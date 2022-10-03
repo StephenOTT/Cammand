@@ -1,407 +1,561 @@
-﻿@using MainApp.Components.VariableInstance
-@using MainApp.Components.Incident
-@using MainApp.Components.UserTask
-@using MainApp.Components.ProcessInstance
-@using MainApp.Components.Job
-@using MainApp.Components.ExternalTask
-@using BpmnJs.Components
-@using Camunda.Http.Api
-@using Camunda.Http.Api.Model
-@using Color = MudBlazor.Color
-@using System.Text.Json
-
-@inject AppData AppData
-
-@page "/process-instances/{instanceId}"
-
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16">
-<MudGrid>
-<MudItem xs="12">
-    <MudText Typo="Typo.h3" GutterBottom="true">Process Instance <code>@InstanceId</code> Details</MudText>
-</MudItem>
-@if (_instance != null)
-{
-    <MudItem xs="12" lg="4">
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>Process Instance Attributes</CardHeaderContent>
-                <CardHeaderActions>
-                    <MudToolBar DisableGutters="true" Dense="true">
-                    </MudToolBar>
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudText Typo="Typo.body1" GutterBottom="true">Process Instance ID: <code>@_instance.Id</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">State: <code>@_instance.State</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition ID: <code>@_instance.ProcessDefinitionId</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition Key: <code>@_instance.ProcessDefinitionKey</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Process Definition Name: <code>@_instance.ProcessDefinitionName</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Super Process Instance Id: <code>@_instance.SuperProcessInstanceId</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Tenant ID: <code>@_instance.TenantId</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Business Key: <code>@_instance.BusinessKey</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Started At: <code>@_instance.StartTime</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Ended At: <code>@_instance.EndTime</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Duration: <code>@_instance.DurationInMillis</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Started By User ID: <code>@_instance.StartUserId</code></MudText>
-                <MudText Typo="Typo.body1" GutterBottom="true">Start Activity Id: <code>@_instance.StartActivityId</code></MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12" lg="8">
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>BPMN Diagram</CardHeaderContent>
-                <CardHeaderActions>
-                    <MudToolBar DisableGutters="true" Dense="true">
-                        <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/>
-                        <MudSpacer/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" @bind-Toggled="@_showCompletedActivityInstanceCounts" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" @bind-Toggled="@_showActiveActivityCounts" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" @bind-Toggled="@_showActivityIncidentCounts" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" @bind-Toggled="@_showWaitingExecutionCounts" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/>
-                        <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off"/>
-                    </MudToolBar>
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudCardContent Style="height: 500px">
-                @* Review why this is needed:*@
-                @if (_bpmnXml != null)
-                {
-                    <MudGrid Style="height: 100%;">
-                        <MudItem xs="8">
-                            <BpmnViewer bpmnXml="@_bpmnXml"
-                                                            @ref="@_bpmnViewer"
-                                                            activityIncidentCounts="@_activityIncidentCounts"
-                                                            activeActivityCounts="@_activeActivityCounts"
-                                                            completedActivityInstanceCounts="@_completedActivityInstanceCounts"
-                                                            HeatmapVisible="@_showBpmnActivityHeatmap"
-                                                            HeatmapProcessDefinitionKey="@_instance.ProcessDefinitionKey"
-                                                            waitingExecutionCounts="@_waitingExecutionCounts"
-                                                            completedActivityMarkerConfig="highlight"
-                                                            applyCompletedActivityMarker="@_showCompletedActivityMarker"
-                                                            ApplyActiveActivityCounts="@_showActiveActivityCounts"
-                                                            ApplyActivityIncidentCounts="@_showActivityIncidentCounts"
-                                                            applyWaitingExecutionCounts="@_showWaitingExecutionCounts"
-                                                            applyCompletedActivityInstanceCounts="@_showCompletedActivityInstanceCounts"
-                                                            OnElementSelection="@((json)=>_selectedBpmnElementConfig = JsonSerializer.Serialize(json, new JsonSerializerOptions(){WriteIndented = true}))">
-                                                    <activityIncidentCountDisplay>
-                                                        <MudBadge Color="Color.Error" Content="@context"/>
-                                                    </activityIncidentCountDisplay>
-                                                    <activeActivityCountDisplay>
-                                                        <MudBadge Color="Color.Primary" Content="@context"/>
-                                                    </activeActivityCountDisplay>
-                                                    <completedActivityInstanceCountDisplay>
-                                                        <MudBadge Color="Color.Success" Content="@context"/>
-                                                    </completedActivityInstanceCountDisplay>
-                                                    <waitingExecutionCountDisplay>
-                                                        <MudBadge Color="Color.Secondary" Content="@context"/>
-                                                    </waitingExecutionCountDisplay>
-                                                </BpmnViewer>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField T="string" Lines="20" @bind-Text="_selectedBpmnElementConfig" Style="height: 100%"/>
-                        </MudItem>
-                    </MudGrid>
-                    
-                }
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12">
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>Process Instance Details</CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudTabs>
-
-                    <MudTabPanel Text="Variables" @ref="_variablesPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="Incidents" @ref="_incidentsPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeIncidentsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricIncidentsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-
-
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="Called Process Instances" @ref="_calledProcessInstancesPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-
-
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="User Tasks" @ref="_userTasksPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"></RuntimeUserTasksTable>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="Jobs" @ref="_jobsPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic Job Log</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="External Tasks" @ref="_externalTasksPanel">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Runtime</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <RuntimeExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                            <MudItem xs="12">
-                                <MudCard>
-                                    <MudCardHeader>
-                                        <CardHeaderContent>Historic External Task Log</CardHeaderContent>
-                                    </MudCardHeader>
-                                    <MudCardContent>
-                                        <HistoricExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-
-                    <MudTabPanel Text="Actions" @ref="_actionsPanel">
-                        Suspend, Add Variables, Increment Retries, Delete Instance, Migrate
-                    </MudTabPanel>
-
-                </MudTabs>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-}
-
-
-</MudGrid>
-</MudContainer>
-
-
-@code {
-    MudToggleIconButton dog;
-
-    [Parameter]
-    public string DefinitionId { get; set; }
-
-    [Parameter]
-    public string InstanceId { get; set; }
-
-    CamundaClient _camunda;
-
-    HistoricProcessInstanceDto _instance;
-
-    private Dictionary<string, int> _activityIncidentCounts = new();
-
-    private Dictionary<string, int> _activeActivityCounts = new();
-
-    private Dictionary<string, int> _completedActivityInstanceCounts = new();
-
-    private Dictionary<string, int> _waitingExecutionCounts = new();
-
-    private string _bpmnXml;
-
-    BpmnViewer _bpmnViewer;
-
-    private ActivityInstanceDto _activityInstanceData;
-
-    MudTabPanel _variablesPanel;
-    MudTabPanel _incidentsPanel;
-    MudTabPanel _calledProcessInstancesPanel;
-    MudTabPanel _userTasksPanel;
-    MudTabPanel _jobsPanel;
-    MudTabPanel _externalTasksPanel;
-    MudTabPanel _actionsPanel;
-
-    bool _showBpmnActivityHeatmap = false;
-    bool _showCompletedActivityMarker = false;
-    bool _showActiveActivityCounts = false;
-    bool _showActivityIncidentCounts = false;
-    bool _showWaitingExecutionCounts = false;
-    bool _showCompletedActivityInstanceCounts = false;
-
-    string _selectedBpmnElementConfig;
-
-    protected override void OnParametersSet()
-    {
-        _camunda = AppData.CamundaClient;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _instance = await _camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: InstanceId);
-
-            _activityInstanceData = await GetActivityInstanceData(); //runtime data
-
-            _activityIncidentCounts = _activityInstanceData.ChildActivityInstances
-                .SelectMany(i => i.Incidents)
-                .GroupBy(i => i.ActivityId)
-                .Select(i => new {activityId = i.Key, count = i.Count()})
-                .ToDictionary(x => x.activityId, x => x.count);
-
-    //@TODO review how Transition Instance incidents are calculated
-
-            _activeActivityCounts = _activityInstanceData.ChildActivityInstances
-                .GroupBy(i => i.ActivityId)
-                .ToDictionary(k => k.Key, v => v.Select(i => i.ExecutionIds).Count());
-
-            _waitingExecutionCounts = _activityInstanceData.ChildTransitionInstances
-                .GroupBy(i => i.ActivityId)
-                .ToDictionary(k => k.Key, v => v.Count());
-
-            _completedActivityInstanceCounts = (await _camunda.Api.HistoricActivityInstanceApi.QueryHistoricActivityInstancesAsync(historicActivityInstanceQueryDto:
-                new HistoricActivityInstanceQueryDto
-                {
-                    ProcessInstanceId = InstanceId,
-                    Finished = true
-                }))
-                .GroupBy(i => i.ActivityId)
-                .Select(i => new {activityId = i.Key, count = i.Count()})
-                .ToDictionary(x => x.activityId, x => x.count);
-
-            _bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId);
-            StateHasChanged();
-        }
-    }
-
-
-    private Task<ActivityInstanceDto> GetActivityInstanceData()
-    {
-        return _camunda.Api.ProcessInstanceApi.GetActivityInstanceTreeAsync(InstanceId);
-    }
-
-        @*private Task<Dictionary<string, int>> CalcIncidents(ActivityInstanceInfo data)
-        {
-            return Task.FromResult(new Dictionary<string, int>());
-        }*@
-
-        @*private Task<Dictionary<string, int>> CalcActiveActivities(ActivityInstanceInfo data)
-        {
-            return Task.FromResult(new Dictionary<string, int>());
-        }*@
-
-        @*private Task<Dictionary<string, int>> CalcWaitingJobs(ActivityInstanceInfo data)
-        {
-            return Task.FromResult(new Dictionary<string, int>());
-        }*@
-
-
-    private async Task<string> GetBpmnXml(string processDefinitionId)
-    {
-        var result = await _camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId);
-        return result.Bpmn20Xml;
-    }
-
-}
+﻿@* @using MainApp.Components.VariableInstance *@
+@* @using MainApp.Components.Incident *@
+@* @using MainApp.Components.UserTask *@
+@* @using MainApp.Components.ProcessInstance *@
+@* @using MainApp.Components.Job *@
+@* @using MainApp.Components.ExternalTask *@
+@* @using Blazor.Bpmn.Components *@
+@* @using Camunda.Http.Api *@
+@* @using Camunda.Http.Api.Model *@
+@* @using Color = MudBlazor.Color *@
+@* @using System.Text.Json *@
+@* *@
+@* @inject AppData AppData *@
+@* *@
+@* @page "/process-instances/{instanceId}" *@
+@* *@
+@* <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-16"> *@
+@* <MudGrid> *@
+@* <MudItem xs="12"> *@
+@*     <MudText Typo="Typo.h3" GutterBottom="true">Process Instance <code>@InstanceId</code> Details</MudText> *@
+@* </MudItem> *@
+@* @if (_instance != null) *@
+@* { *@
+@*     <MudItem xs="12" lg="4"> *@
+@*         <MudCard> *@
+@*             <MudCardHeader> *@
+@*                 <CardHeaderContent>Process Instance Attributes</CardHeaderContent> *@
+@*                 <CardHeaderActions> *@
+@*                     <MudToolBar DisableGutters="true" Dense="true"> *@
+@*                     </MudToolBar> *@
+@*                 </CardHeaderActions> *@
+@*             </MudCardHeader> *@
+@*             <MudCardContent> *@
+@*                 <MudGrid> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField T="string" Label="Process Instance Id" Variant="Variant.Text" InnerPadding="false" AdornmentIcon="@Icons.Outlined.ContentCopy" Adornment="Adornment.End" OnAdornmentClick="@(()=>CopyFieldValue(_instance.Id))">@_instance.Id</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Process State" Variant="Variant.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Outlined.ContentCopy">@_instance.State</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Process Definition Name" Variant="Variant.Text" InnerPadding="false">@_instance.ProcessDefinitionName</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Process Definition Id" Variant="Variant.Text" InnerPadding="false">@_instance.ProcessDefinitionId</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Process Definition Key" Variant="Variant.Text" InnerPadding="false">@_instance.ProcessDefinitionKey</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Super Process Instance Id" Variant="Variant.Text" InnerPadding="false">@_instance.SuperProcessInstanceId</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Tenant Id" Variant="Variant.Text" InnerPadding="false">@_instance.TenantId</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Business Key" Variant="Variant.Text" InnerPadding="false">@_instance.BusinessKey</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Started At" Variant="Variant.Text" InnerPadding="false">@_instance.StartTime</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Ended At" Variant="Variant.Text" InnerPadding="false">@_instance.EndTime</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Duration at Completion" Variant="Variant.Text" InnerPadding="false">@_instance.DurationInMillis</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Started By User Id" Variant="Variant.Text" InnerPadding="false">@_instance.StartUserId</MudField> *@
+@*                     </MudItem> *@
+@*                     <MudItem xs="12"> *@
+@*                         <MudField Label="Start Activity Id" Variant="Variant.Text" InnerPadding="false">@_instance.StartActivityId</MudField> *@
+@*                     </MudItem> *@
+@*                 </MudGrid> *@
+@*             </MudCardContent> *@
+@*         </MudCard> *@
+@*     </MudItem> *@
+@* *@
+@*     <MudItem xs="12" lg="8"> *@
+@*         <MudCard> *@
+@*             <MudCardHeader Class="py-2 pr-2"> *@
+@*                 <CardHeaderContent> *@
+@*                     <MudToolBar DisableGutters="true" Dense="true"> *@
+@*                         BPMN Diagram *@
+@*                         <MudSpacer/> *@
+@*                         <MudIconButton Icon="@Icons.Outlined.MyLocation" OnClick="@(() => _bpmnViewer.RecenterDiagram())" Title="Re-center Diagram"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.BlurOn" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.BlurOn" @bind-Toggled="@_showBpmnActivityHeatmap" Title="Heatmap is off" ToggledTitle="Heatmap is on"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.CheckCircle" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.CheckCircle" Toggled="@_showCompletedActivityInstanceCounts" ToggledChanged="ToggleCompletedActivityOverlay" Title="Completed Activity Instance Counts is off" ToggledTitle="Completed Activity Instance Counts is on"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.PendingActions" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.PendingActions" Toggled="@_showActiveActivityCounts" ToggledChanged="ToggleActiveActivityOverlay" Title="Active Activity Counts is off" ToggledTitle="Active Activity Counts is on"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.ErrorOutline" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.ErrorOutline" Toggled="@_showActivityIncidentCounts" ToggledChanged="ToggleIncidentsOverlay" Title="Incident Counts is off" ToggledTitle="Incidents Counts is on"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.HourglassTop" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.HourglassTop" Toggled="@_showWaitingExecutionCounts" ToggledChanged="ToggleWaitingExecutionsOverlay" Title="Waiting Execution Counts is off" ToggledTitle="Waiting Execution Counts is on"/> *@
+@*                         <MudToggleIconButton Icon="@Icons.Outlined.Info" ToggledColor="Color.Success" ToggledIcon="@Icons.Outlined.Info" Title="Selected Element Info on" ToggledTitle="Selected Element Info off"/> *@
+@*                     </MudToolBar> *@
+@*                 </CardHeaderContent> *@
+@*             </MudCardHeader> *@
+@*             <MudCardContent Class="relative pa-0" Style="height: 500px; overflow:hidden;"> *@
+@*                 <MudDrawerContainer Class="mud-height-full"> *@
+@*                     <MudDrawer @bind-Open="@_showSelectedElementDrawer" Width="350px" Anchor="Anchor.End" Elevation="0" Variant="@DrawerVariant.Persistent" Style="border-left: 1px solid var(--mud-palette-grey-lighter);"> *@
+@*                         <MudDrawerHeader> *@
+@*                             <MudText Typo="Typo.h6">Element Details</MudText> *@
+@*                         </MudDrawerHeader> *@
+@*                         <div class="px-4"> *@
+@*                             @if (_selectedBpmnElement != null) *@
+@*                             { *@
+@*                                 <MudGrid> *@
+@*                                     <MudItem xs="12"> *@
+@*                                         <MudTextField T="string" Label="Name" Text="@_selectedBpmnElement.BusinessObject.Name" ReadOnly="true"/> *@
+@*                                     </MudItem> *@
+@*                                     <MudItem xs="12"> *@
+@*                                         <MudTextField T="string" Label="Type" Text="@_selectedBpmnElement.BusinessObject.Type" ReadOnly="true"/> *@
+@* *@
+@*                                     </MudItem> *@
+@*                                     @if (_selectedBpmnElement.BusinessObject.Documentation != null) *@
+@*                                     { *@
+@*                                         @foreach (var doc in _selectedBpmnElement.BusinessObject.Documentation) *@
+@*                                         { *@
+@*                                             <MudItem xs="12"> *@
+@*                                                 <MudTextField T="string" Lines="5" ReadOnly="true" Label="Documentation" Text="@doc.RootElement.GetProperty("text").GetString()"/> *@
+@*                                             </MudItem> *@
+@*                                         } *@
+@*                                     } *@
+@*                                 </MudGrid> *@
+@*                             } *@
+@*                         </div> *@
+@*                     </MudDrawer> *@
+@*                     @if (_bpmnXml != null) *@
+@*                     { *@
+@*                         <BpmnViewer bpmnXml="@_bpmnXml" *@
+@*                                     @ref="@_bpmnViewer" *@
+@*                                     @bind-HeatmapVisible="@_showBpmnActivityHeatmap" *@
+@*                                     @bind-HeatmapData="@_heatmapData" *@
+@*                                     @bind-OverlayConfigs="@_overlayConfigs" *@
+@*                                     OnElementSelection="@ElementSelected"> *@
+@*                         </BpmnViewer> *@
+@*                     } *@
+@* *@
+@*                 </MudDrawerContainer> *@
+@*             </MudCardContent> *@
+@*         </MudCard> *@
+@*     </MudItem> *@
+@* *@
+@*     <MudItem xs="12"> *@
+@*         <MudCard> *@
+@*             <MudCardHeader> *@
+@*                 <CardHeaderContent>Process Instance Details</CardHeaderContent> *@
+@*             </MudCardHeader> *@
+@*             <MudCardContent> *@
+@*                 <MudTabs> *@
+@* *@
+@*                     <MudTabPanel Text="Variables" @ref="_variablesPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricVariableInstancesTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="Incidents" @ref="_incidentsPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeIncidentsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricIncidentsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@* *@
+@* *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="Called Process Instances" @ref="_calledProcessInstancesPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricCalledProcessInstancesTable Camunda="@_camunda" SuperProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@* *@
+@* *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="User Tasks" @ref="_userTasksPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"></RuntimeUserTasksTable> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricUserTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="Jobs" @ref="_jobsPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic Job Log</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricJobsTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@* *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="External Tasks" @ref="_externalTasksPanel"> *@
+@*                         <MudGrid> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Runtime</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <RuntimeExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                             <MudItem xs="12"> *@
+@*                                 <MudCard> *@
+@*                                     <MudCardHeader> *@
+@*                                         <CardHeaderContent>Historic External Task Log</CardHeaderContent> *@
+@*                                     </MudCardHeader> *@
+@*                                     <MudCardContent> *@
+@*                                         <HistoricExternalTasksTable Camunda="@_camunda" ProcessInstanceId="@InstanceId"/> *@
+@*                                     </MudCardContent> *@
+@*                                 </MudCard> *@
+@*                             </MudItem> *@
+@*                         </MudGrid> *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                     <MudTabPanel Text="Actions" @ref="_actionsPanel"> *@
+@*                         Suspend, Add Variables, Increment Retries, Delete Instance, Migrate *@
+@*                     </MudTabPanel> *@
+@* *@
+@*                 </MudTabs> *@
+@*             </MudCardContent> *@
+@*         </MudCard> *@
+@*     </MudItem> *@
+@* } *@
+@* *@
+@* *@
+@* </MudGrid> *@
+@* </MudContainer> *@
+@* *@
+@* *@
+@* @code { *@
+@*     MudToggleIconButton dog; *@
+@* *@
+@*     [Parameter] *@
+@*     public string DefinitionId { get; set; } *@
+@* *@
+@*     [Parameter] *@
+@*     public string InstanceId { get; set; } *@
+@* *@
+@*     CamundaClient _camunda; *@
+@* *@
+@*     HistoricProcessInstanceDto _instance; *@
+@* *@
+@*     private Dictionary<string, int> _activityIncidentCounts = new(); *@
+@* *@
+@*     private Dictionary<string, int> _activeActivityCounts = new(); *@
+@* *@
+@*     private Dictionary<string, int> _completedActivityInstanceCounts = new(); *@
+@* *@
+@*     private Dictionary<string, int> _waitingExecutionCounts = new(); *@
+@* *@
+@*     private string _bpmnXml; *@
+@* *@
+@*     BpmnViewer _bpmnViewer; *@
+@* *@
+@*     private ActivityInstanceDto _activityInstanceData; *@
+@* *@
+@*     MudTabPanel _variablesPanel; *@
+@*     MudTabPanel _incidentsPanel; *@
+@*     MudTabPanel _calledProcessInstancesPanel; *@
+@*     MudTabPanel _userTasksPanel; *@
+@*     MudTabPanel _jobsPanel; *@
+@*     MudTabPanel _externalTasksPanel; *@
+@*     MudTabPanel _actionsPanel; *@
+@* *@
+@*     bool _showBpmnActivityHeatmap = false; *@
+@*     bool _showCompletedActivityMarker = false; *@
+@*     bool _showActiveActivityCounts = false; *@
+@*     bool _showActivityIncidentCounts = false; *@
+@*     bool _showWaitingExecutionCounts = false; *@
+@*     bool _showCompletedActivityInstanceCounts = false; *@
+@* *@
+@* *@
+@*     List<OverlayConfig> _overlayConfigs = new(); *@
+@* *@
+@*     Dictionary<string, int> _heatmapData = new(); *@
+@* *@
+@* *@
+@*     BpmnElement _selectedBpmnElement; *@
+@* *@
+@*     bool _showSelectedElementDrawer; *@
+@* *@
+@*     void ElementSelected(BpmnElement selectedElement) *@
+@*     { *@
+@*         Console.WriteLine("Element Selected: " + selectedElement); *@
+@*         _selectedBpmnElement = selectedElement; *@
+@*         _showSelectedElementDrawer = selectedElement != null; *@
+@*     } *@
+@* *@
+@* *@
+@*     protected override void OnParametersSet() *@
+@*     { *@
+@*         _camunda = AppData.CamundaClient; *@
+@*     } *@
+@* *@
+@*     protected override async Task OnAfterRenderAsync(bool firstRender) *@
+@*     { *@
+@*         if (firstRender) *@
+@*         { *@
+@*             _instance = await _camunda.Api.HistoricProcessInstanceApi.GetHistoricProcessInstanceAsync(id: InstanceId); *@
+@* *@
+@*             _activityInstanceData = await GetActivityInstanceData(); //runtime data *@
+@* *@
+@*             var incidentOverlays = _activityInstanceData.ChildActivityInstances *@
+@*                 .SelectMany(i => i.Incidents) *@
+@*                 .GroupBy(i => i.ActivityId) *@
+@*                 .Select(i => new {activityId = i.Key, count = i.Count()}) *@
+@*                 .Select(i => new OverlayConfig(i.activityId, element => *@
+@*                 { *@
+@*                     return new OverlayConfig( *@
+@*                         elementId:i.activityId, *@
+@*                         overlayRenderFragment: _ => @<MudBadge Color="Color.Error" Content="i.count"/>, *@
+@*                         positionTop: 15, *@
+@*                         positionLeft: 2, *@
+@*                         tags: new[] {"incident"} *@
+@*                         ); *@
+@*                 })); *@
+@* *@
+@*             _overlayConfigs.AddRange(incidentOverlays); *@
+@* *@
+@* *@
+@*             var activeActivityOverlays = _activityInstanceData.ChildActivityInstances *@
+@*                 .GroupBy(i => i.ActivityId) *@
+@*                 .ToDictionary(k => k.Key, v => v.Select(i => i.ExecutionIds).Count()) *@
+@*                 .Select(i => new OverlayConfig(i.Key, element => *@
+@*                 { *@
+@*                     return new OverlayConfig( *@
+@*                         elementId:i.Key, *@
+@*                         overlayRenderFragment: _ => @<MudBadge Color="Color.Tertiary" Content="i.Value"/>, *@
+@*                         positionBottom: 15, *@
+@*                         positionRight: 15, *@
+@*                         tags: new[] {"activeActivity"} *@
+@*                         ); *@
+@*                 })); *@
+@* *@
+@*             _overlayConfigs.AddRange(activeActivityOverlays); *@
+@* *@
+@* *@
+@*             var waitingExecutionOverlays = _activityInstanceData.ChildTransitionInstances *@
+@*                 .GroupBy(i => i.ActivityId) *@
+@*                 .ToDictionary(k => k.Key, v => v.Count()) *@
+@*                 .Select(i => new OverlayConfig(i.Key, element => *@
+@*                 { *@
+@*                     return new OverlayConfig( *@
+@*                         elementId:i.Key, *@
+@*                         overlayRenderFragment: _ => @<MudBadge Color="Color.Info" Content="i.Value"/>, *@
+@*                         positionBottom: 18, *@
+@*                         positionRight: 18, *@
+@*                         tags: new[] {"waitingExecution"} *@
+@*                         ); *@
+@*                 })); *@
+@* *@
+@*             _overlayConfigs.AddRange(waitingExecutionOverlays); *@
+@* *@
+@* *@
+@*             var completedActivityData = (await _camunda.Api.HistoricActivityInstanceApi.QueryHistoricActivityInstancesAsync(historicActivityInstanceQueryDto: *@
+@*                 new HistoricActivityInstanceQueryDto *@
+@*                 { *@
+@*                     ProcessInstanceId = InstanceId, *@
+@*                     Finished = true *@
+@*                 })) *@
+@*                 .GroupBy(i => i.ActivityId) *@
+@*                 .Select(i => new {activityId = i.Key, count = i.Count()}) *@
+@*                 .ToList(); *@
+@* *@
+@*             var completedActivityOverlay = completedActivityData *@
+@*                 .Select(i => new OverlayConfig(i.activityId, element => *@
+@*                 { *@
+@*                     return new OverlayConfig( *@
+@*                         elementId:i.activityId, *@
+@*                         overlayRenderFragment: _ => @<MudBadge Color="Color.Success" Content="i.count"/>, *@
+@*                         positionTop: -10, *@
+@*                         positionRight: 15, *@
+@*                         tags: new[] {"completedActivity"} *@
+@*                         ); *@
+@*                 })); *@
+@* *@
+@*             _overlayConfigs.AddRange(completedActivityOverlay); *@
+@* *@
+@*             _heatmapData = completedActivityData.ToDictionary(k => k.activityId, v => v.count); *@
+@* *@
+@* *@
+@*     //@TODO review how Transition Instance incidents are calculated *@
+@* *@
+@* *@
+@*             _bpmnXml = await GetBpmnXml(_instance.ProcessDefinitionId); *@
+@* *@
+@*             StateHasChanged(); *@
+@*         } *@
+@*     } *@
+@* *@
+@* *@
+@*     private Task<ActivityInstanceDto> GetActivityInstanceData() *@
+@*     { *@
+@*         return _camunda.Api.ProcessInstanceApi.GetActivityInstanceTreeAsync(InstanceId); *@
+@*     } *@
+@* *@
+@*     private async Task<string> GetBpmnXml(string processDefinitionId) *@
+@*     { *@
+@*         var result = await _camunda.Api.ProcessDefinitionApi.GetProcessDefinitionBpmn20XmlAsync(processDefinitionId); *@
+@*         return result.Bpmn20Xml; *@
+@*     } *@
+@* *@
+@*     async Task ToggleIncidentsOverlay(bool toggled) *@
+@*     { *@
+@*         _showActivityIncidentCounts = toggled; *@
+@* *@
+@*         if (_showActivityIncidentCounts) *@
+@*         { *@
+@*             await _bpmnViewer.ShowOverlays(new[] {"incident"}); *@
+@*         } *@
+@*         else *@
+@*         { *@
+@*             await _bpmnViewer.HideOverlays(new[] {"incident"}); *@
+@*         } *@
+@*     } *@
+@* *@
+@*     async Task ToggleActiveActivityOverlay(bool toggled) *@
+@*     { *@
+@*         _showActiveActivityCounts = toggled; *@
+@* *@
+@*         if (_showActiveActivityCounts) *@
+@*         { *@
+@*             await _bpmnViewer.ShowOverlays(new[] {"activeActivity"}); *@
+@*         } *@
+@*         else *@
+@*         { *@
+@*             await _bpmnViewer.HideOverlays(new[] {"activeActivity"}); *@
+@*         } *@
+@*     } *@
+@* *@
+@*     async Task ToggleWaitingExecutionsOverlay(bool toggled) *@
+@*     { *@
+@*         _showWaitingExecutionCounts = toggled; *@
+@* *@
+@*         if (_showWaitingExecutionCounts) *@
+@*         { *@
+@*             await _bpmnViewer.ShowOverlays(new[] {"waitingExecution"}); *@
+@*         } *@
+@*         else *@
+@*         { *@
+@*             await _bpmnViewer.HideOverlays(new[] {"waitingExecution"}); *@
+@*         } *@
+@*     } *@
+@* *@
+@*     async Task ToggleCompletedActivityOverlay(bool toggled) *@
+@*     { *@
+@*         _showCompletedActivityInstanceCounts = toggled; *@
+@* *@
+@*         if (_showCompletedActivityInstanceCounts) *@
+@*         { *@
+@*             await _bpmnViewer.ShowOverlays(new[] {"completedActivity"}); *@
+@*         } *@
+@*         else *@
+@*         { *@
+@*             await _bpmnViewer.HideOverlays(new[] {"completedActivity"}); *@
+@*         } *@
+@*     } *@
+@* *@
+@*     void ToggleHeatmap(bool toggled) *@
+@*     { *@
+@*         _showBpmnActivityHeatmap = toggled; *@
+@* *@
+@*         _bpmnViewer.HeatmapVisible = _showBpmnActivityHeatmap; *@
+@*     } *@
+@* *@
+@*     void CopyFieldValue(string value) *@
+@*     { *@
+@*          *@
+@*     } *@
+@* *@
+@* } *@

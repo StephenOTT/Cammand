@@ -1,0 +1,325 @@
+﻿@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@if (Xml != null)
+{
+    <div @ref="_bpmnJsElement" style="height:100%;"></div>
+
+    @BpmnOverlays
+}
+
+
+@code
+{
+    ElementReference _bpmnJsElement;
+    IJSObjectReference _bpmnJsModule;
+    IJSObjectReference _bpmnJsInstance;
+
+    [Parameter]
+    public List<OverlayConfig> OverlayConfigs { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback<List<OverlayConfig>> OverlayConfigsChanged { get; set; }
+
+    [Parameter]
+    public string Xml { get; set; }
+    
+    [Parameter]
+    public EventCallback<Task> OnLoaded { get; set; }
+    
+
+    bool _diagramLoaded;
+
+    bool _viewboxChanging;
+    
+    
+    
+    IJSObjectReference _heatmapJsInstance;
+
+    [Parameter]
+    public bool HeatmapVisible { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> HeatmapVisibleChanged { get; set; }
+    
+    [Parameter]
+    public Dictionary<string, int> HeatmapData { get; set; }
+    
+    [Parameter]
+    public EventCallback<Dictionary<string, int>> HeatmapDataChanged { get; set; }
+    
+
+
+    public List<GenericElement> BpmnElements = new();
+
+    [Parameter]
+    public EventCallback<GenericElement> OnElementSelection { get; set; }
+
+
+    RenderFragment BpmnOverlays => __builder =>
+    {
+        if (_diagramLoaded)
+        {
+            foreach (var config in OverlayConfigs)
+            {
+                if (config.State == "INIT")
+                {
+                    <div @ref="@config.HtmlElementRef" @key="@config" style="display:none">
+                        @config.OverlayRenderFragment(BpmnElements.Single(element => element.InternalId == config.ElementId))
+                    </div>
+                }
+            }
+        }
+    };
+
+
+    DotNetObjectReference<BpmnViewer> _dotNetJsRef;
+
+
+    public async Task RecenterDiagram()
+    {
+        await _bpmnJsModule.InvokeVoidAsync("recenterDiagram", _bpmnJsInstance);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _dotNetJsRef = DotNetObjectReference.Create(this);
+
+                _bpmnJsModule = await JS.InvokeAsync<IJSObjectReference>("import","./_content/Blazor.Bpmn/js/bpmn/bpmn-modeler.interop.js");
+                _bpmnJsInstance = await _bpmnJsModule.InvokeAsync<IJSObjectReference>("createBpmnJSInstance", _bpmnJsElement);
+
+                await _bpmnJsInstance.InvokeVoidAsync("importXML", Xml);
+
+                var elementIds = await _bpmnJsModule.InvokeAsync<List<string>>("getAllElementPropertyIds", _bpmnJsInstance);
+
+                elementIds.ForEach(id => { BpmnElements.Add(new GenericElement(_bpmnJsInstance, JS, id, "")); });
+
+                if (OnElementSelection.HasDelegate)
+                {
+                    //Setup callback for element selection
+                    await _bpmnJsModule.InvokeVoidAsync("setupElementSelectionListener", _bpmnJsInstance, _dotNetJsRef);
+                }
+
+                // Setup the viewbox changing listener
+                await _bpmnJsModule.InvokeVoidAsync("setupViewboxChangingListener", _bpmnJsInstance, _dotNetJsRef);
+
+                await RecenterDiagram();
+
+                // Triggers initial root element to be sent to callback.
+                await ElementSelectedEvent(null);
+
+
+                _diagramLoaded = true;
+                await OnLoaded.InvokeAsync(Task.CompletedTask);
+                StateHasChanged(); // Required to ensure that second render occurs to load overlays (because overlays pass the BPMN elements as params to the render fragments)
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                await OnLoaded.InvokeAsync(Task.FromException(e));
+                // StateHasChanged(); // @TODO Do i need StateHasCHanged Here?
+            }
+
+        }
+        if (!firstRender && _diagramLoaded)
+        {
+            try
+            {
+                // Setup the overlay configs using the function
+                OverlayConfigs.FindAll(i => i._overlayConfigFunc != null && i.OverlayRenderFragment == null).ForEach(c =>
+                {
+                    c.SetupOverlayFunc(BpmnElements.Single(el => el.InternalId == c.ElementId));
+                });
+
+                await SetupOverlays();
+                await SetupHeatmap();
+
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                await OnLoaded.InvokeAsync(Task.FromException(e));
+            }
+        }
+    }
+
+
+    async Task SetupOverlays()
+    {
+        foreach (var overlayConfig in OverlayConfigs)
+        {
+            // Only setup overlays that do not have a overlayID (because they have not been created yet)
+            if (overlayConfig.State == "INIT" && overlayConfig.OverlayId == null)
+            {
+                overlayConfig.OverlayId = await _bpmnJsModule.InvokeAsync<string>("addOverlay", overlayConfig, _bpmnJsInstance);
+            }
+        }
+    }
+
+
+    public async Task HideOverlays(IEnumerable<string> tags, string currentState = "INIT")
+    {
+        var overlays = OverlayConfigs .FindAll(i => i.Tags.Intersect(tags).Any() && i.State == currentState);
+
+        if (overlays.Any())
+        {
+            // IDs are collected so we have a copy of the values to send to bpmnjs
+            var ids = overlays.Select(i => i.OverlayId).ToList();
+
+            // Needs to be a Task.run to ensure all changes occur before triggering the params change...
+            // Ref on part of the issue: https://github.com/dotnet/aspnetcore/issues/13610
+            // Got idea from: https://github.com/dotnet/aspnetcore/issues/19647#issuecomment-601321626
+            // Unclear why it works / what problem it is actually solving... @TODO review further.
+            // @TODO Review: using Task.Delay(10) also works... So thinking a race issue??
+            // overlays.ForEach(i =>
+            // {
+            //     i.State = "HIDE";
+            //     i.OverlayId = null;
+            //     i.HtmlElementRef = null;
+            // });
+            await Task.Run(() => overlays.ForEach(i =>
+            {
+                i.State = "HIDE";
+                i.OverlayId = null;
+                i.HtmlElementRef = null;
+            }));
+            // await Task.Delay(10);
+
+            Console.WriteLine("Hiding Overlays");
+
+            // StateHasChanged is required for the UI to update and remove the un-needed elements
+            StateHasChanged();
+
+            // Once the UI was updated to remove Blazor controlled elements, 
+            //we can trigger BpmnJS to remove the overlay which will remove the BPMNjs wrapping div.
+            await RemoveOverlays(ids);
+            // await SetupHeatmap();
+        }
+    }
+
+    public async Task ShowOverlays(IEnumerable<string> tags, string currentState = "HIDE", string newState = "INIT")
+    {
+        var overlays = OverlayConfigs.FindAll(i => i.Tags.Intersect(tags).Any() && i.State == currentState);
+
+        if (overlays.Any())
+        {
+            // This will trigger change detection and cause OnParams Set to trigger
+            // For whatever reason.. The Task.Run is not required here...
+            overlays.ForEach(i => i.State = newState);
+            //StateHasChanged is NOT required here because Blazor will trigger the update based on params change.
+            // If you run StateHasChanged it will double create the overlay on the blazor side but only one will be sent to bpmnjs (race event?)
+            // StateHasChanged();
+        }
+    }
+
+
+    async Task RemoveOverlays(List<string> overlayIds)
+    {
+        await _bpmnJsModule.InvokeVoidAsync("removeOverlays", overlayIds, _bpmnJsInstance);
+    }
+
+
+    async Task SetupHeatmap()
+    {
+        if (HeatmapVisible)
+        {
+            if (HeatmapData == null)
+            {
+                throw new Exception("No Heatmap Data found");
+            }
+            var activities = HeatmapData.ToList();
+            await ShowCustomHeatmap(activities);
+        }
+        else
+        {
+            if (_heatmapJsInstance != null)
+            {
+                await RemoveHeatmap();
+            }
+        }
+    }
+
+    async Task RemoveHeatmap()
+    {
+        if (_heatmapJsInstance != null)
+        {
+            await _bpmnJsModule.InvokeVoidAsync("destroyHeatmap", _bpmnJsElement);
+            _heatmapJsInstance = null;
+        }
+    }
+
+    async Task ShowCustomHeatmap(List<KeyValuePair<string, int>> data)
+    {
+        if (_heatmapJsInstance != null)
+        {
+            throw new Exception("Cannot show heatmap: Another heatmap is already being shown.");
+        }
+        _heatmapJsInstance = await _bpmnJsModule.InvokeAsync<IJSObjectReference>("generateHeatmap", data, _bpmnJsInstance, _bpmnJsElement, _heatmapJsInstance, null);
+    }
+
+    async Task<string> GetRootBpmnElementId()
+    {
+        return await _bpmnJsModule.InvokeAsync<string>("getRootElementId", _bpmnJsInstance);
+    }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
+
+    [JSInvokable]
+    public async Task ElementSelectedEvent(string elementId)
+    {
+        var rootElementId = elementId == null ? await GetRootBpmnElementId() : null;
+        var element = elementId != null ? new GenericElement(_bpmnJsInstance, JS, elementId, "") : BpmnElements.Single(el => el.InternalId == rootElementId);
+        await OnElementSelection.InvokeAsync(element);
+    }
+
+    [JSInvokable]
+    public async Task ViewboxChangingEvent(string action)
+    {
+        //@TODO Future idea: create a list of actions to execute rather than hard code..
+        if (_diagramLoaded)
+        {
+            switch (action)
+            {
+                case "changing":
+                    {
+                        if (HeatmapVisible)
+                        {
+                            await RemoveHeatmap();
+                        }
+                        break;
+                    }
+                case "changed":
+                    {
+                        if (HeatmapVisible)
+                        {
+                            await ShowCustomHeatmap(HeatmapData.ToList());
+                        }
+                        break;
+                    }
+            }
+        }
+    }
+
+
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await _bpmnJsInstance.InvokeVoidAsync("destroy"); // @TODO REVIEW
+        await _bpmnJsInstance.DisposeAsync();
+        await _bpmnJsModule.DisposeAsync();
+
+        if (_heatmapJsInstance != null)
+        {
+            await _heatmapJsInstance.DisposeAsync();
+        }
+    }
+
+}

@@ -1,0 +1,78 @@
+﻿/* Element Highlight (not sequence flows) color elements as green */
+.highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
+    fill: #d0efb1 !important;
+}
+
+/* Element Highlight (not sequence flows) color elements as blue */
+.highlight-running:not(.djs-connection) .djs-visual > :nth-child(1) {
+    fill: rgba(32, 81, 216, 0.63) !important;  
+}
+/* Seqence Flow Highlight */
+.highlight-connection.djs-connection .djs-visual > :nth-child(1) {
+    stroke: rgba(24, 155, 24, 0.822) !important;
+}
+
+.transaction-boundary {
+    background-color: rgb(231, 21, 21);
+    border-radius: 1px;
+    min-height: 20px;
+    width: 5px;
+}
+
+.user-transaction-boundary {
+    background-color: rgba(30, 255, 183, 1);
+    border-radius: 1px;
+    min-height: 40px;
+    width: 3px;
+}
+
+.receivetask-transaction-boundary {
+    background-color: rgba(30, 255, 183, 1);
+    border-radius: 1px;
+    min-height: 40px;
+    width: 3px;
+}
+
+.externaltask-transaction-boundary {
+    background-color: rgb(208, 26, 224);
+    border-radius: 1px;
+    min-height: 40px;
+    width: 3px;
+}
+
+.intermediatecatchevent-transaction-boundary {
+    background-color: rgba(30, 255, 183, 1);
+    border-radius: 1px;
+    min-height: 40px;
+    width: 3px;
+}
+
+pre code {
+    background-color: #f6f8fa;
+    border: 1px solid #f6f8fa;
+    display: block;
+    padding: 20px;
+}
+
+.activity-instance-count {
+    background-color: rgba(165, 196, 189, 0.900);
+    color: rgba(0, 0, 0, 0.900);
+    border-radius: 5px;
+    font-family: Arial;
+    font-size: 10px;
+    padding: 3px;
+    min-height: 16px;
+    min-width: 15px;
+    text-align: center;
+}
+
+.activity-instance-variable-execution {
+    color: rgba(5, 163, 5, 0.900);
+    border-radius: 5px;
+    font-family: Arial;
+    font-size: 15px;
+    padding: 3px;
+    min-height: 15px;
+    min-width: 15px;
+    text-align: center;
+}

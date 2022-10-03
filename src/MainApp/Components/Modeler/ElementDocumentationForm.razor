@@ -1,0 +1,22 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    @if (Element.BusinessObject.HasDocumentation())
+    {
+        @foreach (var doc in Element.BusinessObject.Documentation)
+        {
+            <MudItem xs="12">
+                <MudTextField T="string" Lines="5" ReadOnly="true" Label="Element Documentation" Text="@(doc.Text)"/>
+            </MudItem>
+        }
+    }
+}
+
+
+@code {
+
+    [Parameter]
+    public GenericElement Element { get; set; }
+
+}

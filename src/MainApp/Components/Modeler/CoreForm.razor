@@ -1,0 +1,51 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    <MudItem xs="12">
+        <MudTextField T="string" Label="Element Id" Text="@Element.Id" ReadOnly="true"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" Label="Element Type" Text="@Element.Type" ReadOnly="true"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" Label="Business Type" Text="@Element.BusinessObject.Type" ReadOnly="true"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" Label="Name" Text="@Element.BusinessObject.Name" ReadOnly="true"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" Label="Business Id" Text="@Element.BusinessObject.Id" ReadOnly="true"/>
+    </MudItem>
+
+    
+    @if (Element.BusinessObject.IsAsyncCapable())
+    {
+        var asyncBefore = Element.BusinessObject.IsAsyncBefore;
+        var asyncAfter = Element.BusinessObject.IsAsyncBefore;
+        <MudItem xs="12">
+            <MudSwitch Label="Async Before" ReadOnly="true" Checked="asyncBefore" Color="Color.Primary">
+                <MudIcon Icon="@Icons.Outlined.HourglassTop" Size="Size.Small"/>
+            </MudSwitch>
+        </MudItem>
+        <MudItem xs="12">
+            <MudSwitch Label="Async After" ReadOnly="true" Checked="asyncAfter" Color="Color.Primary">
+                <MudIcon Icon="@Icons.Outlined.HourglassBottom" Size="Size.Small"/>
+            </MudSwitch>
+        </MudItem>
+        @if (asyncBefore || asyncAfter)
+        {
+            <MudItem xs="12">
+                <MudSwitch Label="Exclusive" ReadOnly="true" Checked="@Element.BusinessObject.IsExclusive" Color="Color.Primary"/>
+            </MudItem> 
+        }
+    }
+}
+
+
+@code {
+
+    [Parameter]
+    public GenericElement Element { get; set; }
+
+}

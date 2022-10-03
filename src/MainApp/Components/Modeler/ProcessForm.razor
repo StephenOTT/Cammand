@@ -1,0 +1,49 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Process Id" HelperText="This maps to the Process Definition Key" Text="@Element.Id"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Process Name" Text="@Element.Name"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Version Tag" Text="@Element.VersionTag"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudSwitch T="bool" Label="Is Executable" ReadOnly="true" Checked="@Element.IsExecutable" Color="Color.Primary"></MudSwitch>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Candidate Starter Groups" Text="@Element.CandidateStarterGroups"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Candidate Starter Users" Text="@Element.CandidateStarterUsers"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="History Time to Live" Text="@Element.HistoryTimeToLive"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Job Priority" Text="@Element.JobPriority"/>
+    </MudItem>
+    <MudItem xs="12">
+        <MudTextField T="string" ReadOnly="true" Label="Task Priority" Text="@Element.TaskPriority"/>
+    </MudItem>
+    @if (Element.HasDocumentation())
+    {
+        @foreach (var doc in Element.Documentation!)
+        {
+            <MudItem xs="12">
+                <MudTextField T="string" Lines="5" ReadOnly="true" Label="Process Documentation" Text="@(doc.Text)"/>
+            </MudItem>
+        }
+    }
+}
+
+
+@code {
+
+    [Parameter]
+    public Process Element { get; set; }
+
+}

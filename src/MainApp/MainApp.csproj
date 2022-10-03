@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.7" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="5.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="5.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="5.0.8" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="5.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0" />
-    <PackageReference Include="MudBlazor" Version="5.0.14" />
+    <PackageReference Include="MudBlazor" Version="5.0.15" />
     <PackageReference Include="System.Net.Http.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
   </ItemGroup>
@@ -26,10 +26,9 @@
     <Folder Include="Components\Deployment\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BpmnJs\BpmnJs.csproj" />
+    <ProjectReference Include="..\Blazor.Bpmn\Blazor.Bpmn.csproj" />
     <ProjectReference Include="..\Camunda.Http.Api\Camunda.Http.Api.csproj" />
     <ProjectReference Include="..\Formio\Formio.csproj" />
-    <ProjectReference Include="..\HeatmapJs\HeatmapJs.csproj" />
   </ItemGroup>
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Components\Tasklist\UserTask\RuntimeTaskCard.razor" />

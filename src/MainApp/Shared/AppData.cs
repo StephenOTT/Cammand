@@ -55,11 +55,11 @@ namespace MainApp.Shared
             }
         }
 
-        public void SnackError(ISnackbar snackbar, string message, Exception e = null)
+        public void SnackError(ISnackbar snackbar, string message, Exception e = null, bool throwError = false)
         {
             snackbar.Add(message, Severity.Error);
             Console.Error.WriteLine(message);
-            if (e != null)
+            if (e != null && throwError)
             {
                 throw e;
             }

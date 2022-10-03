@@ -1,0 +1,36 @@
+@using Blazor.Bpmn.Components
+
+@if (Element != null)
+{
+    // @TODO the double get $type is occuring because of conversion of objects
+    var ut = Element;
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Assignee" Text="@ut.Assignee"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Candidate Users" Text="@ut.CandidateUsers"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Candidate Groups" Text="@ut.CandidateGroups"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Due Date" Text="@ut.DueDate"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Follow Up Date" Text="@ut.FollowUpDate"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Priority" Text="@ut.Priority"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" ReadOnly="true" Label="Form Key" Text="@ut.FormKey"/>
+        </MudItem>
+}
+
+
+@code {
+
+    [Parameter]
+    public UserTask Element { get; set; }
+
+}
