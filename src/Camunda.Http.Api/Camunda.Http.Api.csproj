@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Camunda.Http.Api</AssemblyName>
     <PackageId>Camunda.Http.Api</PackageId>
     <OutputType>Library</OutputType>
@@ -18,8 +18,8 @@
     <PackageReleaseNotes>Minor update</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JsonSubTypes" Version="1.8.0" />
-    <PackageReference Include="Polly" Version="7.2.1" />
+    <PackageReference Include="JsonSubTypes" Version="2.0.1" />
+    <PackageReference Include="Polly" Version="8.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 </Project>
