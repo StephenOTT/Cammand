@@ -1,15 +1,15 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.810.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor.Bpmn", "Blazor.Bpmn\Blazor.Bpmn.csproj", "{711EF309-A06E-4E5B-9A54-17ED0C68F995}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blazor.Bpmn", "Blazor.Bpmn\Blazor.Bpmn.csproj", "{711EF309-A06E-4E5B-9A54-17ED0C68F995}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Camunda.Http.Api", "Camunda.Http.Api\Camunda.Http.Api.csproj", "{338C7887-818E-444B-AC44-F8C8D9F68DAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Camunda.Http.Api", "Camunda.Http.Api\Camunda.Http.Api.csproj", "{338C7887-818E-444B-AC44-F8C8D9F68DAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Formio", "Formio\Formio.csproj", "{B1717ADE-2749-4627-9347-2B3605BC8F85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Formio", "Formio\Formio.csproj", "{B1717ADE-2749-4627-9347-2B3605BC8F85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainApp", "MainApp\MainApp.csproj", "{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MainApp", "MainApp\MainApp.csproj", "{FC5477AB-1BC3-4ECB-A5F3-49673FD460B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
