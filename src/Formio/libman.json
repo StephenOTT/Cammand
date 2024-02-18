@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "bootstrap@4.6.2",
+      "destination": "wwwroot/lib/bootstrap/",
+      "files": [
+        "dist/*/*.*"
+      ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "formiojs@4.18.2",
+      "destination": "wwwroot/lib/formiojs/",
+      "files": [
+        "dist/*.*",
+        "dist/*/*.*"
+      ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootswatch@4.6.2",
+      "destination": "wwwroot/lib/bootswatch/",
+      "files": [
+        "dist/materia/bootstrap.min.css"
+      ]
+    }
+  ]
+}

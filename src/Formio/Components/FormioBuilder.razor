@@ -4,7 +4,6 @@
 
 <div @ref="@FormioElement"></div>
 
-
 @code
 {
     ElementReference FormioElement;
@@ -56,10 +55,7 @@
     {
         await FormInstance.DisposeAsync();
     }
-    
-    
-    
-    
+        
     void LogNoSchema()
     {
         Console.WriteLine("No Form Schema found for Formio Builder");
