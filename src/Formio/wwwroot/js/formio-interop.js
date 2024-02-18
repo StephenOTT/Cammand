@@ -1,4 +1,4 @@
-import "./formio.full.min.js";
+import "./../lib/formiojs/dist/formio.full.min.js";
 
 Formio.icons = 'fontawesome'
 
