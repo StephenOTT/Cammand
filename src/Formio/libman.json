@@ -17,6 +17,14 @@
         "dist/*.*",
         "dist/*/*.*"
       ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootswatch@4.6.2",
+      "destination": "wwwroot/lib/bootswatch/",
+      "files": [
+        "dist/materia/bootstrap.min.css"
+      ]
     }
   ]
 }
